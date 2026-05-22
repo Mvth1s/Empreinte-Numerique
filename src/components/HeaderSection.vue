@@ -1,69 +1,61 @@
 <template>
   <div>
     <!-- TOP BAR -->
-    <header style="border-bottom:1px solid var(--line)">
-      <div class="wrap" style="padding-top:10px;padding-bottom:22px">
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <!-- Brand -->
-          <div style="display:flex;align-items:center;gap:14px">
-            <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true" style="flex-shrink:0">
-              <g style="fill:none;stroke:var(--cyan);stroke-width:1">
-                <path d="M22 6 C12 6 6 14 6 22 C6 26 7 29 9 32" />
-                <path d="M22 10 C15 10 10 16 10 22 C10 25 11 28 13 30" />
-                <path d="M22 14 C17 14 14 17 14 22 C14 26 15 28 17 30" />
-                <path d="M22 18 C19 18 18 20 18 22 C18 25 19 27 21 29" />
-                <path d="M22 22 C22 24 22 27 24 30" />
-              </g>
-              <g style="fill:none;stroke:var(--cyan);stroke-width:1;opacity:.35">
-                <path d="M22 6 C32 6 38 14 38 22 C38 26 37 29 35 32" />
-                <path d="M22 10 C29 10 34 16 34 22 C34 25 33 28 31 30" />
-                <path d="M22 14 C27 14 30 17 30 22 C30 26 29 28 27 30" />
-              </g>
-              <g style="stroke:var(--cyan);stroke-width:.6;opacity:.6">
-                <line x1="38" y1="14" x2="44" y2="14"/>
-                <line x1="40" y1="22" x2="44" y2="22"/>
-                <line x1="38" y1="30" x2="44" y2="30"/>
-              </g>
-            </svg>
-            <div>
-              <h1 style="font-family:'IBM Plex Mono',monospace;font-size:14px;letter-spacing:.28em;margin:0;color:var(--fg)">
-                EMPREINTE NUMÉRIQUE
-              </h1>
-              <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--mute);letter-spacing:.22em;text-transform:uppercase;margin-top:4px">
-                Ce que chaque site sait sur vous
-              </div>
-            </div>
+    <header class="hd-bar">
+      <div class="wrap hd-bar-inner">
+        <!-- Brand -->
+        <div class="hd-brand">
+          <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true" class="hd-logo">
+            <g style="fill:none;stroke:var(--cyan);stroke-width:1">
+              <path d="M22 6 C12 6 6 14 6 22 C6 26 7 29 9 32" />
+              <path d="M22 10 C15 10 10 16 10 22 C10 25 11 28 13 30" />
+              <path d="M22 14 C17 14 14 17 14 22 C14 26 15 28 17 30" />
+              <path d="M22 18 C19 18 18 20 18 22 C18 25 19 27 21 29" />
+              <path d="M22 22 C22 24 22 27 24 30" />
+            </g>
+            <g style="fill:none;stroke:var(--cyan);stroke-width:1;opacity:.35">
+              <path d="M22 6 C32 6 38 14 38 22 C38 26 37 29 35 32" />
+              <path d="M22 10 C29 10 34 16 34 22 C34 25 33 28 31 30" />
+              <path d="M22 14 C27 14 30 17 30 22 C30 26 29 28 27 30" />
+            </g>
+            <g style="stroke:var(--cyan);stroke-width:.6;opacity:.6">
+              <line x1="38" y1="14" x2="44" y2="14"/>
+              <line x1="40" y1="22" x2="44" y2="22"/>
+              <line x1="38" y1="30" x2="44" y2="30"/>
+            </g>
+          </svg>
+          <div>
+            <h1 class="hd-title">EMPREINTE NUMÉRIQUE</h1>
+            <div class="hd-subtitle">Ce que chaque site sait sur vous</div>
           </div>
+        </div>
 
-          <!-- Session meta -->
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mute);text-align:right;letter-spacing:.12em">
-            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);margin-right:8px;vertical-align:middle;animation:blink 1.6s infinite" />
-            SESSION ACTIVE · ANALYSE TEMPS RÉEL<br/>
-            <span style="opacity:.6">ID : {{ sessionId }} · {{ sessionDate }}</span>
-          </div>
+        <!-- Session meta -->
+        <div class="hd-session">
+          <span class="hd-dot" />
+          <span class="hd-session-label">SESSION ACTIVE · ANALYSE TEMPS RÉEL</span>
+          <span class="hd-session-id">ID : {{ sessionId }} · {{ sessionDate }}</span>
         </div>
       </div>
     </header>
 
     <!-- HERO -->
-    <section class="wrap" style="padding-top:56px;padding-bottom:48px;border-bottom:1px solid var(--line)">
-      <div style="display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center">
-        <div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--cyan);letter-spacing:.25em;text-transform:uppercase">
-            // rapport_001 — visiteur anonyme
-          </div>
-          <h2 style="font-family:'DM Sans',sans-serif;font-weight:500;font-size:clamp(30px,4.4vw,52px);line-height:1.05;margin:14px 0 18px;letter-spacing:-0.02em;color:var(--fg)">
-            Vous pensez être <span style="color:var(--cyan)">anonyme</span>.<br/>
-            Ce site sait déjà <span style="color:var(--cyan)">{{ dataPoints }} choses</span> sur vous.
+    <section class="wrap hd-hero">
+      <div class="hd-hero-grid">
+        <div class="hd-copy">
+          <div class="hd-eyebrow">// rapport_001 — visiteur anonyme</div>
+          <h2 class="hd-h2">
+            Vous pensez être <span class="hd-cyan">anonyme</span>.<br/>
+            Ce site sait déjà <span class="hd-cyan">{{ dataPoints }} choses</span> sur vous.
           </h2>
-          <p style="color:var(--mute-2);max-width:52ch;line-height:1.55;font-size:15px">
+          <p class="hd-lead">
             Aucun cookie. Aucune permission. Aucun login. Une simple visite suffit à reconstruire votre identité technique avec une précision suffisante pour vous suivre à travers le web.
           </p>
-          <div style="margin-top:28px;padding-top:18px;border-top:1px dashed var(--line-2);font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--mute);letter-spacing:.12em">
-            <strong style="color:var(--fg);font-weight:500">COLLECTÉ EN {{ elapsedMs }}ms</strong>
-            &nbsp;·&nbsp; SANS AUCUNE PERMISSION
-            &nbsp;·&nbsp; 11 CATÉGORIES
-            &nbsp;·&nbsp; {{ dataPoints }} POINTS DE DONNÉES
+          <div class="hd-meta-line">
+            <strong class="hd-meta-strong">COLLECTÉ EN {{ elapsedMs }}ms</strong>
+            <span class="hd-sep">·</span> SANS AUCUNE PERMISSION
+            <span class="hd-sep">·</span> 11 CATÉGORIES
+            <span class="hd-sep hd-sep-hide">·</span> <span class="hd-sep-hide">{{ dataPoints }} POINTS</span>
           </div>
         </div>
 
@@ -94,9 +86,9 @@
               <span class="vbadge">⚫ CRITIQUE</span> RISQUE DE RÉIDENTIFICATION
             </div>
             <ul>
-              <li><span>Empreinte unique probable</span><span>1 sur 287k</span></li>
+              <li><span>Empreinte unique</span><span>1 / 287k</span></li>
               <li><span>Données sensibles</span><span>{{ sensitiveCount }}</span></li>
-              <li><span>Permissions demandées</span><span>0</span></li>
+              <li><span>Permissions</span><span>0</span></li>
               <li><span>Temps d'analyse</span><span>{{ elapsedMs }}ms</span></li>
             </ul>
           </div>
