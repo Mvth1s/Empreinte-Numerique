@@ -1,46 +1,33 @@
 <template>
-  <section class="section-reveal py-16 border-b border-border" ref="sectionRef">
-    <div class="max-w-6xl mx-auto px-6">
-      <SectionHeader index="03" icon="🕐" title="Fuseau horaire & Locale"
-        description="La combinaison fuseau + langue + format est un identifiant géographique très précis." />
+  <div class="wrap section-wrap">
+    <SectionHeader index="03" title="Fuseau horaire & Locale" />
+    <div class="en-grid">
+      <DataCard icon="🕐" label="Fuseau & Locale" sectionIdx="section 03"
+        :rows="[
+          { k: 'FUSEAU_IANA', v: timezone },
+          { k: 'LOCALE', v: locale },
+          { k: 'OFFSET_UTC', v: utcOffset },
+          { k: 'HEURE_LOCALE', v: localTime },
+          { k: 'DST_ACTIF', v: isDST ? 'OUI (heure d\'été)' : 'Non (heure standard)' },
+        ]"
+        inference="Votre fuseau confirme la cohérence de l'IP. Une <strong>incohérence trahirait l'usage d'un VPN</strong>. La locale fr-FR ≠ fr-CA ≠ fr-BE révèle langue ET pays probable."
+        sensitivity="high" :span="4" />
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <DataCard icon="🗺️" label="Fuseau horaire (IANA)" :value="timezone" sensitivity="high"
-          inference="Identifie votre fuseau précis (Europe/Paris, America/New_York…). Couplé à la langue, il géolocalise avec une précision élevée." />
-
-        <DataCard icon="⏱️" label="Offset UTC" :value="utcOffset" sensitivity="medium"
-          inference="Confirme le fuseau horaire et limite les zones possibles. Utilisé en corrélation avec l'IP et la langue." />
-
-        <DataCard icon="🕒" label="Heure locale exacte" :value="localTime" sensitivity="medium"
-          inference="Votre heure actuelle, calculée côté client. Révèle si vous êtes connecté la nuit, révélateur de comportement." />
-
-        <DataCard icon="☀️" label="Heure d'été (DST)" :value="isDST ? 'Active (heure d\'été)' : 'Inactive (heure standard)'" sensitivity="low"
-          inference="L'état DST précise la période de l'année et confirme le fuseau. Réduit encore le nombre de pays possibles." />
-
-        <DataCard icon="🌐" label="Locale système" :value="locale" sensitivity="high"
-          inference="fr-FR ≠ fr-CA ≠ fr-BE. La locale révèle la langue ET le pays probable avec grande précision." />
-
-        <DataCard icon="📅" label="Format de date" :value="dateFormat" sensitivity="medium"
-          inference="DD/MM/YYYY vs MM/DD/YYYY vs YYYY-MM-DD. Varie selon l'OS, la région et les préférences système." />
-
-        <DataCard icon="🔢" label="Format des nombres" :value="numberFormat" sensitivity="medium"
-          inference="1.234,56 (Europe) vs 1,234.56 (USA): révèle la région linguistique de façon fiable et indépendante de l'UA." />
-      </div>
+      <DataCard icon="🔢" label="Formats système" sectionIdx="section 03"
+        :rows="[
+          { k: 'FORMAT_DATE', v: dateFormat },
+          { k: 'FORMAT_NOMBRE', v: numberFormat },
+        ]"
+        inference="DD/MM/YYYY vs MM/DD/YYYY vs YYYY-MM-DD. 1.234,56 (Europe) vs 1,234.56 (USA). Ces formats varient selon l'OS et les préférences système — <strong>indépendamment de l'User-Agent</strong>."
+        sensitivity="medium" :span="4" />
     </div>
-  </section>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
 import DataCard from '../DataCard.vue'
 import SectionHeader from '../SectionHeader.vue'
 import { useTimezone } from '../../composables/useTimezone'
 
 const { timezone, locale, utcOffset, isDST, localTime, dateFormat, numberFormat } = useTimezone()
-
-const sectionRef = ref<HTMLElement | null>(null)
-onMounted(() => {
-  const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { sectionRef.value?.classList.add('visible'); obs.disconnect() } }, { threshold: 0.1 })
-  if (sectionRef.value) obs.observe(sectionRef.value)
-})
 </script>

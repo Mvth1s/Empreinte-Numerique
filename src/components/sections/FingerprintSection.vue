@@ -1,86 +1,115 @@
 <template>
-  <section class="section-reveal py-16 border-b border-border" ref="sectionRef">
-    <div class="max-w-6xl mx-auto px-6">
-      <SectionHeader index="06" icon="🔬" title="Fingerprinting"
-        description="Votre combinaison de signaux constitue un identifiant quasi-unique, stable, sans cookie et sans permission." />
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <DataCard icon="🖼️" label="Empreinte Canvas" :value="canvasHash" sensitivity="critical"
-          inference="Un texte invisible rendu sur un canvas produit des pixels légèrement différents selon votre GPU/OS/drivers. Ce hash est stable et unique."
-          :loading="loading" />
-
-        <DataCard icon="🎵" label="Empreinte AudioContext" :value="audioHash" sensitivity="critical"
-          inference="Un oscillateur audio traité produit un signal légèrement différent selon votre carte son et vos drivers audio. Invisible et persistant."
-          :loading="loading" />
-
-        <DataCard icon="🎨" label="Empreinte CSS Media" :value="cssMediaStr" sensitivity="medium"
-          inference="La combinaison de vos préférences système (mode sombre, animations réduites, contraste, touch) contribue à l'identification."
-          :loading="loading" />
-
-        <DataCard icon="🔤" label="Polices installées" :value="fontsStr" sensitivity="high"
-          inference="Les polices révèlent votre OS, vos logiciels installés (Office, Adobe) et votre région. La liste détectée est ci-dessous."
-          :loading="loading" />
-
-        <DataCard icon="🧩" label="Plugins navigateur" :value="pluginsStr" sensitivity="medium"
-          inference="Les plugins installés (PDF viewer, DRM…) contribuent à l'empreinte. Chrome a supprimé la liste complète, Firefox la dévoile encore."
-          :loading="loading" />
-
-        <DataCard icon="🎬" label="Codecs vidéo/audio" :value="codecsStr" sensitivity="low"
-          inference="La combinaison de codecs supportés varie selon l'OS et le navigateur. Affine l'identification dans les cas ambigus." />
-
-        <DataCard icon="🆔" label="Identifiant unique combiné" :value="combinedHash" sensitivity="critical"
-          inference="SHA-256 de tous vos signaux combinés. Probabilité d'unicité estimée > 99% parmi les utilisateurs web mondiaux."
-          :loading="loading" />
-      </div>
-
-      <!-- Polices détectées -->
-      <div v-if="!loading && detectedFonts.length" class="mt-6 p-4 bg-surface border border-border rounded-lg">
-        <div class="font-mono text-[10px] uppercase tracking-widest text-text-s mb-3">
-          🔤 {{ detectedFonts.length }} polices détectées sur votre système
-        </div>
-        <div class="flex flex-wrap gap-1.5">
-          <span v-for="font in detectedFonts" :key="font"
-                class="font-mono text-[10px] px-2 py-0.5 bg-s2 border border-border rounded text-cyan/80">
-            {{ font }}
-          </span>
-        </div>
-      </div>
-
-      <!-- Codecs -->
-      <div v-if="Object.keys(codecs).length" class="mt-4 p-4 bg-surface border border-border rounded-lg">
-        <div class="font-mono text-[10px] uppercase tracking-widest text-text-s mb-3">🎬 Codecs supportés</div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <div v-for="(val, key) in codecs" :key="key" class="flex items-center justify-between font-mono text-[11px]">
-            <span class="text-text-s">{{ key }}</span>
-            <span :class="val === 'probably' ? 'text-emerald-400' : val === 'maybe' ? 'text-yellow-400' : 'text-text-s'">
-              {{ val === 'probably' ? '✓' : val === 'maybe' ? '~' : '✗' }}
-            </span>
+  <div class="wrap section-wrap">
+    <SectionHeader index="06" title="Fingerprinting" />
+    <div class="en-grid">
+      <div class="en-card col-8" ref="fpCardRef">
+        <div class="en-card-head">
+          <div class="en-card-cat">
+            <span style="font-size:16px;line-height:1;flex-shrink:0">🔬</span>
+            <div>
+              <div class="en-card-name">Identifiant unique probable</div>
+              <div class="en-card-idx">// section 06</div>
+            </div>
           </div>
+          <span class="sev sev-critique"><span class="dot"></span>CRITIQUE</span>
+        </div>
+        <div class="fp-inner">
+          <div class="en-vals-sub">VOTRE EMPREINTE COMBINÉE</div>
+          <div class="fp-hash" ref="hashEl">
+            <span v-if="!combinedHash" class="fp-caret"></span>
+          </div>
+          <div class="fp-meta">
+            <div><strong>Stable</strong> · entre les sessions</div>
+            <div><strong>Sans cookie</strong> · sans stockage</div>
+            <div><strong>Sans permission</strong> · entièrement passif</div>
+            <div><strong>Unicité</strong> · &gt; 99% des utilisateurs</div>
+          </div>
+        </div>
+        <details class="en-deduce">
+          <summary><span class="en-chev">▸</span>🔍 CE QU'ON EN DÉDUIT</summary>
+          <div class="en-deduce-body">SHA-256 de l'ensemble de vos signaux combinés. Cette empreinte est <strong>recalculable à l'identique</strong> à chaque visite, sans cookie ni stockage. La probabilité que deux utilisateurs aient exactement la même est inférieure à 1 sur 100 000.</div>
+        </details>
+      </div>
+
+      <DataCard icon="🖼️" label="Canvas" sectionIdx="section 06"
+        :rows="[{ k: 'CANVAS_HASH', v: canvasHash }]"
+        inference="Un texte invisible rendu sur canvas produit des pixels <strong>légèrement différents</strong> selon votre GPU, OS et drivers. Ce hash est stable et unique."
+        sensitivity="critical" :span="4" :loading="loading" />
+
+      <DataCard icon="🎵" label="AudioContext" sectionIdx="section 06"
+        :rows="[{ k: 'AUDIO_HASH', v: audioHash }]"
+        inference="Un oscillateur audio traité via OfflineAudioContext produit un signal <strong>légèrement différent</strong> selon votre carte son et pilotes audio."
+        sensitivity="critical" :span="4" :loading="loading" />
+
+      <DataCard icon="🔤" label="Polices système" sectionIdx="section 06"
+        :rows="[
+          { k: 'POLICES_DÉTECTÉES', v: fontsCountStr },
+          { k: 'EXEMPLES', v: fontsExStr, cls: 'muted' },
+        ]"
+        inference="Les polices révèlent votre <strong>OS, logiciels (Office, Adobe) et région</strong>. Chaque combinaison est quasi-unique et non modifiable sans accès root."
+        sensitivity="high" :span="4" :loading="loading" />
+
+      <DataCard icon="🎨" label="CSS Media" sectionIdx="section 06"
+        :rows="[{ k: 'CSS_MEDIA_BITS', v: cssMedia, cls: 'muted' }]"
+        inference="La combinaison de vos préférences système (mode sombre, animations réduites, contraste, pointeur) forme un <strong>vecteur de bits unique</strong>."
+        sensitivity="medium" :span="4" :loading="loading" />
+
+      <div v-if="!loading && detectedFonts.length" class="en-card col-12" style="padding: 16px 20px;">
+        <div class="en-vals-sub" style="margin-bottom: 10px;">{{ detectedFonts.length }} POLICES DÉTECTÉES SUR VOTRE SYSTÈME</div>
+        <div class="font-tags">
+          <span v-for="font in detectedFonts" :key="font" class="font-tag">{{ font }}</span>
         </div>
       </div>
     </div>
-  </section>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import DataCard from '../DataCard.vue'
 import SectionHeader from '../SectionHeader.vue'
 import { useFingerprint } from '../../composables/useFingerprint'
 
-const { canvasHash, audioHash, cssMedia, detectedFonts, plugins, codecs, combinedHash, loading } = useFingerprint()
+const { canvasHash, audioHash, cssMedia, detectedFonts, combinedHash, loading } = useFingerprint()
 
-const cssMediaStr = computed(() => cssMedia.value ?? null)
-const fontsStr = computed(() => detectedFonts.value.length ? `${detectedFonts.value.length} polices détectées` : 'Détection en cours...')
-const pluginsStr = computed(() => plugins.value.length ? plugins.value.slice(0, 3).join(', ') + (plugins.value.length > 3 ? '…' : '') : 'Aucun plugin exposé')
-const codecsStr = computed(() => {
-  const supported = Object.entries(codecs.value).filter(([, v]) => v !== 'non').map(([k]) => k)
-  return supported.length ? supported.join(', ') : null
+const fontsCountStr = computed(() => {
+  if (loading.value) return null
+  return detectedFonts.value.length ? `${detectedFonts.value.length} polices détectées` : 'Aucune détectée'
 })
 
-const sectionRef = ref<HTMLElement | null>(null)
+const fontsExStr = computed(() =>
+  detectedFonts.value.slice(0, 4).join(', ') + (detectedFonts.value.length > 4 ? '…' : ''))
+
+const hashEl = ref<HTMLElement | null>(null)
+const fpCardRef = ref<HTMLElement | null>(null)
+
+// Typewriter animation when hash is ready
+watch(combinedHash, (val) => {
+  if (!val || !hashEl.value) return
+  const el = hashEl.value
+  el.innerHTML = ''
+  let i = 0
+  const interval = setInterval(() => {
+    if (i >= val.length) { clearInterval(interval); return }
+    el.textContent = val.slice(0, ++i)
+    const caret = document.createElement('span')
+    caret.className = 'fp-caret'
+    el.appendChild(caret)
+  }, 28)
+})
+
+// Stagger reveal for the custom en-card
 onMounted(() => {
-  const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { sectionRef.value?.classList.add('visible'); obs.disconnect() } }, { threshold: 0.1 })
-  if (sectionRef.value) obs.observe(sectionRef.value)
+  const el = fpCardRef.value
+  if (!el) return
+  const obs = new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting) {
+      const idx = [...document.querySelectorAll('.en-card')].indexOf(el)
+      el.style.transition = `opacity .5s ${idx * 55}ms, transform .5s ${idx * 55}ms, border-color .2s, box-shadow .2s`
+      el.classList.add('revealed')
+      obs.disconnect()
+    }
+  }, { threshold: 0.05 })
+  obs.observe(el)
 })
 </script>

@@ -1,46 +1,37 @@
 <template>
-  <section class="section-reveal py-16 border-b border-border" ref="sectionRef">
-    <div class="max-w-6xl mx-auto px-6">
-      <SectionHeader index="02" icon="🌐" title="Navigateur & OS"
-        description="Votre navigateur envoie automatiquement des métadonnées qui révèlent votre système, vos préférences et votre comportement." />
+  <div class="wrap section-wrap">
+    <SectionHeader index="02" title="Navigateur & OS" />
+    <div class="en-grid">
+      <DataCard icon="💻" label="Navigateur & Système" sectionIdx="section 02"
+        :rows="[
+          { k: 'NAVIGATEUR', v: detectedBrowser },
+          { k: 'OS', v: detectedOS },
+          { k: 'ARCH', v: platform },
+          { k: 'LANGUES', v: languagesStr },
+        ]"
+        inference="La combinaison <strong>navigateur + version + OS + langues</strong> est déjà rare. Trois utilisateurs sur mille partagent exactement la vôtre. L'UA est envoyé à chaque requête HTTP."
+        sensitivity="high" :span="4" />
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <DataCard icon="🤖" label="User-Agent complet" :value="userAgent" sensitivity="high"
-          inference="Chaîne envoyée à chaque requête HTTP. Révèle navigateur, version majeure, OS et parfois la version du moteur de rendu." />
+      <DataCard icon="🔒" label="Vie privée navigateur" sectionIdx="section 02"
+        :rows="[
+          { k: 'DO_NOT_TRACK', v: dntLabel, cls: doNotTrack === '1' ? 'warn' : '' },
+          { k: 'COOKIES_ACTIVÉS', v: cookiesEnabled ? 'Oui' : 'Non' },
+          { k: 'COOKIES_TIERS', v: thirdPartyBlockedLabel, cls: thirdPartyCookies === false ? 'warn' : '' },
+          { k: 'NAVIGATEUR_BOT', v: headless ? 'OUI — suspect ⚠️' : 'Non détecté', cls: headless ? 'bad' : '' },
+        ]"
+        inference="Firefox, Safari et Brave bloquent les cookies tiers par défaut. Ce signal révèle votre navigateur <strong>sans même lire l'User-Agent</strong>."
+        sensitivity="medium" :span="4" />
 
-        <DataCard icon="💻" label="Système d'exploitation" :value="detectedOS" sensitivity="high"
-          inference="OS exact déduit de l'UA. Facilite le ciblage de vulnérabilités spécifiques et le profiling des appareils." />
-
-        <DataCard icon="🌏" label="Navigateur détecté" :value="detectedBrowser" sensitivity="medium"
-          inference="Navigateur et version. Chrome/Edge/Brave partagent le même UA — d'autres heuristiques les distinguent." />
-
-        <DataCard icon="🗣️" label="Langue principale" :value="language" sensitivity="medium"
-          inference="Révèle votre langue native et souvent votre pays d'origine. Utilisé pour la géolocalisation culturelle." />
-
-        <DataCard icon="🌐" label="Langues configurées" :value="languagesStr" sensitivity="medium"
-          inference="Liste complète des langues dans votre ordre de préférence. Combinaison souvent unique et identifiante." />
-
-        <DataCard icon="🖥️" label="Plateforme" :value="platform" sensitivity="medium"
-          inference="Architecture système. Distingue Intel x86, ARM, Linux 64-bit, etc. Contribue à l'empreinte unique." />
-
-        <DataCard icon="🚫" label="Do Not Track" :value="dntLabel" sensitivity="low"
-          inference="Ce paramètre n'est pas contraignant. Moins de 0.1% des sites l'honorent. Il est ignoré par quasiment tous les trackers." />
-
-        <DataCard icon="🍪" label="Cookies activés" :value="cookiesEnabled" sensitivity="medium"
-          inference="Les cookies permettent le suivi inter-sessions persistant. Désactivés = navigateur très restrictif." />
-
-        <DataCard icon="🍪" label="Cookies tiers bloqués" :value="thirdPartyBlockedLabel" sensitivity="medium"
-          inference="Firefox, Safari et Brave bloquent les cookies tiers par défaut. Ce signal révèle votre navigateur sans lire l'UA." />
-
-        <DataCard icon="🤖" label="Navigateur headless" :value="headless ? 'OUI — comportement suspect' : 'Non détecté'" sensitivity="low"
-          inference="Détecte les scripts automatisés, bots ou navigateurs de test (Selenium, Puppeteer). Utilisé pour la protection anti-bot." />
-      </div>
+      <DataCard icon="🤖" label="User-Agent complet" sectionIdx="section 02"
+        :rows="[{ k: 'USER_AGENT', v: userAgent, cls: 'muted' }]"
+        inference="Chaîne envoyée <strong>automatiquement à chaque requête HTTP</strong>. Révèle navigateur, version majeure, moteur de rendu et OS. Impossible à masquer sans proxy."
+        sensitivity="high" :span="4" />
     </div>
-  </section>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed } from 'vue'
 import DataCard from '../DataCard.vue'
 import SectionHeader from '../SectionHeader.vue'
 import { useBrowser } from '../../composables/useBrowser'
@@ -48,19 +39,9 @@ import { useBrowser } from '../../composables/useBrowser'
 const { userAgent, detectedOS, detectedBrowser, language, languages, platform, doNotTrack, cookiesEnabled, thirdPartyCookies, headless } = useBrowser()
 
 const languagesStr = computed(() => languages.value.join(', '))
-const dntLabel = computed(() => {
-  if (doNotTrack.value === '1') return 'Activé (ignoré par 99,9% des sites)'
-  if (doNotTrack.value === '0') return 'Désactivé'
-  return 'Non configuré'
-})
+const dntLabel = computed(() => doNotTrack.value === '1' ? 'Activé (ignoré par 99,9% des sites)' : doNotTrack.value === '0' ? 'Désactivé' : 'Non configuré')
 const thirdPartyBlockedLabel = computed(() => {
-  if (thirdPartyCookies.value === null) return undefined
+  if (thirdPartyCookies.value === null) return '…'
   return thirdPartyCookies.value ? 'Non bloqués (Chrome/standard)' : 'Bloqués (Firefox/Safari/Brave)'
-})
-
-const sectionRef = ref<HTMLElement | null>(null)
-onMounted(() => {
-  const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { sectionRef.value?.classList.add('visible'); obs.disconnect() } }, { threshold: 0.1 })
-  if (sectionRef.value) obs.observe(sectionRef.value)
 })
 </script>

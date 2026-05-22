@@ -1,87 +1,90 @@
 <template>
-  <div class="group relative bg-surface border border-border rounded-lg overflow-hidden card-hover"
-       :class="leftBorderClass">
-    <!-- Sensitivity glow on hover for critical -->
-    <div v-if="sensitivity === 'critical'"
-         class="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-         style="box-shadow:inset 0 0 20px rgba(255,59,48,0.05)" />
-
-    <div class="p-4">
-      <!-- Header -->
-      <div class="flex items-start justify-between gap-2 mb-3">
-        <div class="flex items-center gap-2 min-w-0">
-          <span class="text-base shrink-0">{{ icon }}</span>
-          <span class="font-mono text-[10px] uppercase tracking-[0.15em] text-text-s truncate">{{ label }}</span>
+  <div class="en-card" :class="`col-${span ?? 4}`" ref="cardRef">
+    <!-- Header -->
+    <div class="en-card-head">
+      <div class="en-card-cat">
+        <span style="font-size:16px;line-height:1;flex-shrink:0">{{ icon }}</span>
+        <div>
+          <div class="en-card-name">{{ label }}</div>
+          <div class="en-card-idx">// {{ sectionIdx }}</div>
         </div>
-        <!-- Badge sensibilité -->
-        <span class="shrink-0 font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border whitespace-nowrap"
-              :class="badgeClass">
-          {{ badgeLabel }}
+      </div>
+      <span class="sev" :class="`sev-${severity === 'critical' ? 'critique' : severity === 'high' ? 'eleve' : severity === 'medium' ? 'moyen' : 'faible'}`">
+        <span class="dot"></span>{{ sevLabel }}
+      </span>
+    </div>
+
+    <!-- Values table -->
+    <div class="en-vals">
+      <div class="en-row" v-for="(row, i) in normalizedRows" :key="i">
+        <span class="en-k">{{ row.k }}</span>
+        <span class="en-v" :class="row.cls">
+          <template v-if="loading && i === 0">
+            <span style="display:inline-block;width:6em;height:0.8em;background:var(--line-2);border-radius:2px;animation:pulse 1.5s ease-in-out infinite" />
+          </template>
+          <template v-else>{{ row.v ?? 'N/A' }}</template>
         </span>
       </div>
-
-      <!-- Valeur -->
-      <div class="font-mono text-sm mb-3 min-h-[1.25rem] break-all leading-relaxed"
-           :class="loading ? 'text-text-s' : valueClass">
-        <template v-if="loading">
-          <span class="inline-block w-24 h-3 bg-border rounded animate-pulse" />
-        </template>
-        <template v-else-if="value !== null && value !== undefined && value !== ''">
-          {{ displayValue }}
-        </template>
-        <span v-else class="text-text-s italic text-xs">Indisponible</span>
-      </div>
-
-      <!-- Inférence -->
-      <div class="text-[11px] text-text-s border-t border-border pt-2 leading-relaxed">
-        <span class="mr-1.5">🔍</span>{{ inference }}
-      </div>
     </div>
+
+    <!-- Deduce accordion -->
+    <details class="en-deduce" v-if="inference">
+      <summary>
+        <span class="en-chev">▸</span>🔍 CE QU'ON EN DÉDUIT
+      </summary>
+      <div class="en-deduce-body" v-html="inference" />
+    </details>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import type { Sensitivity } from '../types'
+
+export interface DataRow {
+  k: string
+  v: string | number | boolean | null | undefined
+  cls?: string
+}
 
 const props = defineProps<{
   icon: string
   label: string
-  value: string | number | boolean | null | undefined
-  inference: string
+  sectionIdx: string
+  rows?: DataRow[]
+  // shorthand for single-value cards
+  value?: string | number | boolean | null | undefined
+  inference?: string
   sensitivity: Sensitivity
+  span?: number
   loading?: boolean
 }>()
 
-const leftBorderClass = computed(() => ({
-  'border-l-2 border-l-emerald-500': props.sensitivity === 'low',
-  'border-l-2 border-l-yellow-400': props.sensitivity === 'medium',
-  'border-l-2 border-l-orange-400': props.sensitivity === 'high',
-  'border-l-2 border-l-alert': props.sensitivity === 'critical',
-}))
-
-const valueClass = computed(() => ({
-  'text-cyan': props.sensitivity === 'low' || props.sensitivity === 'medium',
-  'text-orange-300': props.sensitivity === 'high',
-  'text-alert': props.sensitivity === 'critical',
-}))
-
-const badgeClass = computed(() => ({
-  'text-emerald-400 border-emerald-400/30 bg-emerald-400/5': props.sensitivity === 'low',
-  'text-yellow-400 border-yellow-400/30 bg-yellow-400/5': props.sensitivity === 'medium',
-  'text-orange-400 border-orange-400/30 bg-orange-400/5': props.sensitivity === 'high',
-  'text-alert border-alert/30 bg-alert/5': props.sensitivity === 'critical',
-}))
-
-const badgeLabel = computed(() => ({
-  low: '● Faible',
-  medium: '● Moyen',
-  high: '● Élevé',
-  critical: '● Critique',
+const sevLabel = computed(() => ({
+  low: 'FAIBLE', medium: 'MOYEN', high: 'ÉLEVÉ', critical: 'CRITIQUE',
 }[props.sensitivity]))
 
-const displayValue = computed(() => {
-  if (typeof props.value === 'boolean') return props.value ? 'Oui' : 'Non'
-  return String(props.value)
+const normalizedRows = computed((): DataRow[] => {
+  if (props.rows?.length) return props.rows
+  const v = props.value
+  const display = typeof v === 'boolean' ? (v ? 'Oui' : 'Non') : v
+  return [{ k: 'VALEUR', v: display as string | null }]
+})
+
+// Stagger reveal via IntersectionObserver
+const cardRef = ref<HTMLElement | null>(null)
+
+onMounted(() => {
+  const el = cardRef.value
+  if (!el) return
+  const obs = new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting) {
+      const idx = [...document.querySelectorAll('.en-card')].indexOf(el)
+      el.style.transition = `opacity .5s ${idx * 55}ms, transform .5s ${idx * 55}ms, border-color .2s, box-shadow .2s`
+      el.classList.add('revealed')
+      obs.disconnect()
+    }
+  }, { threshold: 0.05 })
+  obs.observe(el)
 })
 </script>

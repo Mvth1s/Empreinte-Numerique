@@ -1,13 +1,16 @@
 <template>
   <div>
+    <!-- Curseur crosshair personnalisé -->
+    <div class="crosshair" ref="crosshairEl"></div>
+
     <!-- Écran de chargement -->
     <Transition name="fade">
-      <LoadingScreen v-if="isLoading" :progress="loadingProgress" :logs="loadingLogs" />
+      <LoadingScreen v-if="isLoading" :progress="loadingProgress" :logs="visibleLogs" @skip="isLoading = false" />
     </Transition>
 
     <!-- Contenu principal -->
     <div v-if="!isLoading">
-      <HeaderSection :score="traceabilityScore" :items-count="itemsCount" />
+      <HeaderSection :score="traceabilityScore" :data-points="dataPoints" :sensitive-count="sensitiveCount" />
 
       <main>
         <NetworkSection />
@@ -23,13 +26,14 @@
         <LocationSection />
       </main>
 
+      <CloserSection />
       <FooterSection />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 import LoadingScreen from './components/LoadingScreen.vue'
 import HeaderSection from './components/HeaderSection.vue'
@@ -44,6 +48,7 @@ import ConnectivitySection from './components/sections/ConnectivitySection.vue'
 import PermissionsSection from './components/sections/PermissionsSection.vue'
 import BehaviorSection from './components/sections/BehaviorSection.vue'
 import LocationSection from './components/sections/LocationSection.vue'
+import CloserSection from './components/CloserSection.vue'
 import FooterSection from './components/FooterSection.vue'
 
 import { useNetwork } from './composables/useNetwork'
@@ -51,29 +56,28 @@ import { useFingerprint } from './composables/useFingerprint'
 import { useScreen } from './composables/useScreen'
 import { useGPU } from './composables/useGPU'
 
-// Données utilisées pour le score global
 const network = useNetwork()
 const fingerprint = useFingerprint()
 const screen = useScreen()
 const gpu = useGPU()
 
-// Score de traçabilité (0-100)
+// Score de traçabilité 0-100
 const traceabilityScore = computed(() => {
   let s = 0
-  if (network.publicIP.value) s += 15         // IP publique
-  if (network.city.value) s += 10             // Géolocalisation ville
-  if (network.localIPs.value.length) s += 15  // Fuite WebRTC
-  if (fingerprint.canvasHash.value) s += 15   // Canvas fingerprint
-  if (fingerprint.audioHash.value) s += 10    // Audio fingerprint
-  if (gpu.renderer.value) s += 8              // GPU exact
-  if (fingerprint.detectedFonts.value.length > 5) s += 8  // Polices
-  s += 5   // Navigateur/UA toujours disponible
-  s += 5   // Fuseau horaire toujours disponible
-  s += 4   // Résolution/écran toujours disponible
+  if (network.publicIP.value) s += 15
+  if (network.city.value) s += 10
+  if (network.localIPs.value.length) s += 15
+  if (fingerprint.canvasHash.value) s += 15
+  if (fingerprint.audioHash.value) s += 10
+  if (gpu.renderer.value) s += 8
+  if (fingerprint.detectedFonts.value.length > 5) s += 8
+  s += 5  // UA/navigateur toujours dispo
+  s += 5  // Fuseau toujours dispo
+  s += 4  // Résolution toujours dispo
   return Math.min(s, 100)
 })
 
-const itemsCount = computed(() => {
+const dataPoints = computed(() => {
   let n = 0
   if (network.publicIP.value) n++
   if (network.city.value) n++
@@ -85,48 +89,75 @@ const itemsCount = computed(() => {
   if (gpu.renderer.value) n++
   if (screen.cores.value) n++
   if (screen.memory.value) n++
-  n += 8 // signaux browser/timezone/storage toujours dispo
+  n += 8
   return n
 })
 
-// Chargement avec logs animés
+const sensitiveCount = computed(() => {
+  let n = 0
+  if (network.publicIP.value) n++
+  if (network.localIPs.value.length) n++
+  if (fingerprint.canvasHash.value) n++
+  if (fingerprint.audioHash.value) n++
+  if (gpu.renderer.value) n++
+  return n
+})
+
+// Crosshair cursor
+const crosshairEl = ref<HTMLElement | null>(null)
+
+function onMouseMove(e: MouseEvent) {
+  if (crosshairEl.value) {
+    crosshairEl.value.style.left = e.clientX + 'px'
+    crosshairEl.value.style.top = e.clientY + 'px'
+  }
+}
+
+// Chargement animé
 const isLoading = ref(true)
 const loadingProgress = ref(0)
-const loadingLogs = ref<string[]>([])
+const allLogs = ref<{ text: string; ok?: string }[]>([])
 
-const LOG_MESSAGES = [
-  '[SYS] Initialisation du moteur d\'analyse...',
-  '[NET] Résolution de l\'adresse IP publique via api.ipify.org...',
-  '[NET] Interrogation du service de géolocalisation ip-api.com...',
-  '[RTC] Ouverture du canal WebRTC peer-to-peer (STUN: stun.google.com)...',
-  '[SYS] Lecture des paramètres navigator.* du navigateur...',
-  '[GPU] Interrogation WEBGL_debug_renderer_info...',
-  '[FPR] Initialisation du canvas de fingerprinting (220×60px)...',
-  '[AUD] Création OfflineAudioContext — traitement oscillateur triangle 10kHz...',
-  '[FNT] Détection des polices installées via TextMetrics canvas (0/80)...',
-  '[FNT] Détection des polices installées (40/80)...',
-  '[FNT] Détection des polices installées (80/80) — analyse terminée.',
-  '[DNS] Requête DoH Cloudflare: whoami.cloudflare.com TXT...',
-  '[STO] Analyse quota localStorage / IndexedDB...',
-  '[PRM] navigator.permissions.query() × 7 permissions...',
-  '[GEO] Triangulation: IP + fuseau IANA + locale système...',
-  '[FPR] Calcul SHA-256 de l\'empreinte combinée...',
-  '[SYS] Calcul du score de traçabilité...',
-  '[SYS] ✓ Rapport prêt.',
+const visibleLogs = computed(() => allLogs.value.slice(-6))
+
+const LOG_MESSAGES: { text: string; ok?: string }[] = [
+  { text: 'Initialisation du moteur d\'analyse…', ok: 'OK' },
+  { text: 'Résolution IP publique via api.ipify.org…', ok: 'OK' },
+  { text: 'Géolocalisation ip-api.com…', ok: 'OK' },
+  { text: 'Canal WebRTC STUN: stun.google.com…', ok: 'OK' },
+  { text: 'Lecture navigator.* — UA, langue, plateforme…', ok: 'OK' },
+  { text: 'WEBGL_debug_renderer_info — GPU model…', ok: 'OK' },
+  { text: 'Canvas fingerprint 220×60px — SHA-256…', ok: 'OK' },
+  { text: 'OfflineAudioContext — oscillateur 10kHz…', ok: 'OK' },
+  { text: 'Détection polices via TextMetrics (0/80)…' },
+  { text: 'Détection polices (40/80)…' },
+  { text: 'Détection polices (80/80) — terminé.', ok: 'OK' },
+  { text: 'DoH Cloudflare: whoami.cloudflare.com TXT…', ok: 'OK' },
+  { text: 'Quota localStorage / IndexedDB…', ok: 'OK' },
+  { text: 'navigator.permissions.query() × 7…', ok: 'OK' },
+  { text: 'Triangulation: IP + fuseau IANA + locale…', ok: 'OK' },
+  { text: 'Calcul empreinte combinée SHA-256…', ok: 'OK' },
+  { text: 'Calcul du score de traçabilité…', ok: 'OK' },
+  { text: 'Rapport prêt.', ok: '✓' },
 ]
 
 onMounted(() => {
+  window.addEventListener('mousemove', onMouseMove)
+
   const total = LOG_MESSAGES.length
   LOG_MESSAGES.forEach((msg, i) => {
     setTimeout(() => {
-      loadingLogs.value.push(msg)
+      allLogs.value.push(msg)
       loadingProgress.value = Math.round(((i + 1) / total) * 100)
-    }, i * 230)
+    }, i * 220)
   })
 
-  // Durée minimale de 4,5s pour l'effet dramatique
   setTimeout(() => {
     isLoading.value = false
-  }, Math.max(total * 230 + 400, 4500))
+  }, Math.max(total * 220 + 400, 4500))
+})
+
+onUnmounted(() => {
+  window.removeEventListener('mousemove', onMouseMove)
 })
 </script>
