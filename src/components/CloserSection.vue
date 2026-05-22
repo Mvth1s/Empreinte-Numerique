@@ -1,12 +1,10 @@
 <template>
   <div class="en-closer">
     <div class="en-closer-inner">
-      <div class="en-closer-quote">
-        "Toutes ces données ont été collectées sans aucune permission.<br>
-        Aucun cookie. Aucun malware.<br>
-        <span class="en-closer-highlight">C'est le Web normal.</span>"
-      </div>
-      <div class="en-closer-meta">— Empreinte Numérique · 100% client-side · zéro tracking</div>
+      <p class="en-closer-quote">
+        Toutes ces données ont été collectées <span class="en-closer-highlight">sans aucune permission</span>.<br/>
+        Aucun cookie. Aucun malware. <span class="en-closer-highlight">C'est le Web normal.</span>
+      </p>
     </div>
   </div>
 </template>

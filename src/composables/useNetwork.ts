@@ -9,7 +9,7 @@ function fetchGeo(): Promise<GeoData | null> {
     try {
       const ipRes = await fetch('https://api.ipify.org?format=json')
       const { ip } = await ipRes.json()
-      const fields = 'status,country,countryCode,regionName,city,isp,org,as,proxy,hosting,query'
+      const fields = 'status,country,countryCode,regionName,city,lat,lon,isp,org,as,proxy,hosting,query'
       const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=${fields}`)
       const geo: GeoData = await geoRes.json()
       geo.ip = ip
@@ -40,6 +40,8 @@ export function useNetwork() {
   const localIPs = ref<string[]>([])
   const webrtcLeak = ref<string | null>(null)
   const dnsResolver = ref<string | null>(null)
+  const lat = ref<number | null>(null)
+  const lon = ref<number | null>(null)
   const loading = ref(true)
 
   async function loadGeo() {
@@ -52,6 +54,8 @@ export function useNetwork() {
       asn.value = geo.as
       isProxy.value = geo.proxy
       isVPN.value = geo.hosting || geo.proxy
+      if (geo.lat != null) lat.value = geo.lat
+      if (geo.lon != null) lon.value = geo.lon
     } else if (geo) {
       publicIP.value = geo.ip
     }
@@ -99,5 +103,5 @@ export function useNetwork() {
     detectDNS()
   })
 
-  return { publicIP, country, city, isp, asn, isVPN, isProxy, localIPs, webrtcLeak, dnsResolver, loading }
+  return { publicIP, country, city, isp, asn, isVPN, isProxy, localIPs, webrtcLeak, dnsResolver, lat, lon, loading }
 }

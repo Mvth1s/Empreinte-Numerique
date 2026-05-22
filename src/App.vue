@@ -12,6 +12,21 @@
     <div v-if="!isLoading">
       <HeaderSection :score="traceabilityScore" :data-points="dataPoints" :sensitive-count="sensitiveCount" />
 
+      <div class="wrap">
+        <div class="en-section-title en-section-overview">
+          <span class="en-section-num">// 01–11</span>
+          <h3>Détail de la collecte</h3>
+          <div class="en-section-rule"></div>
+          <div class="en-legend">
+            Sensibilité&nbsp;:
+            <span class="en-legend-sw" style="background:#6cd99a"></span>FAIBLE
+            <span class="en-legend-sw" style="background:var(--yellow)"></span>MOYEN
+            <span class="en-legend-sw" style="background:var(--red)"></span>ÉLEVÉ
+            <span class="en-legend-sw" style="background:#fff"></span>CRITIQUE
+          </div>
+        </div>
+      </div>
+
       <main>
         <NetworkSection />
         <BrowserSection />

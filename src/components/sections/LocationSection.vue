@@ -26,19 +26,26 @@
           <div class="en-term-line">$ geoip --from ip <span style="color:var(--cyan)">{{ publicIP ?? '…' }}</span></div>
           <template v-if="!loading">
             <div class="en-term-line en-term-out">
-              <span class="en-term-key">country</span>{{ country ?? 'N/A' }}
+              <span class="en-term-key">LATITUDE</span>{{ approxCoord(lat, 1) }} <span class="en-term-approx">(±15 km)</span>
             </div>
             <div class="en-term-line en-term-out">
-              <span class="en-term-key">city</span>{{ city ?? 'N/A' }} <span class="en-term-approx">± 30km</span>
+              <span class="en-term-key">LONGITUDE</span>{{ approxCoord(lon, 1) }} <span class="en-term-approx">(±15 km)</span>
             </div>
             <div class="en-term-line en-term-out">
-              <span class="en-term-key">isp</span>{{ isp ?? 'N/A' }}
+              <span class="en-term-key">PAYS</span>{{ country ?? 'N/A' }}
             </div>
             <div class="en-term-line en-term-out">
-              <span class="en-term-key">timezone</span>{{ timezone }}
+              <span class="en-term-key">VILLE</span>{{ city ?? 'N/A' }}
             </div>
             <div class="en-term-line en-term-out">
-              <span class="en-term-key">locale</span>{{ locale }}
+              <span class="en-term-key">FAI</span>{{ isp ?? 'N/A' }}
+            </div>
+            <div class="en-term-line en-term-out">
+              <span class="en-term-key">FUSEAU</span>{{ timezone }}
+            </div>
+            <div class="en-term-compare">
+              <div>Avec permission GPS&nbsp;→ <span class="en-term-bad">précision &lt; 10 m</span></div>
+              <div>Avec Wi-Fi alentour&nbsp;→ <span class="en-term-bad">précision &lt; 30 m</span></div>
             </div>
           </template>
           <div v-else class="en-term-line">
@@ -61,8 +68,16 @@ import SectionHeader from '../SectionHeader.vue'
 import { useNetwork } from '../../composables/useNetwork'
 import { useTimezone } from '../../composables/useTimezone'
 
-const { publicIP, city, country, isp, loading } = useNetwork()
+const { publicIP, city, country, isp, lat, lon, loading } = useNetwork()
 const { timezone, locale } = useTimezone()
+
+function approxCoord(val: number | null, decimals: number): string {
+  if (val == null) return '—'
+  const str = val.toFixed(4)
+  const dotIdx = str.indexOf('.')
+  const keep = dotIdx + 1 + decimals
+  return `~${str.slice(0, keep)}${'x'.repeat(str.length - keep)}`
+}
 
 const locationStr = computed(() => {
   if (loading.value) return null

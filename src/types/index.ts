@@ -16,6 +16,8 @@ export interface GeoData {
   countryCode: string
   regionName: string
   city: string
+  lat?: number
+  lon?: number
   isp: string
   org: string
   as: string

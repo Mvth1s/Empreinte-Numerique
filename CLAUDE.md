@@ -16,9 +16,9 @@ npm run preview  # Prévisualisation du build dist/
 
 ## Stack
 
-- **Vite 5 + Vue 3 + TypeScript** (Composition API `<script setup>`)
-- **CSS vanilla** avec variables CSS dans `src/style.css` — pas de Tailwind pour la mise en page principale
-- **100% client-side** — aucun backend, aucun cookie
+- **Vite 5 + Vue 3 + TypeScript** (Composition API `<script setup>`) — `vue-tsc` vérifie les types avant `vite build`
+- **CSS vanilla** avec variables CSS dans `src/style.css` — `tailwindcss` est dans les devDeps mais n'est pas utilisé pour la mise en page principale
+- **100% client-side** — aucun backend, aucun cookie, aucun test automatisé
 - APIs externes : `api.ipify.org` (HTTPS) + `ip-api.com` (HTTP — free tier, fallback `ipapi.co`)
 
 > `ip-api.com` ne supporte HTTPS que sur abonnement. Le composable `useNetwork` bascule sur `ipapi.co` si la requête HTTP échoue (mixed content en production HTTPS).
@@ -36,7 +36,7 @@ App.vue
 └── score + dataPoints calculés ici → props à HeaderSection
 ```
 
-Chaque composable est un **singleton côté module** pour les données async partagées (pattern `_geoPromise` dans `useNetwork.ts`). Plusieurs sections peuvent appeler le même composable sans doublon.
+Le **fetch réseau** est mis en cache au niveau module via `_geoPromise` dans `useNetwork.ts` — plusieurs composants peuvent appeler `useNetwork()` sans déclencher plusieurs requêtes. Les refs réactives, elles, sont créées à chaque appel (pas de Pinia ni de store global).
 
 ### Grille de mise en page (`.en-grid`)
 
@@ -45,8 +45,12 @@ La grille est en CSS pur dans `src/style.css` — 12 colonnes, gap 20px. Classes
 ### Composant DataCard
 
 Toute donnée s'affiche via `DataCard.vue` avec les props :
-- `rows: { k: string; v: string|null; cls?: 'muted'|'warn'|'bad' }[]`
-- `sensitivity: 'low'|'medium'|'high'|'critical'`
+- `icon: string` (emoji affiché en en-tête)
+- `label: string` (titre de la carte)
+- `sectionIdx: string` (ex : `"section 01"`, affiché en commentaire)
+- `sensitivity: 'low'|'medium'|'high'|'critical'` → badge FR : faible/moyen/élevé/critique
+- `rows?: { k: string; v: string|number|boolean|null; cls?: string }[]`
+- `value?` (raccourci pour une seule valeur, génère une ligne `{ k: 'VALEUR', v: ... }`)
 - `span?: number` (colonnes grille, défaut 4)
 - `loading?: boolean` (skeleton sur la première ligne)
 - `inference?: string` (HTML autorisé, dans un `<details>`)
@@ -69,6 +73,11 @@ DataCard gère son propre `IntersectionObserver` pour l'animation de révélatio
 | `.en-closer` | Section de conclusion pleine largeur |
 | `.en-footer` / `.en-footer-grid` | Footer 3 colonnes |
 
+### Utilitaires partagés
+
+- `src/types/index.ts` — types exportés : `Sensitivity`, `DataItem`, `GeoData`
+- `src/utils/hash.ts` — `sha256(str): Promise<hex>` (Web Crypto API) + `shortHash(hash): string` (16 premiers caractères en majuscules)
+
 ### Composables (`src/composables/`)
 
 | Fichier | Données retournées |
@@ -86,11 +95,13 @@ DataCard gère son propre `IntersectionObserver` pour l'animation de révélatio
 
 ### Score de traçabilité (App.vue)
 
+Le score (0–100) et les compteurs `dataPoints` / `sensitiveCount` sont calculés dans `App.vue` et passés en props à `HeaderSection`. Les composables `useNetwork`, `useFingerprint`, `useScreen`, `useGPU` sont appelés **uniquement ici** pour le score ; les sections les appellent à nouveau de leur côté.
+
 | Signal | Points |
 |---|---|
 | IP publique collectée | +15 |
 | Ville géolocalisée | +10 |
-| Fuite WebRTC | +15 |
+| IPs locales via WebRTC | +15 |
 | Canvas fingerprint | +15 |
 | Audio fingerprint | +10 |
 | GPU exact | +8 |

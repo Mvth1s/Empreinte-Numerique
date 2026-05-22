@@ -2,7 +2,7 @@
   <div class="wrap section-wrap">
     <SectionHeader index="06" title="Fingerprinting" />
     <div class="en-grid">
-      <div class="en-card col-8" ref="fpCardRef">
+      <div class="en-card fp-card-special col-8" ref="fpCardRef">
         <div class="en-card-head">
           <div class="en-card-cat">
             <span style="font-size:16px;line-height:1;flex-shrink:0">🔬</span>

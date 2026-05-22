@@ -190,12 +190,58 @@
 
 /* Section title */
 .en-section-title {
-  display: flex; align-items: baseline; gap: 16px;
+  display: flex; align-items: center; gap: 16px;
   padding: 36px 4px 22px;
 }
 .en-section-title h3 { font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 22px; margin: 0; letter-spacing: -0.01em; }
 .en-section-num { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--cyan); letter-spacing: 0.2em; flex-shrink: 0; }
 .en-section-rule { flex: 1; height: 1px; background: var(--line); min-width: 20px; }
+
+/* Sensitivity legend (overview section title) */
+.en-section-overview { border-bottom: 1px solid var(--line); padding-bottom: 22px; }
+.en-legend {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px; color: var(--mute); letter-spacing: 0.15em;
+  display: flex; align-items: center; white-space: nowrap; flex-shrink: 0;
+}
+.en-legend-sw {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  margin: 0 5px 0 12px; vertical-align: middle;
+}
+
+/* Fingerprint special card glow */
+.fp-card-special {
+  background: linear-gradient(180deg, var(--card) 0%, #0c0c14 100%) !important;
+  overflow: hidden;
+}
+.fp-card-special::before {
+  content: "";
+  position: absolute; inset: -1px;
+  background: radial-gradient(600px 200px at 80% 50%, rgba(0,229,255,0.08), transparent 60%);
+  pointer-events: none;
+}
+
+/* Heatmap side-by-side layout */
+.heat-wrap {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 18px;
+  align-items: start;
+  margin-top: 14px;
+}
+.heat-stats-table {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--mute-2);
+}
+.heat-stat-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0; border-bottom: 1px dotted var(--line);
+}
+.heat-stat-val { color: var(--cyan); white-space: nowrap; }
+.heat-stat-desc {
+  margin-top: 14px; font-family: 'DM Sans', sans-serif; font-size: 12.5px;
+  color: var(--mute-2); line-height: 1.55;
+}
+.heat-stat-desc strong { color: var(--fg); font-weight: 500; }
 
 /* Fingerprint special card */
 .fp-inner { margin-top: 14px; }
@@ -229,7 +275,7 @@
 }
 
 /* Heatmap */
-.heat-canvas { width: 100%; height: 200px; background: #08080d; border: 1px solid var(--line); display: block; }
+.heat-canvas { width: 320px; height: 200px; background: #08080d; border: 1px solid var(--line); display: block; }
 .heat-empty {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--mute); text-align: center; padding: 20px;
@@ -248,27 +294,29 @@
 .en-term-out { color: var(--mute-2); }
 .en-term-key { color: var(--mute); display: inline-block; min-width: 110px; }
 .en-term-approx { color: var(--yellow); font-size: 10.5px; }
+.en-term-compare {
+  margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line-2);
+  font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--mute-2);
+  line-height: 1.8;
+}
+.en-term-bad { color: var(--red); font-weight: 500; }
 
 /* Closer */
 .en-closer {
-  padding: 70px 28px;
+  padding: 60px 28px;
   text-align: center;
   border-top: 1px solid var(--line);
-  background: linear-gradient(180deg, transparent, rgba(0,229,255,0.025) 50%, transparent 100%);
+  border-bottom: 1px solid var(--line);
 }
-.en-closer-inner { max-width: 900px; margin: 0 auto; }
+.en-closer-inner { max-width: 1000px; margin: 0 auto; }
 .en-closer-quote {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: clamp(13px, 2vw, 22px);
-  line-height: 1.65; color: rgba(255,255,255,0.72);
-  letter-spacing: 0.04em;
+  font-size: clamp(18px, 2.2vw, 28px);
+  line-height: 1.5; color: rgba(255,255,255,0.78);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  margin: 0;
 }
 .en-closer-highlight { color: var(--cyan); }
-.en-closer-meta {
-  font-family: 'IBM Plex Mono', monospace; font-size: 10.5px;
-  color: var(--mute); letter-spacing: 0.18em; text-transform: uppercase;
-  margin-top: 24px;
-}
 
 /* Gauge card */
 .gauge-card {
@@ -345,6 +393,9 @@
 
 /* Tablette portrait : ≤720px */
 @media (max-width: 720px) {
+  .heat-wrap { grid-template-columns: 1fr; }
+  .heat-canvas { width: 100%; }
+
   /* Curseur */
   body { cursor: auto; }
   .crosshair { display: none; }

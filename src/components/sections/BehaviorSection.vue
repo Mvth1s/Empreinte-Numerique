@@ -2,35 +2,65 @@
   <div class="wrap section-wrap">
     <SectionHeader index="10" title="Comportement utilisateur" />
     <div class="en-grid">
-      <DataCard icon="🖱️" label="Interactions temps réel" sectionIdx="section 10"
-        :rows="[
-          { k: 'VITESSE_SOURIS', v: avgMouseSpeed ? `${avgMouseSpeed} px/s` : 'Bougez la souris…' },
-          { k: 'SCROLL_PROFONDEUR', v: `${scrollDepth}%`, cls: 'muted' },
-          { k: 'TEMPS_PAGE', v: timeStr, cls: 'muted' },
-          { k: 'CHANGEMENTS_ONGLET', v: `${tabSwitches} fois`, cls: 'muted' },
-          { k: 'POSITIONS_CAPTÉES', v: `${mousePositions.length} points`, cls: 'muted' },
-        ]"
-        inference="Un mouvement trop régulier = bot. Votre trajectoire révèle votre <strong>pattern de lecture (F-pattern, Z-pattern)</strong>. Le temps de visite est monétisé pour le scoring publicitaire."
-        sensitivity="medium" :span="5" />
-
-      <div class="en-card col-7" ref="heatCardRef">
+      <div class="en-card col-12" ref="heatCardRef">
         <div class="en-card-head">
           <div class="en-card-cat">
             <span style="font-size:16px;line-height:1;flex-shrink:0">🌡️</span>
             <div>
               <div class="en-card-name">Heatmap mouvements souris</div>
-              <div class="en-card-idx">// section 10</div>
+              <div class="en-card-idx">// section 10 — heatmap live</div>
             </div>
           </div>
           <span class="sev sev-moyen"><span class="dot"></span>MOYEN</span>
         </div>
-        <div style="position:relative; margin-top:12px;">
-          <canvas ref="heatmapCanvas" class="heat-canvas" />
-          <div v-if="!mousePositions.length" class="heat-empty">
-            Déplacez votre souris pour visualiser le tracking
+
+        <div class="heat-wrap">
+          <div style="position:relative;">
+            <canvas ref="heatmapCanvas" class="heat-canvas" />
+            <div v-if="!mousePositions.length" class="heat-empty">
+              Déplacez votre souris pour visualiser le tracking
+            </div>
+          </div>
+
+          <div class="heat-stats-table">
+            <div class="heat-stat-row">
+              <span>Mouvements depuis</span>
+              <span class="heat-stat-val">{{ timeStr }}</span>
+            </div>
+            <div class="heat-stat-row">
+              <span>Échantillons capturés</span>
+              <span class="heat-stat-val">{{ mousePositions.length }}</span>
+            </div>
+            <div class="heat-stat-row">
+              <span>Vitesse moyenne</span>
+              <span class="heat-stat-val">{{ avgMouseSpeed ? `${avgMouseSpeed} px/s` : '—' }}</span>
+            </div>
+            <div class="heat-stat-row">
+              <span>Profondeur de scroll</span>
+              <span class="heat-stat-val">{{ scrollDepth }}%</span>
+            </div>
+            <div class="heat-stat-row">
+              <span>Changements d'onglet</span>
+              <span class="heat-stat-val">{{ tabSwitches }}</span>
+            </div>
+            <div class="heat-stat-row">
+              <span>Précision pointeur</span>
+              <span class="heat-stat-val">{{ pointerType }}</span>
+            </div>
+            <div class="heat-stat-row">
+              <span>Latéralité estimée</span>
+              <span class="heat-stat-val">{{ laterality }}</span>
+            </div>
+            <p class="heat-stat-desc">
+              Le simple parcours de votre souris est <strong>une signature comportementale</strong> presque aussi unique qu'une empreinte digitale.
+            </p>
           </div>
         </div>
-        <p class="heat-caption">Chaque point = une position capturée. Votre trajectoire de lecture est analysable par n'importe quel site.</p>
+
+        <details class="en-deduce">
+          <summary><span class="en-chev">▸</span>🔍 CE QU'ON EN DÉDUIT</summary>
+          <div class="en-deduce-body">Vitesse, accélération, rythme des clics, hésitations : ces signaux permettent de distinguer <strong>un humain d'un bot</strong>, mais aussi <strong>vous d'un autre humain</strong>. Plusieurs systèmes anti-fraude bancaire reposent uniquement là-dessus.</div>
+        </details>
       </div>
     </div>
   </div>
@@ -38,7 +68,6 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, onMounted } from 'vue'
-import DataCard from '../DataCard.vue'
 import SectionHeader from '../SectionHeader.vue'
 import { useBehavior } from '../../composables/useBehavior'
 
@@ -53,29 +82,51 @@ const timeStr = computed(() => {
   return `${Math.floor(s / 60)}m ${s % 60}s`
 })
 
+const pointerType = computed(() =>
+  window.matchMedia('(pointer: coarse)').matches ? 'tactile' : 'souris (non tactile)'
+)
+
+const laterality = computed(() => {
+  const pts = mousePositions.value
+  if (pts.length < 20) return '—'
+  const rightCount = pts.filter(p => p.x > window.innerWidth / 2).length
+  return rightCount > pts.length * 0.55 ? 'droitier probable' : 'gaucher probable'
+})
+
 function drawHeatmap(positions: { x: number; y: number }[]) {
   const canvas = heatmapCanvas.value
   if (!canvas) return
-  const rect = canvas.getBoundingClientRect()
-  canvas.width = rect.width * window.devicePixelRatio
-  canvas.height = rect.height * window.devicePixelRatio
+  canvas.width = 320
+  canvas.height = 200
   const ctx = canvas.getContext('2d')
   if (!ctx) return
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
-  ctx.clearRect(0, 0, rect.width, rect.height)
 
-  const scaleX = rect.width / window.innerWidth
-  const scaleY = rect.height / window.innerHeight
+  ctx.fillStyle = '#08080d'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)'
+  ctx.lineWidth = 1
+  for (let x = 0; x < canvas.width; x += 20) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke()
+  }
+  for (let y = 0; y < canvas.height; y += 20) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke()
+  }
+
+  const scaleX = canvas.width / window.innerWidth
+  const scaleY = canvas.height / window.innerHeight
 
   positions.forEach(({ x, y }, i) => {
     const cx = x * scaleX
     const cy = y * scaleY
-    const alpha = 0.05 + (i / positions.length) * 0.1
-    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 18)
-    grad.addColorStop(0, `rgba(0,229,255,${alpha})`)
+    const alpha = 0.05 + (i / positions.length) * 0.15
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 16)
+    grad.addColorStop(0, `rgba(255,255,255,${Math.min(0.8, alpha * 4)})`)
+    grad.addColorStop(0.4, `rgba(0,229,255,${alpha * 2})`)
     grad.addColorStop(1, 'rgba(0,229,255,0)')
     ctx.fillStyle = grad
-    ctx.fillRect(cx - 18, cy - 18, 36, 36)
+    ctx.fillRect(cx - 16, cy - 16, 32, 32)
   })
 
   if (positions.length > 1) {
