@@ -113,19 +113,20 @@
       />
     </div>
 
-    <DataCardV2
-      v-if="gpsCoords"
-      icon="📡"
-      title="Position GPS réelle"
-      :value="gpsCity ?? `${gpsCoords.lat.toFixed(5)}, ${gpsCoords.lon.toFixed(5)}`"
-      mean="Ces coordonnées proviennent directement du GPS ou de la triangulation Wi-Fi de votre appareil — avec votre autorisation explicite."
-      :deduce="`Précision : ±${gpsCoords.accuracy} m. C'est votre position à quelques mètres près — suffisant pour localiser votre domicile, votre bureau, ou la pièce où vous vous trouvez.`"
-      tech-key="getCurrentPosition() + Nominatim reverse"
-      :tech-val="`${gpsCoords.lat.toFixed(6)}, ${gpsCoords.lon.toFixed(6)} ±${gpsCoords.accuracy}m`"
-      severity="critique"
-      sev-label="critique"
-      :span="12"
-    />
+    <div v-if="gpsCoords" class="cards" style="margin-top:18px">
+      <DataCardV2
+        icon="📍"
+        title="Position GPS réelle"
+        :value="gpsCityLoading ? '🔍 Ville en cours…' : (gpsCity ?? `${gpsCoords.lat.toFixed(5)}, ${gpsCoords.lon.toFixed(5)}`)"
+        mean="Ces coordonnées proviennent directement du GPS ou de la triangulation Wi-Fi de votre appareil — avec votre autorisation explicite."
+        :deduce="`Précision : ±${gpsCoords.accuracy} m · ${gpsCoords.lat.toFixed(6)}, ${gpsCoords.lon.toFixed(6)}. C'est votre position à quelques mètres près — suffisant pour localiser votre domicile, votre bureau, ou la pièce où vous vous trouvez.`"
+        tech-key="getCurrentPosition() + Nominatim reverse"
+        :tech-val="`${gpsCoords.lat.toFixed(6)}, ${gpsCoords.lon.toFixed(6)} ±${gpsCoords.accuracy}m`"
+        severity="critique"
+        sev-label="critique"
+        :span="12"
+      />
+    </div>
 
     <div class="tab-foot">
       <span class="tf-key">⚠️</span>
@@ -145,6 +146,7 @@ const tz = useTimezone()
 
 const gpsCoords = ref<{ lat: number; lon: number; accuracy: number } | null>(null)
 const gpsCity = ref<string | null>(null)
+const gpsCityLoading = ref(false)
 const gpsError = ref<string | null>(null)
 const gpsLoading = ref(false)
 
@@ -171,7 +173,9 @@ function requestGPS() {
       const lon = pos.coords.longitude
       gpsCoords.value = { lat, lon, accuracy: Math.round(pos.coords.accuracy) }
       gpsLoading.value = false
+      gpsCityLoading.value = true
       gpsCity.value = await reverseGeocode(lat, lon)
+      gpsCityLoading.value = false
     },
     (err) => {
       gpsError.value = err.code === 1 ? 'Permission refusée' : 'Impossible d\'obtenir la position'
