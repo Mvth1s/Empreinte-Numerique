@@ -21,7 +21,7 @@
         <div class="loc-line"><b>Échantillons</b><span id="heat-count">{{ heatCount }}</span></div>
         <div class="loc-line"><b>Temps</b><span id="heat-time">{{ heatTime }}</span></div>
         <div class="loc-line"><b>Pointeur</b><span>{{ pointerType }}</span></div>
-        <div class="loc-line"><b>Latéralité</b><span>droitier (probable)</span></div>
+        <div class="loc-line"><b>Latéralité</b><span>{{ beh.handedness.value }}</span></div>
         <p class="beh-note">Bougez votre souris — chaque pixel parcouru est une donnée.</p>
       </div>
     </div>
@@ -42,11 +42,11 @@
       <DataCardV2
         icon="⌨️"
         title="Rythme de frappe"
-        value="Mesurable"
-        mean="Le délai entre vos touches au clavier forme une cadence qui vous est propre."
-        deduce="Utilisé par certaines banques comme deuxième facteur invisible d'authentification."
-        tech-key="keydown / keyup deltas"
-        tech-val="… ms entre touches"
+        :value="beh.avgKeyInterval.value ? beh.avgKeyInterval.value + ' ms/touche' : 'Tapez au clavier…'"
+        mean="Le délai moyen entre vos touches au clavier forme une cadence biométrique qui vous est propre."
+        deduce="Utilisé par certaines banques comme deuxième facteur invisible d'authentification. Impossible à reproduire exactement par un bot."
+        tech-key="keydown timestamps → Δt moyen"
+        :tech-val="beh.avgKeyInterval.value ? beh.avgKeyInterval.value + ' ms' : '…'"
         severity="eleve"
         sev-label="Élevé"
         :span="4"

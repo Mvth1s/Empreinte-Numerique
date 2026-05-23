@@ -330,7 +330,7 @@ const shareText = computed(() => {
     `🎮 GPU          : ${gpu.renderer.value ?? '—'}`,
     `📡 IP publique  : ${network.publicIP.value ?? '—'}`,
     `📍 Localisation : ${network.city.value ?? '—'}, ${network.country.value ?? '—'}`,
-    `🔑 Empreinte    : ${fingerprint.combinedHash.value ?? '—'}`,
+    `🖐️ Empreinte    : ${fingerprint.combinedHash.value ?? '—'}`,
     '',
     'Toutes ces données ont été collectées sans aucune permission.',
     '→ empreinte-numerique.fr'

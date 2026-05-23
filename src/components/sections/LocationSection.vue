@@ -25,7 +25,7 @@
       <div class="loc-info">
         <div class="hb-label">SANS PERMISSION GPS</div>
         <div class="loc-line"><b>Pays</b><span>{{ net.country.value ?? '…' }}</span></div>
-        <div class="loc-line"><b>Région</b><span>{{ regionName }}</span></div>
+        <div class="loc-line"><b>Région</b><span>{{ net.regionName.value ?? '—' }}</span></div>
         <div class="loc-line"><b>Ville</b><span>{{ net.city.value ?? '…' }}</span></div>
         <div class="loc-line"><b>Quartier</b><span>{{ coordStr }} (±15 km)</span></div>
         <div class="loc-warn">
@@ -65,8 +65,8 @@
         :value="net.city.value ?? '…'"
         mean="La ville est déterminée par la base GeoIP avec une précision variable selon le FAI et la région."
         deduce="Localisation à 50-200 km de précision. Permet des publicités géolocalisées et des prix dynamiques par région."
-        tech-key="ip-api.com › city + regionName"
-        :tech-val="net.city.value ?? '—'"
+        tech-key="ip-api.com › city / regionName"
+        :tech-val="[net.city.value, net.regionName.value].filter(Boolean).join(', ') || '—'"
         severity="eleve"
         sev-label="élevé"
         :loading="net.loading.value"
@@ -184,12 +184,6 @@ function requestGPS() {
     { enableHighAccuracy: true, timeout: 10000 }
   )
 }
-
-const regionName = computed(() => {
-  const city = net.city.value ?? ''
-  const parts = city.split(', ')
-  return parts.length > 1 ? parts[1] : '—'
-})
 
 const coordStr = computed(() => {
   if (net.lat.value && net.lon.value) return `${net.lat.value.toFixed(2)}, ${net.lon.value.toFixed(2)}`
