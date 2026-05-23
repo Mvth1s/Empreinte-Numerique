@@ -1,118 +1,132 @@
 <template>
-  <div class="wrap section-wrap">
-    <SectionHeader index="11" title="Localisation sans GPS" />
-    <div class="en-grid">
-      <DataCard icon="🗺️" label="Position synthétisée" sectionIdx="section 11"
-        :rows="[
-          { k: 'POSITION', v: locationStr },
-          { k: 'PRÉCISION', v: precision, cls: 'muted' },
-          { k: 'SOURCES', v: signals, cls: 'muted' },
-        ]"
-        inference="Combinaison IP + timezone + langue. Précision : ville ou arrondissement. Obtenu <strong>sans une seule permission</strong>. La géo IP seule atteint ±20-50 km en milieu urbain."
-        sensitivity="critical" :span="6" :loading="loading" />
-
-      <div class="en-card col-6" ref="termCardRef">
-        <div class="en-card-head">
-          <div class="en-card-cat">
-            <span style="font-size:16px;line-height:1;flex-shrink:0">💻</span>
-            <div>
-              <div class="en-card-name">Terminal de localisation</div>
-              <div class="en-card-idx">// section 11</div>
-            </div>
-          </div>
-          <span class="sev sev-eleve"><span class="dot"></span>ÉLEVÉ</span>
+  <section>
+    <div class="tab-header">
+      <div class="th-left">
+        <span class="th-ico">📍</span>
+        <div>
+          <h2>Localisation sans GPS</h2>
+          <p class="th-sub">Sans demander votre position GPS, votre IP permet de vous localiser à la ville, parfois au quartier. Croisée avec le fuseau horaire, la précision est redoutable.</p>
         </div>
-        <div class="en-term">
-          <div class="en-term-line">$ geoip --from ip <span style="color:var(--cyan)">{{ publicIP ?? '…' }}</span></div>
-          <template v-if="!loading">
-            <div class="en-term-line en-term-out">
-              <span class="en-term-key">LATITUDE</span>{{ approxCoord(lat, 1) }} <span class="en-term-approx">(±15 km)</span>
-            </div>
-            <div class="en-term-line en-term-out">
-              <span class="en-term-key">LONGITUDE</span>{{ approxCoord(lon, 1) }} <span class="en-term-approx">(±15 km)</span>
-            </div>
-            <div class="en-term-line en-term-out">
-              <span class="en-term-key">PAYS</span>{{ country ?? 'N/A' }}
-            </div>
-            <div class="en-term-line en-term-out">
-              <span class="en-term-key">VILLE</span>{{ city ?? 'N/A' }}
-            </div>
-            <div class="en-term-line en-term-out">
-              <span class="en-term-key">FAI</span>{{ isp ?? 'N/A' }}
-            </div>
-            <div class="en-term-line en-term-out">
-              <span class="en-term-key">FUSEAU</span>{{ timezone }}
-            </div>
-            <div class="en-term-compare">
-              <div>Avec permission GPS&nbsp;→ <span class="en-term-bad">précision &lt; 10 m</span></div>
-              <div>Avec Wi-Fi alentour&nbsp;→ <span class="en-term-bad">précision &lt; 30 m</span></div>
-            </div>
-          </template>
-          <div v-else class="en-term-line">
-            <span class="fp-caret"></span>
-          </div>
-        </div>
-        <details class="en-deduce">
-          <summary><span class="en-chev">▸</span>🔍 CE QU'ON EN DÉDUIT</summary>
-          <div class="en-deduce-body">Sans GPS ni permission, la corrélation de signaux passifs permet de localiser tout utilisateur à <strong>l'échelle d'une ville</strong>. En milieu urbain dense, la précision peut descendre sous 5 km.</div>
-        </details>
+      </div>
+      <div>
+        <span class="th-count">6<small>signaux collectés</small></span>
       </div>
     </div>
-  </div>
+
+    <!-- Location hero -->
+    <div class="hero-block loc-block">
+      <div class="loc-map">
+        <div class="ring r-pays"></div>
+        <div class="ring r-region"></div>
+        <div class="ring r-city"></div>
+        <div class="ring r-pin"></div>
+        <span class="pin">📍</span>
+      </div>
+      <div class="loc-info">
+        <div class="loc-line"><b>Pays</b><span>{{ net.country.value ?? '…' }}</span></div>
+        <div class="loc-line"><b>Ville</b><span>{{ net.city.value ?? '…' }}</span></div>
+        <div class="loc-line"><b>Latitude</b><span>{{ net.lat.value ?? '—' }}</span></div>
+        <div class="loc-line"><b>Longitude</b><span>{{ net.lon.value ?? '—' }}</span></div>
+        <div class="loc-line"><b>FAI</b><span>{{ net.isp.value ?? '—' }}</span></div>
+        <div v-if="net.isVPN.value" class="loc-warn">
+          <b>⚠️ VPN/Proxy détecté</b> — Votre localisation réelle peut différer de celle affichée.
+        </div>
+      </div>
+    </div>
+
+    <div class="cards">
+      <DataCardV2
+        icon="🌍"
+        title="Pays d'origine"
+        :value="net.country.value ?? '…'"
+        mean="Le pays est déduit depuis la base de données GeoIP associée à votre adresse IP publique."
+        deduce="Permet les restrictions géographiques de contenu (géo-blocage), le ciblage publicitaire par pays, le respect des lois locales."
+        tech-key="ip-api.com › country + countryCode"
+        :tech-val="net.country.value ?? '—'"
+        severity="eleve"
+        sev-label="élevé"
+        :loading="net.loading.value"
+        :span="4"
+      />
+      <DataCardV2
+        icon="🏙️"
+        title="Ville approximative"
+        :value="net.city.value ?? '…'"
+        mean="La ville est déterminée par la base GeoIP avec une précision variable selon le FAI et la région."
+        deduce="Localisation à 50-200 km de précision. Permet des publicités géolocalisées et des prix dynamiques par région."
+        tech-key="ip-api.com › city + regionName"
+        :tech-val="net.city.value ?? '—'"
+        severity="eleve"
+        sev-label="élevé"
+        :loading="net.loading.value"
+        :span="4"
+      />
+      <DataCardV2
+        icon="🗺️"
+        title="Coordonnées GPS approximatives"
+        :value="net.lat.value && net.lon.value ? `${net.lat.value}, ${net.lon.value}` : '…'"
+        mean="Les coordonnées latitude/longitude sont les coordonnées du centre de la zone GeoIP, pas votre position exacte."
+        deduce="Ces coordonnées correspondent souvent au centre de votre ville ou FAI. La précision réelle est de 10-50 km."
+        tech-key="ip-api.com › lat + lon"
+        :tech-val="net.lat.value && net.lon.value ? `${net.lat.value}, ${net.lon.value}` : '—'"
+        severity="moyen"
+        sev-label="moyen"
+        :loading="net.loading.value"
+        :span="4"
+      />
+      <DataCardV2
+        icon="🕐"
+        title="Fuseau IANA vs IP"
+        :value="`${tz.timezone.value} / ${net.country.value ?? '…'}`"
+        mean="Le croisement du fuseau horaire (via Intl) et du pays IP permet de vérifier la cohérence de votre localisation."
+        deduce="Une incohérence fuseau/pays révèle l'utilisation d'un VPN. Ex : fuseau Europe/Paris avec IP américaine = VPN probable."
+        tech-key="Intl.timeZone ∩ ip-api.country"
+        :tech-val="`${tz.timezone.value}`"
+        severity="eleve"
+        sev-label="élevé"
+        :loading="net.loading.value"
+        :span="6"
+      />
+      <DataCardV2
+        icon="🔢"
+        title="ASN & FAI"
+        :value="net.isp.value ?? '…'"
+        mean="L'ASN (Autonomous System Number) identifie le réseau et le fournisseur propriétaire de votre bloc d'IPs."
+        deduce="Révèle si vous êtes sur une connexion résidentielle, professionnelle, un datacenter ou un VPN commercial connu."
+        tech-key="ip-api.com › isp + as"
+        :tech-val="net.asn.value ?? '—'"
+        severity="moyen"
+        sev-label="moyen"
+        :loading="net.loading.value"
+        :span="6"
+      />
+      <DataCardV2
+        icon="📡"
+        title="Résolveur DNS"
+        :value="net.dnsResolver.value ?? 'Non détecté'"
+        mean="Via une requête DNS-over-HTTPS vers Cloudflare, le sous-réseau client source de la résolution DNS est identifiable."
+        deduce="Le résolveur DNS révèle votre opérateur ou votre VPN. Cloudflare (1.1.1.1), Google (8.8.8.8), Orange, SFR…"
+        tech-key="DoH › cloudflare-dns.com › edns-client-subnet"
+        :tech-val="net.dnsResolver.value ?? '—'"
+        severity="moyen"
+        sev-label="moyen"
+        :loading="net.loading.value"
+        :span="12"
+      />
+    </div>
+
+    <div class="tab-foot">
+      <span class="tf-key">⚠️</span>
+      <span>La triangulation <strong>IP + fuseau IANA + résolveur DNS</strong> permet de localiser un utilisateur même derrière un VPN si les trois sources sont incohérentes entre elles.</span>
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
-import DataCard from '../DataCard.vue'
-import SectionHeader from '../SectionHeader.vue'
 import { useNetwork } from '../../composables/useNetwork'
 import { useTimezone } from '../../composables/useTimezone'
+import DataCardV2 from '../DataCardV2.vue'
 
-const { publicIP, city, country, isp, lat, lon, loading } = useNetwork()
-const { timezone, locale } = useTimezone()
-
-function approxCoord(val: number | null, decimals: number): string {
-  if (val == null) return '—'
-  const str = val.toFixed(4)
-  const dotIdx = str.indexOf('.')
-  const keep = dotIdx + 1 + decimals
-  return `~${str.slice(0, keep)}${'x'.repeat(str.length - keep)}`
-}
-
-const locationStr = computed(() => {
-  if (loading.value) return null
-  const parts = [city.value, country.value].filter(Boolean)
-  return parts.length ? parts.join(' — ') : 'Localisation en cours…'
-})
-
-const precision = computed(() => {
-  if (loading.value) return null
-  if (city.value) return 'Ville identifiée (±20–50 km)'
-  if (country.value) return 'Pays identifié (précision régionale)'
-  return 'Pays approximatif'
-})
-
-const signals = computed(() => {
-  const s: string[] = []
-  if (publicIP.value) s.push('IP publique')
-  if (timezone.value) s.push('Fuseau IANA')
-  if (locale.value) s.push('Locale système')
-  if (city.value) s.push('Géo IP')
-  return s.length ? s.join(' + ') : null
-})
-
-const termCardRef = ref<HTMLElement | null>(null)
-onMounted(() => {
-  const el = termCardRef.value
-  if (!el) return
-  const obs = new IntersectionObserver(([entry]) => {
-    if (entry.isIntersecting) {
-      const idx = [...document.querySelectorAll('.en-card')].indexOf(el)
-      el.style.transition = `opacity .5s ${idx * 55}ms, transform .5s ${idx * 55}ms, border-color .2s, box-shadow .2s`
-      el.classList.add('revealed')
-      obs.disconnect()
-    }
-  }, { threshold: 0.05 })
-  obs.observe(el)
-})
+const net = useNetwork()
+const tz = useTimezone()
 </script>

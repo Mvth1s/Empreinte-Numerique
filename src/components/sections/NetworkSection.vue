@@ -1,56 +1,108 @@
 <template>
-  <div class="wrap section-wrap">
-    <SectionHeader index="01" title="Réseau & IP" />
-    <div class="en-grid">
-      <DataCard icon="🌐" label="Adresse IP & Géolocalisation" sectionIdx="section 01"
-        :rows="[
-          { k: 'IP_PUBLIQUE', v: publicIP },
-          { k: 'PAYS / RÉGION', v: country },
-          { k: 'VILLE', v: city },
-          { k: 'FAI', v: isp },
-          { k: 'ASN', v: asn },
-        ]"
-        inference="Votre IP révèle votre <strong>fournisseur d'accès</strong>, votre <strong>pays</strong>, votre <strong>région</strong> et souvent votre <strong>ville</strong>. Combinée à d'autres signaux, elle suffit à vous reconnaître entre deux sessions."
-        sensitivity="high" :span="4" :loading="loading" />
-
-      <DataCard icon="🛡️" label="Anonymat réseau" sectionIdx="section 01"
-        :rows="[
-          { k: 'VPN / DATACENTER', v: vpnLabel, cls: isVPN ? 'bad' : '' },
-          { k: 'PROXY', v: isProxy ? 'Détecté ⚠️' : 'Non détecté', cls: isProxy ? 'bad' : '' },
-        ]"
-        inference="Certains <strong>ASN sont connus</strong> pour appartenir à des VPN, proxies ou hébergeurs. Ce signal est utilisé par les systèmes anti-fraude et les DRM pour bloquer les connexions anonymisées."
-        sensitivity="high" :span="4" :loading="loading" />
-
-      <DataCard icon="💥" label="Fuite IP via WebRTC" sectionIdx="section 01"
-        :rows="[
-          { k: 'IP_LOCALE (RTCPeer)', v: localIPsStr, cls: localIPs.length ? 'bad' : '' },
-          { k: 'IP_RÉELLE_EXPOSÉE', v: webrtcLeak, cls: webrtcLeak ? 'bad' : '' },
-        ]"
-        inference="<strong>Même derrière un VPN</strong>, WebRTC peut révéler votre vraie IP publique via STUN. Aucune permission requise. La plupart des VPN grand public ne bloquent pas cette fuite."
-        sensitivity="critical" :span="4" :loading="!localIPsReady" />
-
-      <DataCard icon="🔍" label="Résolveur DNS" sectionIdx="section 01"
-        :rows="[{ k: 'RÉSOLVEUR_DNS', v: dnsResolver }]"
-        inference="Le serveur DNS que vous utilisez (FAI, Google 8.8.8.8, Cloudflare 1.1.1.1…) révèle vos habitudes de confidentialité et peut journaliser tous les domaines que vous visitez."
-        sensitivity="medium" :span="4" :loading="loading" />
+  <section>
+    <div class="tab-header">
+      <div class="th-left">
+        <span class="th-ico">🌐</span>
+        <div>
+          <h2>Réseau &amp; Identification IP</h2>
+          <p class="th-sub">Chaque connexion expose votre adresse IP, votre FAI, votre localisation approximative et vos IPs locales via WebRTC — sans aucune permission.</p>
+        </div>
+      </div>
+      <div>
+        <span class="th-count">6<small>signaux collectés</small></span>
+      </div>
     </div>
-  </div>
+
+    <div class="cards">
+      <DataCardV2
+        icon="🌍"
+        title="Adresse IP publique"
+        :value="net.publicIP.value ?? '…'"
+        mean="C'est l'adresse qu'un serveur voit quand vous vous connectez. Elle identifie votre connexion internet."
+        deduce="Localisation à la ville près, identification du FAI, corrélation entre visites, possibilité de blocage géographique."
+        tech-key="api.ipify.org"
+        :tech-val="net.publicIP.value ?? '…'"
+        severity="critique"
+        sev-label="critique"
+        :loading="net.loading.value"
+        :span="6"
+      />
+      <DataCardV2
+        icon="📍"
+        title="Localisation géographique"
+        :value="net.city.value ?? '…'"
+        mean="Votre ville et région sont déduites de votre IP via des bases de données de géolocalisation."
+        deduce="Ciblage publicitaire géolocalisé, personnalisation de contenu, restriction d'accès selon le pays."
+        tech-key="ip-api.com › city+regionName"
+        :tech-val="net.city.value ?? '—'"
+        severity="eleve"
+        sev-label="élevé"
+        :loading="net.loading.value"
+        :span="6"
+      />
+      <DataCardV2
+        icon="🏢"
+        title="Fournisseur d'accès (FAI)"
+        :value="net.isp.value ?? '…'"
+        mean="Le FAI est l'entreprise qui fournit votre connexion internet. Il est directement lié à votre IP."
+        deduce="Type de connexion (résidentiel, entreprise, VPN), pays d'origine, profil socio-économique approximatif."
+        tech-key="ip-api.com › isp"
+        :tech-val="net.isp.value ?? '—'"
+        severity="moyen"
+        sev-label="moyen"
+        :loading="net.loading.value"
+        :span="4"
+      />
+      <DataCardV2
+        icon="🔢"
+        title="ASN (Système autonome)"
+        :value="net.asn.value ?? '…'"
+        mean="L'ASN identifie le réseau autonome propriétaire de votre bloc d'adresses IP."
+        deduce="Permet de savoir si vous utilisez un VPN commercial, un proxy, un réseau d'entreprise ou résidentiel."
+        tech-key="ip-api.com › as"
+        :tech-val="net.asn.value ?? '—'"
+        severity="moyen"
+        sev-label="moyen"
+        :loading="net.loading.value"
+        :span="4"
+      />
+      <DataCardV2
+        icon="⚠️"
+        title="Proxy / VPN détecté"
+        :value="net.isVPN.value ? 'Oui — VPN/Proxy probable' : 'Non détecté'"
+        mean="Les services de géo-IP signalent si votre IP appartient à un hébergeur, un VPN connu ou un proxy."
+        deduce="Certains services bloquent les connexions VPN. Votre anonymat peut être partiellement compromis."
+        tech-key="ip-api.com › proxy+hosting"
+        :tech-val="net.isProxy.value ? 'true' : 'false'"
+        severity="faible"
+        sev-label="faible"
+        :loading="net.loading.value"
+        :span="4"
+      />
+      <DataCardV2
+        icon="🔓"
+        title="IPs locales (fuite WebRTC)"
+        :value="net.localIPs.value.length ? net.localIPs.value.join(', ') : 'Aucune détectée'"
+        mean="WebRTC peut exposer vos IPs locales (LAN, Wi-Fi) même derrière un VPN via le protocole ICE/STUN."
+        deduce="Révèle votre réseau local, contourne l'anonymat VPN, permet de vous identifier sur le réseau de l'entreprise."
+        tech-key="RTCPeerConnection › ICE candidates"
+        :tech-val="net.webrtcLeak.value ?? 'aucune'"
+        severity="critique"
+        sev-label="critique"
+        :loading="net.loading.value"
+        :span="12"
+      />
+    </div>
+
+    <div class="tab-foot">
+      <span class="tf-key">⚠️</span>
+      <span>Ces données sont collectées <strong>automatiquement</strong> à chaque connexion, sans cookie ni consentement. Un VPN masque l'IP publique mais les IPs locales peuvent rester exposées via WebRTC.</span>
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import DataCard from '../DataCard.vue'
-import SectionHeader from '../SectionHeader.vue'
 import { useNetwork } from '../../composables/useNetwork'
-
-const { publicIP, country, city, isp, asn, isVPN, isProxy, localIPs, webrtcLeak, dnsResolver, loading } = useNetwork()
-
-const localIPsStr = computed(() => localIPs.value.length ? localIPs.value.join(' / ') : 'Non détecté')
-const vpnLabel = computed(() => {
-  if (loading.value) return undefined
-  return isVPN.value ? 'OUI — ASN de datacenter / hébergeur' : 'Non détecté'
-})
-
-const localIPsReady = ref(false)
-setTimeout(() => { localIPsReady.value = true }, 5500)
+import DataCardV2 from '../DataCardV2.vue'
+const net = useNetwork()
 </script>

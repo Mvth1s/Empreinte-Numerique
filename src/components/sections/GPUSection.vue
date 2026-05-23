@@ -1,34 +1,102 @@
 <template>
-  <div class="wrap section-wrap">
-    <SectionHeader index="05" title="GPU & Rendu" />
-    <div class="en-grid">
-      <DataCard icon="🎮" label="GPU non masqué" sectionIdx="section 05"
-        :rows="[
-          { k: 'GPU', v: renderer },
-          { k: 'VENDOR', v: vendor, cls: 'muted' },
-          { k: 'WEBGL_VER', v: webgl2 ? 'WebGL 2.0' : 'WebGL 1.0', cls: 'muted' },
-          { k: 'WEBGPU', v: webgpu ? 'Supporté' : 'Non disponible', cls: 'muted' },
-          { k: 'EXTENSIONS', v: formatsStr, cls: 'muted' },
-        ]"
-        inference="Le rendu graphique varie selon votre <strong>carte, ses pilotes et la composition de l'OS</strong>. WEBGL_debug_renderer_info révèle le modèle exact du GPU sans aucune permission."
-        sensitivity="critical" :span="6" :loading="!renderer" />
-
-      <DataCard icon="🎲" label="Empreinte de rendu WebGL" sectionIdx="section 05"
-        :rows="[{ k: 'RENDER_HASH', v: renderHash }]"
-        inference="Un triangle 3D rendu produit des pixels <strong>légèrement différents selon votre GPU, driver et OS</strong>. Ce hash est votre signature graphique — quasi-unique et stable."
-        sensitivity="critical" :span="6" :loading="!renderHash" />
+  <section>
+    <div class="tab-header">
+      <div class="th-left">
+        <span class="th-ico">🎮</span>
+        <div>
+          <h2>GPU &amp; Rendu graphique</h2>
+          <p class="th-sub">Via l'extension WebGL, le navigateur expose le nom exact de votre GPU et de son fabricant — une donnée hautement identifiante qui ne demande aucune permission.</p>
+        </div>
+      </div>
+      <div>
+        <span class="th-count">6<small>signaux collectés</small></span>
+      </div>
     </div>
-  </div>
+
+    <div class="cards">
+      <DataCardV2
+        icon="🏷️"
+        title="Fabricant GPU"
+        :value="gpu.vendor.value ?? 'Non disponible'"
+        mean="Le vendor GPU est exposé par l'extension WEBGL_debug_renderer_info, qui retourne le fabricant exact de la puce graphique."
+        deduce="NVIDIA, AMD, Apple, Intel, Qualcomm — le fabricant identifie la gamme de l'appareil et son positionnement marché."
+        tech-key="WEBGL_debug_renderer_info › UNMASKED_VENDOR"
+        :tech-val="gpu.vendor.value ?? 'N/A'"
+        severity="eleve"
+        sev-label="élevé"
+        :span="6"
+      />
+      <DataCardV2
+        icon="🖼️"
+        title="Modèle GPU exact"
+        :value="gpu.renderer.value ?? 'Non disponible'"
+        mean="Le modèle exact du GPU est retourné par la même extension WebGL. C'est l'une des données les plus identifiantes du navigateur."
+        deduce="Identifie précisément votre machine : RTX 4090 vs GTX 1650 vs M3 Pro. Fréquence d'occurrence extrêmement faible."
+        tech-key="WEBGL_debug_renderer_info › UNMASKED_RENDERER"
+        :tech-val="gpu.renderer.value ?? 'N/A'"
+        severity="critique"
+        sev-label="critique"
+        :span="6"
+      />
+      <DataCardV2
+        icon="🔢"
+        title="Hash de rendu WebGL"
+        :value="gpu.renderHash.value ?? '…'"
+        mean="Un triangle coloré est rendu en WebGL, les pixels sont lus et hashés. Chaque GPU produit un résultat légèrement différent."
+        deduce="Ce hash est quasi-unique par GPU et driver. Il persiste même si vous changez navigateur ou activez le mode privé."
+        tech-key="WebGL readPixels › SHA-256 (16 chars)"
+        :tech-val="gpu.renderHash.value ?? '…'"
+        severity="critique"
+        sev-label="critique"
+        :span="4"
+      />
+      <DataCardV2
+        icon="🌐"
+        title="WebGL 2"
+        :value="gpu.webgl2.value ? 'Supporté' : 'Non supporté'"
+        mean="WebGL 2 est la version moderne de l'API graphique web, offrant des capacités de rendu avancées."
+        deduce="Réduit l'espace d'anonymat en divisant les utilisateurs selon leur support WebGL2, contribue au fingerprinting."
+        tech-key="canvas.getContext('webgl2')"
+        :tech-val="String(gpu.webgl2.value)"
+        severity="faible"
+        sev-label="faible"
+        :span="4"
+      />
+      <DataCardV2
+        icon="🚀"
+        title="WebGPU"
+        :value="gpu.webgpu.value ? 'Disponible' : 'Non disponible'"
+        mean="WebGPU est la nouvelle API graphique haut niveau, accessible via navigator.gpu dans les navigateurs modernes."
+        deduce="Sa disponibilité identifie les utilisateurs de navigateurs récents et réduit l'anonymat par segmentation."
+        tech-key="'gpu' in navigator"
+        :tech-val="String(gpu.webgpu.value)"
+        severity="faible"
+        sev-label="faible"
+        :span="4"
+      />
+      <DataCardV2
+        icon="📦"
+        title="Formats de texture"
+        :value="gpu.supportedTextureFormats.value.length ? gpu.supportedTextureFormats.value.join(', ') : 'Aucun détecté'"
+        mean="Les formats de texture compressée supportés (S3TC, ETC1, ASTC...) varient selon le GPU et le driver installé."
+        deduce="Chaque combinaison de formats est un signal d'identification matériel supplémentaire pour le fingerprinting."
+        tech-key="WEBGL_compressed_texture_* extensions"
+        :tech-val="gpu.supportedTextureFormats.value.join(', ') || 'none'"
+        severity="moyen"
+        sev-label="moyen"
+        :span="12"
+      />
+    </div>
+
+    <div class="tab-foot">
+      <span class="tf-key">⚠️</span>
+      <span>Le modèle GPU exact est l'une des données les plus <strong>identifiantes</strong> du navigateur. Combiné au hash de rendu, il crée une empreinte graphique quasi-impossible à falsifier sans bloquer WebGL.</span>
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import DataCard from '../DataCard.vue'
-import SectionHeader from '../SectionHeader.vue'
 import { useGPU } from '../../composables/useGPU'
-
-const { vendor, renderer, webgl2, webgpu, renderHash, supportedTextureFormats } = useGPU()
-
-const formatsStr = computed(() =>
-  supportedTextureFormats.value.length ? supportedTextureFormats.value.join(', ') : 'Aucun format compressé')
+import DataCardV2 from '../DataCardV2.vue'
+const gpu = useGPU()
 </script>

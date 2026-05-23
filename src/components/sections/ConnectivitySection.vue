@@ -1,32 +1,102 @@
 <template>
-  <div class="wrap section-wrap">
-    <SectionHeader index="08" title="Connectivité" />
-    <div class="en-grid">
-      <DataCard icon="📡" label="Connexion réseau" sectionIdx="section 08"
-        :rows="[
-          { k: 'TYPE', v: connectionType ?? 'Non disponible (non-Chromium)' },
-          { k: 'QUALITÉ', v: effectiveType ?? 'Non disponible', cls: 'muted' },
-          { k: 'DÉBIT', v: downlink ? `${downlink} Mbps` : 'Non disponible', cls: 'muted' },
-          { k: 'LATENCE_RTT', v: rtt ? `${rtt} ms` : 'Non disponible', cls: 'muted' },
-        ]"
-        inference="WiFi, 4G, Ethernet. La qualité réelle distingue <strong>mobile de desktop</strong> et révèle le contexte d'usage. Un VPN dégrade souvent l'effectiveType."
-        sensitivity="medium" :span="6" />
-
-      <DataCard icon="🟢" label="État & Économie" sectionIdx="section 08"
-        :rows="[
-          { k: 'STATUT', v: online ? 'En ligne' : 'Hors ligne' },
-          { k: 'ÉCONOMIE_DONNÉES', v: saveData === null ? 'Non disponible' : saveData ? 'Activé' : 'Désactivé', cls: 'muted' },
-        ]"
-        inference="<code>navigator.onLine</code> + <code>saveData</code> révèlent vos <strong>contraintes réseau et préférences</strong>. Le mode économie indique souvent un profil mobile ou connexion limitée."
-        sensitivity="low" :span="6" />
+  <section>
+    <div class="tab-header">
+      <div class="th-left">
+        <span class="th-ico">📡</span>
+        <div>
+          <h2>Connectivité &amp; Qualité réseau</h2>
+          <p class="th-sub">L'API Network Information expose le type de connexion, la bande passante estimée et la latence — des signaux qui révèlent votre contexte de connexion.</p>
+        </div>
+      </div>
+      <div>
+        <span class="th-count">6<small>signaux collectés</small></span>
+      </div>
     </div>
-  </div>
+
+    <div class="cards">
+      <DataCardV2
+        icon="🌐"
+        title="Statut en ligne"
+        :value="cn.online.value ? 'En ligne' : 'Hors ligne'"
+        mean="navigator.onLine retourne true si le navigateur a accès au réseau, false en mode hors ligne."
+        deduce="Permet d'adapter le contenu servi et de détecter les utilisateurs en mode avion ou avec une connexion intermittente."
+        tech-key="navigator.onLine"
+        :tech-val="String(cn.online.value)"
+        severity="faible"
+        sev-label="faible"
+        :span="4"
+      />
+      <DataCardV2
+        icon="📶"
+        title="Type de connexion"
+        :value="cn.connectionType.value ?? 'Non disponible'"
+        mean="navigator.connection.type retourne le type de réseau : wifi, cellular, ethernet, bluetooth, none…"
+        deduce="Distingue Wi-Fi, données mobiles, ethernet. Révèle le contexte de connexion (domicile, bureau, mobile)."
+        tech-key="navigator.connection.type"
+        :tech-val="cn.connectionType.value ?? 'N/A'"
+        severity="moyen"
+        sev-label="moyen"
+        :span="4"
+      />
+      <DataCardV2
+        icon="📊"
+        title="Type effectif (4G/3G…)"
+        :value="cn.effectiveType.value ?? 'Non disponible'"
+        mean="effectiveType déduit la qualité réelle de la connexion (slow-2g, 2g, 3g, 4g) selon les mesures de performance réseau."
+        deduce="Révèle si vous êtes en zone de mauvaise couverture, adapte le contenu chargé, profil utilisateur mobile/rural."
+        tech-key="navigator.connection.effectiveType"
+        :tech-val="cn.effectiveType.value ?? 'N/A'"
+        severity="moyen"
+        sev-label="moyen"
+        :span="4"
+      />
+      <DataCardV2
+        icon="⬇️"
+        title="Débit descendant estimé"
+        :value="cn.downlink.value != null ? `${cn.downlink.value} Mb/s` : 'Non disponible'"
+        mean="downlink est une estimation de la bande passante descendante en mégabits par seconde, fournie par le système."
+        deduce="Permet aux sites d'adapter la qualité des médias servis et révèle votre type de connexion internet."
+        tech-key="navigator.connection.downlink"
+        :tech-val="cn.downlink.value != null ? `${cn.downlink.value} Mb/s` : 'N/A'"
+        severity="faible"
+        sev-label="faible"
+        :span="4"
+      />
+      <DataCardV2
+        icon="⏱️"
+        title="Latence estimée (RTT)"
+        :value="cn.rtt.value != null ? `${cn.rtt.value} ms` : 'Non disponible'"
+        mean="rtt (Round Trip Time) est la latence aller-retour estimée de la connexion en millisecondes."
+        deduce="Une latence élevée peut indiquer une connexion satellite, un VPN lointain ou une connexion mobile dégradée."
+        tech-key="navigator.connection.rtt"
+        :tech-val="cn.rtt.value != null ? `${cn.rtt.value} ms` : 'N/A'"
+        severity="faible"
+        sev-label="faible"
+        :span="4"
+      />
+      <DataCardV2
+        icon="💡"
+        title="Mode économie de données"
+        :value="cn.saveData.value ? 'Activé' : 'Désactivé'"
+        mean="saveData indique si l'utilisateur a activé le mode économie de données sur son appareil ou opérateur."
+        deduce="Révèle une connexion data limitée ou coûteuse, souvent associée aux forfaits mobiles prépayés ou à la couverture réduite."
+        tech-key="navigator.connection.saveData"
+        :tech-val="String(cn.saveData.value)"
+        severity="faible"
+        sev-label="faible"
+        :span="4"
+      />
+    </div>
+
+    <div class="tab-foot">
+      <span class="tf-key">⚠️</span>
+      <span>L'API Network Information est <strong>expérimentale</strong> et principalement disponible sur Chrome/Android. Les données exposées permettent de cibler le contenu selon la qualité de connexion perçue.</span>
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-import DataCard from '../DataCard.vue'
-import SectionHeader from '../SectionHeader.vue'
 import { useConnectivity } from '../../composables/useConnectivity'
-
-const { connectionType, effectiveType, downlink, rtt, saveData, online } = useConnectivity()
+import DataCardV2 from '../DataCardV2.vue'
+const cn = useConnectivity()
 </script>

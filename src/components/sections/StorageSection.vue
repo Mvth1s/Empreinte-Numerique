@@ -1,38 +1,126 @@
 <template>
-  <div class="wrap section-wrap">
-    <SectionHeader index="07" title="Stockage & État" />
-    <div class="en-grid">
-      <DataCard icon="📦" label="Stockage local" sectionIdx="section 07"
-        :rows="[
-          { k: 'LOCAL_STORAGE', v: localStorageAvail ? 'Disponible' : 'Bloqué' },
-          { k: 'SESSION_STORAGE', v: sessionStorageAvail ? 'Disponible' : 'Bloqué', cls: 'muted' },
-          { k: 'INDEXED_DB', v: indexedDBAvail ? 'Disponible' : 'Bloqué', cls: 'muted' },
-          { k: 'QUOTA_ESTIMÉ', v: storageQuota ?? '…', cls: 'muted' },
-        ]"
-        inference="LocalStorage persiste <strong>indefiniment</strong>, IndexedDB peut stocker des Go. Même en navigation privée, certains persistent. Vecteurs de super-cookie."
-        sensitivity="medium" :span="4" :loading="!storageQuota" />
-
-      <DataCard icon="🍪" label="Cookies & Workers" sectionIdx="section 07"
-        :rows="[
-          { k: 'COOKIES', v: cookiesEnabled ? 'Activés' : 'Désactivés' },
-          { k: 'SERVICE_WORKER', v: serviceWorkerAvail ? 'Supporté' : 'Non disponible', cls: 'muted' },
-          { k: 'CACHE_API', v: cacheAPIAvail ? 'Disponible' : 'Non disponible', cls: 'muted' },
-        ]"
-        inference="Les Service Workers <strong>persistent après fermeture du navigateur</strong> et peuvent servir un super-cookie résistant au vidage de cache."
-        sensitivity="high" :span="4" />
-
-      <DataCard v-if="cacheTimings.length" icon="⏱️" label="Cache timing (attaque)" sectionIdx="section 07"
-        :rows="cacheTimings.map(t => ({ k: t.url.replace('https://', '').split('/')[0], v: `${t.ms} ms${t.cached ? ' ⚡ cache' : ''}`, cls: t.cached ? 'warn' : 'muted' }))"
-        inference="En mesurant le temps de chargement de CDN populaires, on détecte si vous les avez chargés récemment — <strong>révélant des sites visités</strong> sans aucun accès historique."
-        sensitivity="high" :span="4" />
+  <section>
+    <div class="tab-header">
+      <div class="th-left">
+        <span class="th-ico">💾</span>
+        <div>
+          <h2>Stockage &amp; Persistance des données</h2>
+          <p class="th-sub">Votre navigateur dispose de multiples mécanismes de stockage. Leur disponibilité et leur timing révèlent votre configuration et vos habitudes de navigation.</p>
+        </div>
+      </div>
+      <div>
+        <span class="th-count">8<small>signaux collectés</small></span>
+      </div>
     </div>
-  </div>
+
+    <div class="cards">
+      <DataCardV2
+        icon="📦"
+        title="localStorage"
+        :value="st.localStorageAvail.value ? 'Disponible' : 'Bloqué'"
+        mean="localStorage permet de stocker des données persistantes côté client, sans expiration. Idéal pour les trackers à long terme."
+        deduce="Si disponible, permet de stocker un identifiant unique persistant qui survit à la fermeture du navigateur."
+        tech-key="localStorage.setItem/getItem"
+        :tech-val="String(st.localStorageAvail.value)"
+        severity="eleve"
+        sev-label="élevé"
+        :span="4"
+      />
+      <DataCardV2
+        icon="📋"
+        title="sessionStorage"
+        :value="st.sessionStorageAvail.value ? 'Disponible' : 'Bloqué'"
+        mean="sessionStorage stocke des données pour la durée de l'onglet uniquement. Effacé à la fermeture."
+        deduce="Permet le suivi de session sans cookie, partage les données entre iframes de même origine."
+        tech-key="sessionStorage.setItem/getItem"
+        :tech-val="String(st.sessionStorageAvail.value)"
+        severity="moyen"
+        sev-label="moyen"
+        :span="4"
+      />
+      <DataCardV2
+        icon="🗄️"
+        title="IndexedDB"
+        :value="st.indexedDBAvail.value ? 'Disponible' : 'Bloqué'"
+        mean="IndexedDB est une base de données NoSQL côté client, capable de stocker des gigaoctets de données structurées."
+        deduce="Les trackers avancés utilisent IndexedDB pour stocker des empreintes, des historiques de session et des données de ciblage."
+        tech-key="'indexedDB' in window"
+        :tech-val="String(st.indexedDBAvail.value)"
+        severity="eleve"
+        sev-label="élevé"
+        :span="4"
+      />
+      <DataCardV2
+        icon="🍪"
+        title="Cookies activés"
+        :value="st.cookiesEnabled.value ? 'Oui' : 'Non'"
+        mean="Les cookies restent le mécanisme de suivi le plus utilisé. Ils permettent le suivi cross-session et la persistance d'identifiants."
+        deduce="Avec les cookies, chaque site peut vous assigner un identifiant unique et vous suivre sur toutes vos visites."
+        tech-key="navigator.cookieEnabled"
+        :tech-val="String(st.cookiesEnabled.value)"
+        severity="eleve"
+        sev-label="élevé"
+        :span="4"
+      />
+      <DataCardV2
+        icon="⚙️"
+        title="Service Worker"
+        :value="st.serviceWorkerAvail.value ? 'Disponible' : 'Non disponible'"
+        mean="Les Service Workers sont des scripts qui s'exécutent en arrière-plan, interceptent les requêtes réseau et peuvent cacher du contenu."
+        deduce="Peuvent être utilisés pour du tracking persistant difficile à effacer, même après vidage du cache."
+        tech-key="'serviceWorker' in navigator"
+        :tech-val="String(st.serviceWorkerAvail.value)"
+        severity="moyen"
+        sev-label="moyen"
+        :span="4"
+      />
+      <DataCardV2
+        icon="📡"
+        title="Cache API"
+        :value="st.cacheAPIAvail.value ? 'Disponible' : 'Non disponible'"
+        mean="L'API Cache permet aux pages et Service Workers de stocker des ressources réseau pour une utilisation hors ligne."
+        deduce="Peut être exploitée pour un stockage persistant supplémentaire. Les timings de cache révèlent vos habitudes de navigation."
+        tech-key="'caches' in window"
+        :tech-val="String(st.cacheAPIAvail.value)"
+        severity="moyen"
+        sev-label="moyen"
+        :span="4"
+      />
+      <DataCardV2
+        icon="💽"
+        title="Quota de stockage"
+        :value="st.storageQuota.value ?? '…'"
+        mean="navigator.storage.estimate() retourne l'espace alloué au site par le navigateur, qui varie selon la capacité du disque."
+        deduce="Le quota maximal dépend de votre espace disque disponible — il peut révéler la capacité approximative de votre stockage."
+        tech-key="navigator.storage.estimate().quota"
+        :tech-val="st.storageQuota.value ?? '…'"
+        severity="faible"
+        sev-label="faible"
+        :span="6"
+      />
+      <DataCardV2
+        icon="⏱️"
+        title="Timing de cache CDN"
+        :value="st.cacheTimings.value.length ? `${st.cacheTimings.value.filter(t => t.cached).length}/${st.cacheTimings.value.length} en cache` : '…'"
+        mean="Des requêtes vers des CDN populaires (jQuery, Google Fonts) mesurent si ces ressources sont déjà en cache."
+        deduce="Révèle vos visites récentes de sites utilisant ces CDN. Historiquement utilisé pour reconstruire votre historique de navigation."
+        tech-key="performance.now() › fetch(cdn, force-cache)"
+        :tech-val="st.cacheTimings.value.map(t => `${t.url}: ${t.ms}ms`).join(', ')"
+        severity="eleve"
+        sev-label="élevé"
+        :span="6"
+      />
+    </div>
+
+    <div class="tab-foot">
+      <span class="tf-key">⚠️</span>
+      <span>Le <strong>timing de cache CDN</strong> peut reconstruire un historique partiel de vos visites web, sans aucune permission. Cette technique est désormais partiellement bloquée par les navigateurs modernes.</span>
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-import DataCard from '../DataCard.vue'
-import SectionHeader from '../SectionHeader.vue'
 import { useStorage } from '../../composables/useStorage'
-
-const { localStorageAvail, sessionStorageAvail, indexedDBAvail, cookiesEnabled, serviceWorkerAvail, cacheAPIAvail, storageQuota, cacheTimings } = useStorage()
+import DataCardV2 from '../DataCardV2.vue'
+const st = useStorage()
 </script>
