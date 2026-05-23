@@ -2,7 +2,7 @@
   <section>
     <div class="tab-header">
       <div class="th-left">
-        <span class="th-ico">🔍</span>
+        <span class="th-ico">🖥️</span>
         <div>
           <h2>Navigateur &amp; OS</h2>
           <p class="th-sub">Chaque visite envoie une carte d'identité technique très bavarde.</p>
