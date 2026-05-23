@@ -12,6 +12,12 @@ declare global {
     deviceMemory?: number
     getBattery?: () => Promise<BatteryInfo>
   }
+  interface Performance {
+    memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number; totalJSHeapSize: number }
+  }
+  interface Screen {
+    isExtended?: boolean
+  }
 }
 
 export function useScreen() {
@@ -26,6 +32,14 @@ export function useScreen() {
   const prefersColorScheme = ref(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
   const refreshRate = ref<number | null>(null)
   const touchPoints = ref(navigator.maxTouchPoints)
+
+  const heapUsed = ref<number | null>(
+    performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) : null
+  )
+  const heapLimit = ref<number | null>(
+    performance.memory ? Math.round(performance.memory.jsHeapSizeLimit / 1024 / 1024) : null
+  )
+  const isExtended = ref<boolean | null>(screen.isExtended ?? null)
 
   function measureRefreshRate() {
     let start = 0, count = 0
@@ -51,7 +65,11 @@ export function useScreen() {
         }
       }
     } catch { /* API non supportée */ }
+    if (performance.memory) {
+      heapUsed.value = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024)
+      heapLimit.value = Math.round(performance.memory.jsHeapSizeLimit / 1024 / 1024)
+    }
   })
 
-  return { resolution, availResolution, colorDepth, pixelRatio, cores, memory, battery, hdr, prefersColorScheme, refreshRate, touchPoints }
+  return { resolution, availResolution, colorDepth, pixelRatio, cores, memory, battery, hdr, prefersColorScheme, refreshRate, touchPoints, heapUsed, heapLimit, isExtended }
 }

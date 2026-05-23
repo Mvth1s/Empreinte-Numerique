@@ -1,157 +1,209 @@
 <template>
-  <div class="wrap section-wrap">
-    <SectionHeader index="10" title="Comportement utilisateur" />
-    <div class="en-grid">
-      <div class="en-card col-12" ref="heatCardRef">
-        <div class="en-card-head">
-          <div class="en-card-cat">
-            <span style="font-size:16px;line-height:1;flex-shrink:0">🌡️</span>
-            <div>
-              <div class="en-card-name">Heatmap mouvements souris</div>
-              <div class="en-card-idx">// section 10 — heatmap live</div>
-            </div>
-          </div>
-          <span class="sev sev-moyen"><span class="dot"></span>MOYEN</span>
+  <section>
+    <div class="tab-header">
+      <div class="th-left">
+        <span class="th-ico">🖱️</span>
+        <div>
+          <h2>Comportement</h2>
+          <p class="th-sub">Votre souris écrit votre signature, ligne par ligne.</p>
         </div>
-
-        <div class="heat-wrap">
-          <div style="position:relative;">
-            <canvas ref="heatmapCanvas" class="heat-canvas" />
-            <div v-if="!mousePositions.length" class="heat-empty">
-              Déplacez votre souris pour visualiser le tracking
-            </div>
-          </div>
-
-          <div class="heat-stats-table">
-            <div class="heat-stat-row">
-              <span>Mouvements depuis</span>
-              <span class="heat-stat-val">{{ timeStr }}</span>
-            </div>
-            <div class="heat-stat-row">
-              <span>Échantillons capturés</span>
-              <span class="heat-stat-val">{{ mousePositions.length }}</span>
-            </div>
-            <div class="heat-stat-row">
-              <span>Vitesse moyenne</span>
-              <span class="heat-stat-val">{{ avgMouseSpeed ? `${avgMouseSpeed} px/s` : '—' }}</span>
-            </div>
-            <div class="heat-stat-row">
-              <span>Profondeur de scroll</span>
-              <span class="heat-stat-val">{{ scrollDepth }}%</span>
-            </div>
-            <div class="heat-stat-row">
-              <span>Changements d'onglet</span>
-              <span class="heat-stat-val">{{ tabSwitches }}</span>
-            </div>
-            <div class="heat-stat-row">
-              <span>Précision pointeur</span>
-              <span class="heat-stat-val">{{ pointerType }}</span>
-            </div>
-            <div class="heat-stat-row">
-              <span>Latéralité estimée</span>
-              <span class="heat-stat-val">{{ laterality }}</span>
-            </div>
-            <p class="heat-stat-desc">
-              Le simple parcours de votre souris est <strong>une signature comportementale</strong> presque aussi unique qu'une empreinte digitale.
-            </p>
-          </div>
-        </div>
-
-        <details class="en-deduce">
-          <summary><span class="en-chev">▸</span>🔍 CE QU'ON EN DÉDUIT</summary>
-          <div class="en-deduce-body">Vitesse, accélération, rythme des clics, hésitations : ces signaux permettent de distinguer <strong>un humain d'un bot</strong>, mais aussi <strong>vous d'un autre humain</strong>. Plusieurs systèmes anti-fraude bancaire reposent uniquement là-dessus.</div>
-        </details>
+      </div>
+      <div>
+        <span class="th-count">7<small>signaux</small></span>
       </div>
     </div>
-  </div>
+
+    <!-- Hero heatmap -->
+    <div class="hero-block beh-block">
+      <canvas id="heat-canvas" ref="heatCanvas" aria-hidden="true"></canvas>
+      <div class="beh-info">
+        <div class="hb-label">HEATMAP DE VOTRE SOURIS · LIVE</div>
+        <div class="loc-line"><b>Échantillons</b><span id="heat-count">{{ heatCount }}</span></div>
+        <div class="loc-line"><b>Temps</b><span id="heat-time">{{ heatTime }}</span></div>
+        <div class="loc-line"><b>Pointeur</b><span>{{ pointerType }}</span></div>
+        <div class="loc-line"><b>Latéralité</b><span>{{ beh.handedness.value }}</span></div>
+        <p class="beh-note">Bougez votre souris — chaque pixel parcouru est une donnée.</p>
+      </div>
+    </div>
+
+    <div class="cards">
+      <DataCardV2
+        icon="🖱️"
+        title="Trajectoire de votre souris"
+        value="Enregistrée en direct"
+        mean="Chaque petit mouvement entre deux clics est suivi et peut être analysé."
+        deduce="La forme de vos déplacements distingue un humain d'un bot, et vous distingue d'autres humains."
+        tech-key="addEventListener('mousemove', …)"
+        :tech-val="`~ ${beh.mousePositions.value.length} points`"
+        severity="eleve"
+        sev-label="Élevé"
+        :span="4"
+      />
+      <DataCardV2
+        icon="⌨️"
+        title="Rythme de frappe"
+        :value="beh.avgKeyInterval.value ? beh.avgKeyInterval.value + ' ms/touche' : 'Tapez au clavier…'"
+        mean="Le délai moyen entre vos touches au clavier forme une cadence biométrique qui vous est propre."
+        deduce="Utilisé par certaines banques comme deuxième facteur invisible d'authentification. Impossible à reproduire exactement par un bot."
+        tech-key="keydown timestamps → Δt moyen"
+        :tech-val="beh.avgKeyInterval.value ? beh.avgKeyInterval.value + ' ms' : '…'"
+        severity="eleve"
+        sev-label="Élevé"
+        :span="4"
+      />
+      <DataCardV2
+        icon="📐"
+        title="Précision du pointeur"
+        :value="pointerType"
+        mean="Le navigateur sait si vous pointez avec précision (souris) ou approximation (doigt)."
+        deduce="Confirme la classe d'appareil et la posture (assis devant un PC vs mobile dans la main)."
+        tech-key="matchMedia('(pointer:fine)')"
+        :tech-val="isFinePonter ? 'true' : 'false'"
+        severity="moyen"
+        sev-label="Moyen"
+        :span="4"
+      />
+      <DataCardV2
+        icon="📜"
+        title="Profondeur de défilement"
+        :value="beh.scrollDepth.value + ' %'"
+        mean="Le site sait jusqu'où vous avez fait défiler la page — si vous avez lu l'introduction, le milieu ou tout le contenu."
+        deduce="Mesure votre intérêt réel pour le contenu. Utilisé pour adapter les publicités et évaluer l'engagement."
+        tech-key="scrollY / (scrollHeight – innerHeight)"
+        :tech-val="beh.scrollDepth.value + '%'"
+        severity="faible"
+        sev-label="faible"
+        :span="3"
+      />
+      <DataCardV2
+        icon="⏱️"
+        title="Temps sur la page"
+        :value="formatTime(beh.timeOnPage.value)"
+        mean="La durée exacte depuis que vous avez ouvert cette page est connue à la seconde près."
+        deduce="Distingue un visiteur rapide d'un lecteur attentif. Sert à mesurer l'intérêt et à personnaliser le contenu."
+        tech-key="Date.now() – startTime"
+        :tech-val="beh.timeOnPage.value + ' s'"
+        severity="faible"
+        sev-label="faible"
+        :span="3"
+      />
+      <DataCardV2
+        icon="🔀"
+        title="Changements d'onglet"
+        :value="beh.tabSwitches.value === 0 ? 'Aucun' : beh.tabSwitches.value + ' fois'"
+        mean="Chaque fois que vous passez à un autre onglet ou minimisez la fenêtre, le site le détecte automatiquement."
+        deduce="Révèle si vous comparez des prix, si vous êtes distrait, ou si vous partagez votre écran avec quelqu'un."
+        tech-key="visibilitychange → document.hidden"
+        :tech-val="String(beh.tabSwitches.value)"
+        severity="moyen"
+        sev-label="moyen"
+        :span="3"
+      />
+      <DataCardV2
+        icon="⚡"
+        title="Vitesse de déplacement"
+        :value="beh.avgMouseSpeed.value ? beh.avgMouseSpeed.value + ' px/s' : 'En attente…'"
+        mean="La vitesse moyenne de vos mouvements de souris est mesurée en permanence. Les humains ont chacun leur rythme naturel."
+        deduce="Sert à prouver que vous êtes humain (pas un robot), et peut contribuer à créer une empreinte comportementale unique."
+        tech-key="distance / temps entre mousemove"
+        :tech-val="beh.avgMouseSpeed.value ? beh.avgMouseSpeed.value + ' px/s' : '…'"
+        severity="moyen"
+        sev-label="moyen"
+        :span="3"
+      />
+    </div>
+
+    <div class="tab-foot">
+      <span class="tf-key">⚠️</span>
+      <span>Toutes ces données ont été obtenues <strong>sans aucune permission</strong> de votre part.</span>
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted } from 'vue'
-import SectionHeader from '../SectionHeader.vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useBehavior } from '../../composables/useBehavior'
+import DataCardV2 from '../DataCardV2.vue'
 
-const { scrollDepth, timeOnPage, tabSwitches, mousePositions, avgMouseSpeed } = useBehavior()
+const beh = useBehavior()
+const heatCanvas = ref<HTMLCanvasElement | null>(null)
+const heatCount = ref(0)
+const heatTime = ref('0,0 s')
+const isFinePonter = window.matchMedia('(pointer: fine)').matches
+const pointerType = isFinePonter ? 'fine (souris)' : 'coarse (tactile)'
 
-const heatmapCanvas = ref<HTMLCanvasElement | null>(null)
-const heatCardRef = ref<HTMLElement | null>(null)
-
-const timeStr = computed(() => {
-  const s = timeOnPage.value
-  if (s < 60) return `${s}s`
-  return `${Math.floor(s / 60)}m ${s % 60}s`
-})
-
-const pointerType = computed(() =>
-  window.matchMedia('(pointer: coarse)').matches ? 'tactile' : 'souris (non tactile)'
-)
-
-const laterality = computed(() => {
-  const pts = mousePositions.value
-  if (pts.length < 20) return '—'
-  const rightCount = pts.filter(p => p.x > window.innerWidth / 2).length
-  return rightCount > pts.length * 0.55 ? 'droitier probable' : 'gaucher probable'
-})
-
-function drawHeatmap(positions: { x: number; y: number }[]) {
-  const canvas = heatmapCanvas.value
-  if (!canvas) return
-  canvas.width = 320
-  canvas.height = 200
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return
-
-  ctx.fillStyle = '#08080d'
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-  // Grid
-  ctx.strokeStyle = 'rgba(255,255,255,0.04)'
-  ctx.lineWidth = 1
-  for (let x = 0; x < canvas.width; x += 20) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke()
-  }
-  for (let y = 0; y < canvas.height; y += 20) {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke()
-  }
-
-  const scaleX = canvas.width / window.innerWidth
-  const scaleY = canvas.height / window.innerHeight
-
-  positions.forEach(({ x, y }, i) => {
-    const cx = x * scaleX
-    const cy = y * scaleY
-    const alpha = 0.05 + (i / positions.length) * 0.15
-    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 16)
-    grad.addColorStop(0, `rgba(255,255,255,${Math.min(0.8, alpha * 4)})`)
-    grad.addColorStop(0.4, `rgba(0,229,255,${alpha * 2})`)
-    grad.addColorStop(1, 'rgba(0,229,255,0)')
-    ctx.fillStyle = grad
-    ctx.fillRect(cx - 16, cy - 16, 32, 32)
-  })
-
-  if (positions.length > 1) {
-    ctx.beginPath()
-    ctx.moveTo(positions[0].x * scaleX, positions[0].y * scaleY)
-    positions.slice(1).forEach(p => ctx.lineTo(p.x * scaleX, p.y * scaleY))
-    ctx.strokeStyle = 'rgba(0,229,255,0.12)'
-    ctx.lineWidth = 1
-    ctx.stroke()
-  }
+function formatTime(s: number): string {
+  if (s < 60) return s + ' s'
+  const m = Math.floor(s / 60)
+  const sec = s % 60
+  return `${m} min ${sec} s`
 }
 
-watch(mousePositions, (positions) => { drawHeatmap(positions) }, { deep: true })
+let ctx: CanvasRenderingContext2D | null = null
+let count = 0
+let t0 = performance.now()
+let fadeInterval: ReturnType<typeof setInterval> | null = null
+
+function dot(e: MouseEvent) {
+  const c = heatCanvas.value
+  if (!c || !ctx) return
+  const rr = c.getBoundingClientRect()
+  let x: number, y: number
+  if (e.clientX >= rr.left && e.clientX <= rr.right && e.clientY >= rr.top && e.clientY <= rr.bottom) {
+    x = e.clientX - rr.left
+    y = e.clientY - rr.top
+  } else {
+    x = (e.clientX / window.innerWidth) * c.width
+    y = (e.clientY / window.innerHeight) * c.height
+  }
+  const g = ctx.createRadialGradient(x, y, 0, x, y, 22)
+  g.addColorStop(0, 'rgba(255,255,255,0.8)')
+  g.addColorStop(0.35, 'rgba(0,229,255,0.55)')
+  g.addColorStop(1, 'rgba(0,229,255,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(x - 22, y - 22, 44, 44)
+
+  count++
+  heatCount.value = count
+  const dt = ((performance.now() - t0) / 1000).toFixed(1)
+  heatTime.value = dt.replace('.', ',') + ' s'
+}
+
+function fade() {
+  const c = heatCanvas.value
+  if (!c || !ctx) return
+  ctx.fillStyle = 'rgba(8,8,13,0.04)'
+  ctx.fillRect(0, 0, c.width, c.height)
+}
 
 onMounted(() => {
-  const el = heatCardRef.value
-  if (!el) return
-  const obs = new IntersectionObserver(([entry]) => {
-    if (entry.isIntersecting) {
-      const idx = [...document.querySelectorAll('.en-card')].indexOf(el)
-      el.style.transition = `opacity .5s ${idx * 55}ms, transform .5s ${idx * 55}ms, border-color .2s, box-shadow .2s`
-      el.classList.add('revealed')
-      obs.disconnect()
-    }
-  }, { threshold: 0.05 })
-  obs.observe(el)
+  const c = heatCanvas.value
+  if (!c) return
+  const r = c.getBoundingClientRect()
+  c.width = r.width || c.offsetWidth
+  c.height = r.height || c.offsetHeight
+  ctx = c.getContext('2d')
+  if (!ctx) return
+
+  // Background + grid
+  ctx.fillStyle = '#08080d'
+  ctx.fillRect(0, 0, c.width, c.height)
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)'
+  ctx.lineWidth = 1
+  for (let x = 0; x < c.width; x += 24) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, c.height); ctx.stroke()
+  }
+  for (let y = 0; y < c.height; y += 24) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(c.width, y); ctx.stroke()
+  }
+
+  t0 = performance.now()
+  window.addEventListener('mousemove', dot)
+  fadeInterval = setInterval(fade, 120)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('mousemove', dot)
+  if (fadeInterval) clearInterval(fadeInterval)
 })
 </script>

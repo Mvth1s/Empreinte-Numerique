@@ -6,25 +6,28 @@ let _geoPromise: Promise<GeoData | null> | null = null
 function fetchGeo(): Promise<GeoData | null> {
   if (_geoPromise) return _geoPromise
   _geoPromise = (async () => {
-    try {
-      const ipRes = await fetch('https://api.ipify.org?format=json')
-      const { ip } = await ipRes.json()
-      const fields = 'status,country,countryCode,regionName,city,lat,lon,isp,org,as,proxy,hosting,query'
-      const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=${fields}`)
-      const geo: GeoData = await geoRes.json()
-      geo.ip = ip
-      return geo
-    } catch {
+    // ip-api.com free tier is HTTP-only — skip on HTTPS to avoid mixed-content block
+    if (location.protocol !== 'https:') {
       try {
-        const res = await fetch('https://ipapi.co/json/')
-        const d = await res.json()
-        return {
-          ip: d.ip, country: d.country_name, countryCode: d.country_code,
-          regionName: d.region, city: d.city, isp: d.org, org: d.org,
-          as: d.asn, proxy: false, hosting: false, status: 'success',
-        }
-      } catch { return null }
+        const ipRes = await fetch('https://api.ipify.org?format=json')
+        const { ip } = await ipRes.json()
+        const fields = 'status,country,countryCode,regionName,city,lat,lon,isp,org,as,proxy,hosting,query'
+        const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=${fields}`)
+        const geo: GeoData = await geoRes.json()
+        if (geo.status === 'success') { geo.ip = ip; return geo }
+      } catch { /* fall through */ }
     }
+    try {
+      const res = await fetch('https://ipapi.co/json/')
+      const d = await res.json()
+      return {
+        ip: d.ip, country: d.country_name, countryCode: d.country_code,
+        regionName: d.region, city: d.city,
+        lat: d.latitude, lon: d.longitude,
+        isp: d.org, org: d.org,
+        as: d.asn, proxy: false, hosting: false, status: 'success',
+      }
+    } catch { return null }
   })()
   return _geoPromise
 }
@@ -33,6 +36,7 @@ export function useNetwork() {
   const publicIP = ref<string | null>(null)
   const country = ref<string | null>(null)
   const city = ref<string | null>(null)
+  const regionName = ref<string | null>(null)
   const isp = ref<string | null>(null)
   const asn = ref<string | null>(null)
   const isVPN = ref<boolean | null>(null)
@@ -43,13 +47,15 @@ export function useNetwork() {
   const lat = ref<number | null>(null)
   const lon = ref<number | null>(null)
   const loading = ref(true)
+  const networkError = ref(false)
 
   async function loadGeo() {
     const geo = await fetchGeo()
     if (geo && geo.status === 'success') {
       publicIP.value = geo.ip
       country.value = `${geo.country} (${geo.countryCode})`
-      city.value = `${geo.city}, ${geo.regionName}`
+      city.value = geo.city
+      regionName.value = geo.regionName
       isp.value = geo.isp
       asn.value = geo.as
       isProxy.value = geo.proxy
@@ -58,6 +64,8 @@ export function useNetwork() {
       if (geo.lon != null) lon.value = geo.lon
     } else if (geo) {
       publicIP.value = geo.ip
+    } else {
+      networkError.value = true
     }
     loading.value = false
   }
@@ -103,5 +111,5 @@ export function useNetwork() {
     detectDNS()
   })
 
-  return { publicIP, country, city, isp, asn, isVPN, isProxy, localIPs, webrtcLeak, dnsResolver, lat, lon, loading }
+  return { publicIP, country, city, regionName, isp, asn, isVPN, isProxy, localIPs, webrtcLeak, dnsResolver, lat, lon, loading, networkError }
 }
