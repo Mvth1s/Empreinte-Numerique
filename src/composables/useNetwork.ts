@@ -43,6 +43,7 @@ export function useNetwork() {
   const lat = ref<number | null>(null)
   const lon = ref<number | null>(null)
   const loading = ref(true)
+  const networkError = ref(false)
 
   async function loadGeo() {
     const geo = await fetchGeo()
@@ -58,6 +59,8 @@ export function useNetwork() {
       if (geo.lon != null) lon.value = geo.lon
     } else if (geo) {
       publicIP.value = geo.ip
+    } else {
+      networkError.value = true
     }
     loading.value = false
   }
@@ -103,5 +106,5 @@ export function useNetwork() {
     detectDNS()
   })
 
-  return { publicIP, country, city, isp, asn, isVPN, isProxy, localIPs, webrtcLeak, dnsResolver, lat, lon, loading }
+  return { publicIP, country, city, isp, asn, isVPN, isProxy, localIPs, webrtcLeak, dnsResolver, lat, lon, loading, networkError }
 }

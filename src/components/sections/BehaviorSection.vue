@@ -9,7 +9,7 @@
         </div>
       </div>
       <div>
-        <span class="th-count">3 <small>signaux</small></span>
+        <span class="th-count">7<small>signaux</small></span>
       </div>
     </div>
 
@@ -63,6 +63,54 @@
         sev-label="Moyen"
         :span="4"
       />
+      <DataCardV2
+        icon="📜"
+        title="Profondeur de défilement"
+        :value="beh.scrollDepth.value + ' %'"
+        mean="Le site sait jusqu'où vous avez fait défiler la page — si vous avez lu l'introduction, le milieu ou tout le contenu."
+        deduce="Mesure votre intérêt réel pour le contenu. Utilisé pour adapter les publicités et évaluer l'engagement."
+        tech-key="scrollY / (scrollHeight – innerHeight)"
+        :tech-val="beh.scrollDepth.value + '%'"
+        severity="faible"
+        sev-label="faible"
+        :span="3"
+      />
+      <DataCardV2
+        icon="⏱️"
+        title="Temps sur la page"
+        :value="formatTime(beh.timeOnPage.value)"
+        mean="La durée exacte depuis que vous avez ouvert cette page est connue à la seconde près."
+        deduce="Distingue un visiteur rapide d'un lecteur attentif. Sert à mesurer l'intérêt et à personnaliser le contenu."
+        tech-key="Date.now() – startTime"
+        :tech-val="beh.timeOnPage.value + ' s'"
+        severity="faible"
+        sev-label="faible"
+        :span="3"
+      />
+      <DataCardV2
+        icon="🔀"
+        title="Changements d'onglet"
+        :value="beh.tabSwitches.value === 0 ? 'Aucun' : beh.tabSwitches.value + ' fois'"
+        mean="Chaque fois que vous passez à un autre onglet ou minimisez la fenêtre, le site le détecte automatiquement."
+        deduce="Révèle si vous comparez des prix, si vous êtes distrait, ou si vous partagez votre écran avec quelqu'un."
+        tech-key="visibilitychange → document.hidden"
+        :tech-val="String(beh.tabSwitches.value)"
+        severity="moyen"
+        sev-label="moyen"
+        :span="3"
+      />
+      <DataCardV2
+        icon="⚡"
+        title="Vitesse de déplacement"
+        :value="beh.avgMouseSpeed.value ? beh.avgMouseSpeed.value + ' px/s' : 'En attente…'"
+        mean="La vitesse moyenne de vos mouvements de souris est mesurée en permanence. Les humains ont chacun leur rythme naturel."
+        deduce="Sert à prouver que vous êtes humain (pas un robot), et peut contribuer à créer une empreinte comportementale unique."
+        tech-key="distance / temps entre mousemove"
+        :tech-val="beh.avgMouseSpeed.value ? beh.avgMouseSpeed.value + ' px/s' : '…'"
+        severity="moyen"
+        sev-label="moyen"
+        :span="3"
+      />
     </div>
 
     <div class="tab-foot">
@@ -83,6 +131,13 @@ const heatCount = ref(0)
 const heatTime = ref('0,0 s')
 const isFinePonter = window.matchMedia('(pointer: fine)').matches
 const pointerType = isFinePonter ? 'fine (souris)' : 'coarse (tactile)'
+
+function formatTime(s: number): string {
+  if (s < 60) return s + ' s'
+  const m = Math.floor(s / 60)
+  const sec = s % 60
+  return `${m} min ${sec} s`
+}
 
 let ctx: CanvasRenderingContext2D | null = null
 let count = 0

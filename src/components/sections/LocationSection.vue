@@ -9,7 +9,7 @@
         </div>
       </div>
       <div>
-        <span class="th-count">5<small>signaux</small></span>
+        <span class="th-count">{{ gpsCoords ? 6 : 5 }}<small>signaux</small></span>
       </div>
     </div>
 
@@ -29,7 +29,18 @@
         <div class="loc-line"><b>Ville</b><span>{{ net.city.value ?? '…' }}</span></div>
         <div class="loc-line"><b>Quartier</b><span>{{ coordStr }} (±15 km)</span></div>
         <div class="loc-warn">
-          Avec votre permission GPS → <b>précision &lt; 10 m</b>
+          <template v-if="!gpsCoords && !gpsError">
+            Avec votre permission GPS → <b>précision &lt; 10 m</b>
+            <button class="gps-btn" @click="requestGPS" :disabled="gpsLoading">
+              {{ gpsLoading ? 'Demande en cours…' : '📍 Autoriser la localisation GPS' }}
+            </button>
+          </template>
+          <template v-else-if="gpsError">
+            <span style="color:var(--red)">⚠️ {{ gpsError }}</span>
+          </template>
+          <template v-else-if="gpsCoords">
+            <span style="color:var(--cyan)">✓ GPS autorisé — précision : ±{{ gpsCoords.accuracy }} m</span>
+          </template>
         </div>
       </div>
     </div>
@@ -102,6 +113,20 @@
       />
     </div>
 
+    <DataCardV2
+      v-if="gpsCoords"
+      icon="📡"
+      title="Position GPS réelle"
+      :value="`${gpsCoords.lat.toFixed(6)}, ${gpsCoords.lon.toFixed(6)}`"
+      mean="Ces coordonnées proviennent directement du GPS ou de la triangulation Wi-Fi de votre appareil — avec votre autorisation explicite."
+      :deduce="`Précision : ±${gpsCoords.accuracy} m. C'est votre position à quelques mètres près — suffisant pour localiser votre domicile, votre bureau, ou la pièce où vous vous trouvez.`"
+      tech-key="navigator.geolocation.getCurrentPosition()"
+      :tech-val="`${gpsCoords.lat.toFixed(6)}, ${gpsCoords.lon.toFixed(6)} ±${gpsCoords.accuracy}m`"
+      severity="critique"
+      sev-label="critique"
+      :span="12"
+    />
+
     <div class="tab-foot">
       <span class="tf-key">⚠️</span>
       <span>Toutes ces données ont été obtenues <strong>sans aucune permission</strong> de votre part.</span>
@@ -110,13 +135,33 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useNetwork } from '../../composables/useNetwork'
 import { useTimezone } from '../../composables/useTimezone'
 import DataCardV2 from '../DataCardV2.vue'
 
 const net = useNetwork()
 const tz = useTimezone()
+
+const gpsCoords = ref<{ lat: number; lon: number; accuracy: number } | null>(null)
+const gpsError = ref<string | null>(null)
+const gpsLoading = ref(false)
+
+function requestGPS() {
+  if (!navigator.geolocation) { gpsError.value = 'Géolocalisation non supportée'; return }
+  gpsLoading.value = true
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      gpsCoords.value = { lat: pos.coords.latitude, lon: pos.coords.longitude, accuracy: Math.round(pos.coords.accuracy) }
+      gpsLoading.value = false
+    },
+    (err) => {
+      gpsError.value = err.code === 1 ? 'Permission refusée' : 'Impossible d\'obtenir la position'
+      gpsLoading.value = false
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  )
+}
 
 const regionName = computed(() => {
   const city = net.city.value ?? ''

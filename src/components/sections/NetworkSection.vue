@@ -13,6 +13,11 @@
       </div>
     </div>
 
+    <div v-if="net.networkError.value" class="net-error">
+      <span>⚠️</span>
+      <span>Impossible de contacter les APIs de géolocalisation (ip-api.com / ipapi.co). Les données réseau ne sont pas disponibles — vérifiez votre connexion ou désactivez un bloqueur de requêtes.</span>
+    </div>
+
     <div class="cards">
       <DataCardV2
         icon="🌍"

@@ -11,7 +11,7 @@
           Sans cookie, sans login, sans la moindre autorisation, un site web peut reconstruire votre identité technique en moins de deux secondes. Cette démo vous montre <strong style="color:var(--fg)">tout ce qu'il découvre</strong>, en langage clair.
         </p>
         <ul>
-          <li><b>11</b>catégories</li>
+          <li><b>12</b>catégories</li>
           <li><b>~140</b>signaux</li>
           <li><b>0</b>permission</li>
         </ul>
@@ -32,7 +32,14 @@
         </div>
         <div class="top-right">
           <button class="mobile-btn" @click="mobileNavOpen = true" aria-label="Ouvrir le menu">☰ Catégories</button>
-          <button class="share-btn" @click="openShare">📤 Partager mon résultat</button>
+          <div class="trace-score">
+            <div class="ts-bar"><div class="ts-fill" :style="{ width: traceScore + '%', background: scoreColor }"></div></div>
+            <div class="ts-meta">
+              <span :style="{ color: scoreColor }">{{ traceScore }}<small>/100</small></span>
+              <span class="ts-lbl">Traçabilité</span>
+            </div>
+          </div>
+          <button class="share-btn" @click="openShare">📤 Partager</button>
           <div class="session">
             <div><span class="dot"></span>SESSION ACTIVE</div>
             <div style="opacity:.6">{{ sessionDate }}</div>
@@ -46,7 +53,7 @@
         <div class="progress-track">
           <div class="progress-bar" id="global-progress" :style="{ width: progressPct + '%' }"></div>
         </div>
-        <span class="progress-stat" id="progress-label">{{ seenCount }} / 11 catégories explorées</span>
+        <span class="progress-stat" id="progress-label">{{ seenCount }} / 12 catégories explorées</span>
       </div>
 
       <!-- Tab bar (desktop) -->
@@ -143,20 +150,21 @@ const conn = useConnectivity()
 
 const TABS = [
   { id: 'network',      icon: '🌐', label: 'Réseau & IP',        short: 'Réseau',        loader: { kind: 'radar',       text: 'Localisation de votre IP en cours' },     bg: 'radar' as const },
-  { id: 'browser',      icon: '🖥️', label: 'Navigateur & OS',    short: 'Navigateur',    loader: { kind: 'terminal',    text: 'Lecture de votre navigateur' },            bg: 'particles' as const },
-  { id: 'timezone',     icon: '🕐', label: 'Fuseau horaire',      short: 'Fuseau',        loader: { kind: 'clock',       text: 'Détection de votre position temporelle' }, bg: 'particles' as const },
-  { id: 'hardware',     icon: '📱', label: 'Écran & Matériel',    short: 'Matériel',      loader: { kind: 'scanner',     text: 'Analyse de votre matériel' },              bg: 'particles' as const },
+  { id: 'browser',      icon: '🖥️', label: 'Navigateur & OS',    short: 'Navigateur',    loader: { kind: 'terminal',    text: 'Lecture de votre navigateur' },            bg: 'terminal' as const },
+  { id: 'timezone',     icon: '🕐', label: 'Fuseau horaire',      short: 'Fuseau',        loader: { kind: 'clock',       text: 'Détection de votre position temporelle' }, bg: 'clock' as const },
+  { id: 'hardware',     icon: '📱', label: 'Écran & Matériel',    short: 'Matériel',      loader: { kind: 'scanner',     text: 'Analyse de votre matériel' },              bg: 'scan' as const },
   { id: 'gpu',          icon: '🎮', label: 'GPU & Rendu',         short: 'GPU',           loader: { kind: 'wireframe',   text: 'Interrogation de votre GPU' },             bg: 'tron' as const },
   { id: 'fingerprint',  icon: '🔑', label: 'Fingerprinting',      short: 'Empreinte',     loader: { kind: 'hexrain',     text: 'Calcul de votre empreinte unique' },       bg: 'hexrain' as const },
-  { id: 'storage',      icon: '💾', label: 'Stockage',            short: 'Stockage',      loader: { kind: 'diskbar',     text: 'Inspection du stockage local' },           bg: 'particles' as const },
-  { id: 'connectivity', icon: '📡', label: 'Connectivité',        short: 'Connexion',     loader: { kind: 'wifi',        text: 'Test de votre connexion' },                bg: 'particles' as const },
-  { id: 'permissions',  icon: '🎙️', label: 'Permissions',         short: 'Permissions',   loader: { kind: 'permissions', text: 'Vérification de vos permissions' },        bg: 'particles' as const },
+  { id: 'storage',      icon: '💾', label: 'Stockage',            short: 'Stockage',      loader: { kind: 'diskbar',     text: 'Inspection du stockage local' },           bg: 'blocks' as const },
+  { id: 'connectivity', icon: '📡', label: 'Connectivité',        short: 'Connexion',     loader: { kind: 'wifi',        text: 'Test de votre connexion' },                bg: 'wave' as const },
+  { id: 'permissions',  icon: '🎙️', label: 'Permissions',         short: 'Permissions',   loader: { kind: 'permissions', text: 'Vérification de vos permissions' },        bg: 'rings' as const },
   { id: 'behavior',     icon: '🖱️', label: 'Comportement',        short: 'Comportement',  loader: { kind: 'cursor',      text: 'Observation de votre comportement' },      bg: 'cursor' as const },
-  { id: 'location',     icon: '📍', label: 'Localisation',        short: 'Localisation',  loader: { kind: 'mapzoom',     text: 'Triangulation de votre position' },        bg: 'particles' as const },
+  { id: 'location',     icon: '📍', label: 'Localisation',        short: 'Localisation',  loader: { kind: 'mapzoom',     text: 'Triangulation de votre position' },        bg: 'map' as const },
+  { id: 'conclusion',   icon: '🛡️', label: 'Se protéger',         short: 'Protection',    loader: { kind: 'terminal',    text: 'Analyse de vos protections' },             bg: 'particles' as const },
 ]
 
 type TabId = typeof TABS[number]['id']
-type BgKind = 'particles' | 'radar' | 'hexrain' | 'tron' | 'cursor'
+type BgKind = 'particles' | 'radar' | 'hexrain' | 'tron' | 'cursor' | 'terminal' | 'clock' | 'scan' | 'blocks' | 'wave' | 'rings' | 'map'
 
 const sections: Record<TabId, ReturnType<typeof defineAsyncComponent>> = {
   network:      defineAsyncComponent(() => import('./components/sections/NetworkSection.vue')),
@@ -170,6 +178,7 @@ const sections: Record<TabId, ReturnType<typeof defineAsyncComponent>> = {
   permissions:  defineAsyncComponent(() => import('./components/sections/PermissionsSection.vue')),
   behavior:     defineAsyncComponent(() => import('./components/sections/BehaviorSection.vue')),
   location:     defineAsyncComponent(() => import('./components/sections/LocationSection.vue')),
+  conclusion:   defineAsyncComponent(() => import('./components/sections/ConclusionSection.vue')),
 }
 
 const activeTab = ref<TabId>('network')
@@ -190,7 +199,26 @@ const tipEl = ref<HTMLElement | null>(null)
 
 const seenCount = computed(() => seenTabs.value.size)
 const progressPct = computed(() => (seenTabs.value.size / TABS.length) * 100)
+
 const activeComponent = computed(() => sections[activeTab.value])
+
+const traceScore = computed(() => {
+  let s = 20 // UA, écran, navigateur, timezone — toujours lisibles sans permission
+  if (network.publicIP.value) s += 15
+  if (network.city.value) s += 10
+  if (network.localIPs.value.length > 0) s += 15
+  if (fingerprint.canvasHash.value) s += 15
+  if (fingerprint.audioHash.value) s += 10
+  if (gpu.renderer.value) s += 8
+  if (fingerprint.detectedFonts.value.length > 5) s += 7
+  return Math.min(s, 100)
+})
+const scoreColor = computed(() => {
+  const s = traceScore.value
+  if (s >= 80) return 'var(--red)'
+  if (s >= 50) return 'var(--yellow)'
+  return 'var(--green)'
+})
 
 const sessionDate = computed(() => {
   const now = new Date()
