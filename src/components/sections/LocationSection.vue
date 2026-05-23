@@ -45,6 +45,21 @@
       </div>
     </div>
 
+    <div v-if="gpsCoords" class="cards" style="margin-bottom:0">
+      <DataCardV2
+        icon="📍"
+        title="Position GPS réelle"
+        :value="gpsCityLoading ? '🔍 Ville en cours…' : (gpsCity ?? `${gpsCoords.lat.toFixed(5)}, ${gpsCoords.lon.toFixed(5)}`)"
+        mean="Ces coordonnées proviennent directement du GPS ou de la triangulation Wi-Fi de votre appareil — avec votre autorisation explicite."
+        :deduce="`Précision : ±${gpsCoords.accuracy} m · ${gpsCoords.lat.toFixed(6)}, ${gpsCoords.lon.toFixed(6)}. C'est votre position à quelques mètres près — suffisant pour localiser votre domicile, votre bureau, ou la pièce où vous vous trouvez.`"
+        tech-key="getCurrentPosition() + Nominatim reverse"
+        :tech-val="`${gpsCoords.lat.toFixed(6)}, ${gpsCoords.lon.toFixed(6)} ±${gpsCoords.accuracy}m`"
+        severity="critique"
+        sev-label="critique"
+        :span="12"
+      />
+    </div>
+
     <div class="cards">
       <DataCardV2
         icon="🌍"
@@ -110,21 +125,6 @@
         sev-label="moyen"
         :loading="net.loading.value"
         :span="6"
-      />
-    </div>
-
-    <div v-if="gpsCoords" class="cards" style="margin-top:18px">
-      <DataCardV2
-        icon="📍"
-        title="Position GPS réelle"
-        :value="gpsCityLoading ? '🔍 Ville en cours…' : (gpsCity ?? `${gpsCoords.lat.toFixed(5)}, ${gpsCoords.lon.toFixed(5)}`)"
-        mean="Ces coordonnées proviennent directement du GPS ou de la triangulation Wi-Fi de votre appareil — avec votre autorisation explicite."
-        :deduce="`Précision : ±${gpsCoords.accuracy} m · ${gpsCoords.lat.toFixed(6)}, ${gpsCoords.lon.toFixed(6)}. C'est votre position à quelques mètres près — suffisant pour localiser votre domicile, votre bureau, ou la pièce où vous vous trouvez.`"
-        tech-key="getCurrentPosition() + Nominatim reverse"
-        :tech-val="`${gpsCoords.lat.toFixed(6)}, ${gpsCoords.lon.toFixed(6)} ±${gpsCoords.accuracy}m`"
-        severity="critique"
-        sev-label="critique"
-        :span="12"
       />
     </div>
 
