@@ -14,333 +14,533 @@
 <script setup lang="ts">
 import { ref, watch, onUnmounted } from 'vue'
 
-const props = defineProps<{
-  visible: boolean
-  kind: string
-  text: string
-}>()
-
+const props = defineProps<{ visible: boolean; kind: string; text: string }>()
 const emit = defineEmits<{ (e: 'skip'): void }>()
+
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 const DPR = Math.min(2, devicePixelRatio || 1)
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 let stopFn: (() => void) | null = null
-let animId = 0
+
+const CYAN = '#00e5ff'
+const FAINT = 'rgba(0, 229, 255, 0.35)'
+const DIM = 'rgba(0, 229, 255, 0.12)'
+
+function clr(ctx: CanvasRenderingContext2D, W: number, H: number) {
+  ctx.fillStyle = '#08080d'; ctx.fillRect(0, 0, W, H)
+}
 
 function startLoader(kind: string) {
-  stopFn?.()
-  stopFn = null
-  cancelAnimationFrame(animId)
+  stopFn?.(); stopFn = null
   const c = canvasEl.value
   if (!c || !props.visible || reduced) return
   const ctx = c.getContext('2d')
   if (!ctx) return
-
   const W = c.offsetWidth || 700
   const H = c.offsetHeight || 300
-  c.width = W * DPR
-  c.height = H * DPR
+  c.width = W * DPR; c.height = H * DPR
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
 
   switch (kind) {
-    case 'radar': stopFn = loaderRadar(c, ctx, W, H); break
-    case 'terminal': stopFn = loaderTerminal(c, ctx, W, H); break
-    case 'clock': stopFn = loaderClock(c, ctx, W, H); break
-    case 'scanner': stopFn = loaderScanner(c, ctx, W, H); break
-    case 'wireframe': stopFn = loaderWireframe(c, ctx, W, H); break
-    case 'hexrain': stopFn = loaderHexrain(c, ctx, W, H); break
-    case 'diskbar': stopFn = loaderDiskbar(c, ctx, W, H); break
-    case 'wifi': stopFn = loaderWifi(c, ctx, W, H); break
-    case 'permissions': stopFn = loaderPermissions(c, ctx, W, H); break
-    case 'cursor': stopFn = loaderCursor(c, ctx, W, H); break
-    case 'mapzoom': stopFn = loaderMapzoom(c, ctx, W, H); break
-    default: stopFn = loaderScanner(c, ctx, W, H)
+    case 'radar':       stopFn = loaderRadar(ctx, W, H);       break
+    case 'terminal':    stopFn = loaderTerminal(ctx, W, H);    break
+    case 'clock':       stopFn = loaderClock(ctx, W, H);       break
+    case 'scanner':     stopFn = loaderScanner(ctx, W, H);     break
+    case 'wireframe':   stopFn = loaderWireframe(ctx, W, H);   break
+    case 'hexrain':     stopFn = loaderHexrain(ctx, W, H);     break
+    case 'diskbar':     stopFn = loaderDiskbar(ctx, W, H);     break
+    case 'wifi':        stopFn = loaderWifi(ctx, W, H);        break
+    case 'permissions': stopFn = loaderPermissions(ctx, W, H); break
+    case 'cursor':      stopFn = loaderCursor(ctx, W, H);      break
+    case 'mapzoom':     stopFn = loaderMapzoom(ctx, W, H);     break
+    default:            stopFn = loaderScanner(ctx, W, H)
   }
 }
 
-function loaderRadar(c: HTMLCanvasElement, ctx: CanvasRenderingContext2D, W: number, H: number) {
-  let angle = 0, running = true
-  const cx = W / 2, cy = H / 2, R = Math.min(W, H) * .4
-  const draw = () => {
-    if (!running) return
-    ctx.fillStyle = '#08080d'
-    ctx.fillRect(0, 0, W, H)
-    ctx.strokeStyle = 'rgba(0,229,255,0.15)'
-    ctx.lineWidth = 1
-    for (let r = R * .33; r <= R; r += R * .33) {
+// ---- RADAR ----
+function loaderRadar(ctx: CanvasRenderingContext2D, W: number, H: number) {
+  let raf = 0
+  const t0 = performance.now()
+  const cx = W / 2, cy = H / 2
+  function draw(now: number) {
+    const t = (now - t0) / 1000
+    clr(ctx, W, H)
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1
+    for (let r = 30; r < 400; r += 40) {
       ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke()
     }
-    ctx.strokeStyle = 'rgba(0,229,255,0.08)'
-    for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
-      ctx.beginPath(); ctx.moveTo(cx, cy)
-      ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); ctx.stroke()
-    }
-    ctx.save(); ctx.translate(cx, cy); ctx.rotate(angle)
-    const grad = ctx.createLinearGradient(0, 0, R, 0)
-    grad.addColorStop(0, 'rgba(0,229,255,0.4)')
-    grad.addColorStop(1, 'rgba(0,229,255,0)')
-    ctx.fillStyle = grad
-    ctx.beginPath(); ctx.moveTo(0, 0)
-    ctx.arc(0, 0, R, -Math.PI / 5, 0); ctx.closePath(); ctx.fill()
-    ctx.restore()
-    ctx.fillStyle = 'rgba(0,229,255,0.9)'
-    ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2); ctx.fill()
-    angle += .04
-    animId = requestAnimationFrame(draw)
-  }
-  draw(); return () => { running = false }
-}
-
-function loaderTerminal(c: HTMLCanvasElement, ctx: CanvasRenderingContext2D, W: number, H: number) {
-  const lines = [
-    '> Initialisation analyse réseau…',
-    '> ip.ipify.org → 200 OK',
-    '> RTCPeerConnection → STUN resolve',
-    '> WebRTC ICE candidates: 3 found',
-    '> DNS resolver: Cloudflare (1.1.1.1)',
-    '> Collecte terminée.',
-  ]
-  let lineIdx = 0, charIdx = 0, running = true
-  const draw = () => {
-    if (!running) return
-    ctx.fillStyle = '#08080d'; ctx.fillRect(0, 0, W, H)
-    ctx.font = "14px 'IBM Plex Mono', monospace"
-    const displayed = lines.slice(0, lineIdx)
-    if (lineIdx < lines.length) displayed.push(lines[lineIdx].slice(0, charIdx))
-    displayed.forEach((l, i) => {
-      ctx.fillStyle = i < lineIdx ? 'rgba(0,229,255,0.5)' : 'rgba(0,229,255,0.9)'
-      ctx.fillText(l, 24, 40 + i * 34)
-    })
-    if (lineIdx < lines.length) {
-      if (charIdx < lines[lineIdx].length) charIdx++
-      else { charIdx = 0; lineIdx++ }
-    } else {
-      lineIdx = 0; charIdx = 0
-    }
-    animId = requestAnimationFrame(draw)
-  }
-  draw(); return () => { running = false }
-}
-
-function loaderClock(c: HTMLCanvasElement, ctx: CanvasRenderingContext2D, W: number, H: number) {
-  let angle = 0, running = true
-  const cx = W / 2, cy = H / 2, R = Math.min(W, H) * .35
-  const draw = () => {
-    if (!running) return
-    ctx.fillStyle = '#08080d'; ctx.fillRect(0, 0, W, H)
-    ctx.strokeStyle = 'rgba(0,229,255,0.2)'; ctx.lineWidth = 1
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke()
-    for (let i = 0; i < 12; i++) {
-      const a = (i / 12) * Math.PI * 2
-      ctx.beginPath()
-      ctx.moveTo(cx + Math.cos(a) * (R - 10), cy + Math.sin(a) * (R - 10))
-      ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R)
-      ctx.strokeStyle = 'rgba(0,229,255,0.4)'; ctx.stroke()
-    }
-    ctx.strokeStyle = 'rgba(0,229,255,0.8)'; ctx.lineWidth = 2
-    ctx.beginPath(); ctx.moveTo(cx, cy)
-    ctx.lineTo(cx + Math.cos(angle - Math.PI / 2) * R * .65, cy + Math.sin(angle - Math.PI / 2) * R * .65)
+    ctx.beginPath()
+    ctx.moveTo(cx - 200, cy); ctx.lineTo(cx + 200, cy)
+    ctx.moveTo(cx, cy - 140); ctx.lineTo(cx, cy + 140)
     ctx.stroke()
-    ctx.strokeStyle = 'rgba(0,229,255,1)'; ctx.lineWidth = 1.5
-    ctx.beginPath(); ctx.moveTo(cx, cy)
-    ctx.lineTo(cx + Math.cos(angle * 12 - Math.PI / 2) * R * .85, cy + Math.sin(angle * 12 - Math.PI / 2) * R * .85)
-    ctx.stroke()
-    angle += .01
-    animId = requestAnimationFrame(draw)
-  }
-  draw(); return () => { running = false }
-}
-
-function loaderScanner(c: HTMLCanvasElement, ctx: CanvasRenderingContext2D, W: number, H: number) {
-  let y = 0, dir = 1, running = true
-  const draw = () => {
-    if (!running) return
-    ctx.fillStyle = '#08080d'; ctx.fillRect(0, 0, W, H)
-    const grad = ctx.createLinearGradient(0, y - 30, 0, y + 30)
-    grad.addColorStop(0, 'transparent')
-    grad.addColorStop(.5, 'rgba(0,229,255,0.5)')
-    grad.addColorStop(1, 'transparent')
-    ctx.fillStyle = grad; ctx.fillRect(0, y - 30, W, 60)
-    ctx.fillStyle = 'rgba(0,229,255,0.85)'
-    ctx.fillRect(0, y - 1, W, 2)
-    y += 2 * dir
-    if (y > H || y < 0) dir *= -1
-    animId = requestAnimationFrame(draw)
-  }
-  draw(); return () => { running = false }
-}
-
-function loaderWireframe(c: HTMLCanvasElement, ctx: CanvasRenderingContext2D, W: number, H: number) {
-  let t = 0, running = true
-  const pts3d = Array.from({ length: 8 }, (_, i) => ({
-    x: (i & 1 ? 1 : -1) * 80,
-    y: (i & 2 ? 1 : -1) * 80,
-    z: (i & 4 ? 1 : -1) * 80,
-  }))
-  const edges = [[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]]
-  const draw = () => {
-    if (!running) return
-    ctx.fillStyle = '#08080d'; ctx.fillRect(0, 0, W, H)
-    const cos = Math.cos(t), sin = Math.sin(t)
-    const proj = pts3d.map(p => {
-      const rx = p.x * cos - p.z * sin
-      const rz = p.x * sin + p.z * cos
-      const scale = 350 / (350 + rz)
-      return { x: W / 2 + rx * scale, y: H / 2 + p.y * scale }
-    })
-    ctx.strokeStyle = 'rgba(0,229,255,0.5)'; ctx.lineWidth = 1
-    for (const [a, b] of edges) {
-      ctx.beginPath(); ctx.moveTo(proj[a].x, proj[a].y); ctx.lineTo(proj[b].x, proj[b].y); ctx.stroke()
+    for (let i = 0; i < 3; i++) {
+      const p = ((t * 0.6) + i * 0.33) % 1
+      ctx.strokeStyle = `rgba(0,229,255,${(1 - p) * 0.9})`; ctx.lineWidth = 2
+      ctx.beginPath(); ctx.arc(cx, cy, p * 240, 0, Math.PI * 2); ctx.stroke()
     }
-    t += .02; animId = requestAnimationFrame(draw)
-  }
-  draw(); return () => { running = false }
-}
-
-function loaderHexrain(c: HTMLCanvasElement, ctx: CanvasRenderingContext2D, W: number, H: number) {
-  const chars = '0123456789ABCDEF'
-  const colW = 22
-  const cols = Array.from({ length: Math.ceil(W / colW) }, () => Math.random() * -30)
-  let running = true
-  const draw = () => {
-    if (!running) return
-    ctx.fillStyle = 'rgba(8,8,13,0.15)'; ctx.fillRect(0, 0, W, H)
-    ctx.fillStyle = 'rgba(0,229,255,0.7)'
-    ctx.font = "13px 'IBM Plex Mono', monospace"
-    for (let i = 0; i < cols.length; i++) {
-      ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * colW + 4, cols[i] * 18)
-      if (cols[i] * 18 > H && Math.random() > .975) cols[i] = 0
-      cols[i]++
+    const a = (t * 1.6) % (Math.PI * 2)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const grad = (ctx as any).createConicGradient ? (ctx as any).createConicGradient(a, cx, cy) : null
+    if (grad) {
+      grad.addColorStop(0, 'rgba(0,229,255,0.0)')
+      grad.addColorStop(0.05, 'rgba(0,229,255,0.4)')
+      grad.addColorStop(0.1, 'rgba(0,229,255,0.0)')
+      grad.addColorStop(1, 'rgba(0,229,255,0.0)')
+      ctx.fillStyle = grad
+      ctx.beginPath(); ctx.arc(cx, cy, 230, 0, Math.PI * 2); ctx.fill()
     }
-    animId = requestAnimationFrame(draw)
-  }
-  draw(); return () => { running = false }
-}
-
-function loaderDiskbar(c: HTMLCanvasElement, ctx: CanvasRenderingContext2D, W: number, H: number) {
-  let t = 0, running = true
-  const bars = ['localStorage', 'sessionStorage', 'IndexedDB', 'Cache API', 'CookieStorage']
-  const targets = [0.72, 0.45, 0.88, 0.31, 0.15]
-  const draw = () => {
-    if (!running) return
-    ctx.fillStyle = '#08080d'; ctx.fillRect(0, 0, W, H)
-    ctx.font = "12px 'IBM Plex Mono', monospace"
-    bars.forEach((name, i) => {
-      const y = 50 + i * 44
-      const fill = Math.min(targets[i], (t - i * .15))
-      ctx.fillStyle = 'rgba(0,229,255,0.2)'
-      ctx.fillRect(160, y, W - 200, 18)
-      ctx.fillStyle = 'rgba(0,229,255,0.7)'
-      ctx.fillRect(160, y, (W - 200) * Math.max(0, fill), 18)
-      ctx.fillStyle = 'rgba(0,229,255,0.5)'
-      ctx.fillText(name, 10, y + 13)
-      ctx.fillStyle = 'rgba(0,229,255,0.9)'
-      ctx.fillText(Math.round(Math.max(0, fill) * 100) + '%', W - 36, y + 13)
-    })
-    t += .008; if (t > 1.5) t = 0
-    animId = requestAnimationFrame(draw)
-  }
-  draw(); return () => { running = false }
-}
-
-function loaderWifi(c: HTMLCanvasElement, ctx: CanvasRenderingContext2D, W: number, H: number) {
-  let t = 0, running = true
-  const cx = W / 2, cy = H / 2 + 60
-  const draw = () => {
-    if (!running) return
-    ctx.fillStyle = '#08080d'; ctx.fillRect(0, 0, W, H)
-    const bars = 4
-    for (let i = 0; i < bars; i++) {
-      const lit = (Math.floor(t * 2) % (bars + 1)) > i
-      ctx.strokeStyle = lit ? 'rgba(0,229,255,0.9)' : 'rgba(0,229,255,0.15)'
-      ctx.lineWidth = 3
-      const r = 30 + i * 30
-      ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI * .75, -Math.PI * .25); ctx.stroke()
-    }
-    ctx.fillStyle = 'rgba(0,229,255,0.9)'
+    ctx.fillStyle = CYAN
     ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill()
-    t += .03; animId = requestAnimationFrame(draw)
+    ctx.strokeStyle = CYAN; ctx.lineWidth = 1
+    ctx.beginPath(); ctx.arc(cx, cy, 14, 0, Math.PI * 2); ctx.stroke()
+    ctx.fillStyle = FAINT; ctx.font = '11px "IBM Plex Mono", monospace'
+    ctx.fillText('92.184.117.43', cx + 18, cy - 4)
+    ctx.fillText('Paris · FR', cx + 18, cy + 12)
+    raf = requestAnimationFrame(draw)
   }
-  draw(); return () => { running = false }
+  raf = requestAnimationFrame(draw)
+  return () => cancelAnimationFrame(raf)
 }
 
-function loaderPermissions(c: HTMLCanvasElement, ctx: CanvasRenderingContext2D, W: number, H: number) {
-  const icons = ['📍', '📷', '🎤', '🔔', '📋', '💾', '🎹']
-  let t = 0, running = true
-  const draw = () => {
-    if (!running) return
-    ctx.fillStyle = '#08080d'; ctx.fillRect(0, 0, W, H)
-    const lit = Math.floor(t) % icons.length
-    ctx.font = '32px sans-serif'
-    icons.forEach((ico, i) => {
-      const x = W / 2 + (i - icons.length / 2 + .5) * 70
-      ctx.globalAlpha = i === lit ? 1 : 0.2
-      ctx.fillText(ico, x - 16, H / 2 + 12)
+// ---- TERMINAL ----
+function loaderTerminal(ctx: CanvasRenderingContext2D, W: number, H: number) {
+  const lines = [
+    '> navigator.userAgent',
+    '"Mozilla/5.0 (Win64; x64) AppleWebKit/537.36 …',
+    ' …  Chrome/124.0.6367.91 Safari/537.36"',
+    '> navigator.platform        → "Win32"',
+    '> navigator.languages       → ["fr-FR","fr","en-US","en"]',
+    '> navigator.hardwareConcurrency → 12',
+    '> navigator.deviceMemory    → 8',
+    '> navigator.cookieEnabled   → true',
+    '> navigator.maxTouchPoints  → 0',
+    '> navigator.doNotTrack      → null',
+    '> screen.width × height     → 2560 × 1440',
+    '> screen.colorDepth         → 24',
+    '> Intl.DateTimeFormat … timeZone → "Europe/Paris"',
+    '> performance.memory.jsHeapSize → 4 194 304',
+    '> navigator.plugins.length  → 5',
+    '✓ profil capturé.'
+  ]
+  let raf = 0
+  const t0 = performance.now()
+  let shown = 0, lastAdd = 0
+  function draw(now: number) {
+    clr(ctx, W, H)
+    const t = (now - t0) / 1000
+    if (now - lastAdd > 230 && shown < lines.length) { shown++; lastAdd = now }
+    ctx.font = '13px "IBM Plex Mono", monospace'; ctx.textBaseline = 'top'
+    const pad = 28, lh = 18
+    for (let i = 0; i < shown; i++) {
+      const y = pad + i * lh
+      if (y > H - 30) continue
+      const l = lines[i]
+      ctx.fillStyle = l.startsWith('>') ? CYAN : l.startsWith('✓') ? '#6cd99a' : 'rgba(255,255,255,0.7)'
+      ctx.fillText(l, pad, y)
+    }
+    if (shown < lines.length) {
+      const y = pad + shown * lh
+      if (Math.floor(t * 2) % 2 === 0) { ctx.fillStyle = CYAN; ctx.fillRect(pad, y + 2, 8, 14) }
+    }
+    ctx.textBaseline = 'alphabetic'
+    raf = requestAnimationFrame(draw)
+  }
+  raf = requestAnimationFrame(draw)
+  return () => cancelAnimationFrame(raf)
+}
+
+// ---- CLOCK ----
+function loaderClock(ctx: CanvasRenderingContext2D, W: number, H: number) {
+  let raf = 0
+  const t0 = performance.now()
+  function draw(now: number) {
+    clr(ctx, W, H)
+    const t = (now - t0) / 1000
+    const cx = W / 2, cy = H / 2
+    ctx.strokeStyle = DIM; ctx.lineWidth = 1
+    for (let i = 0; i < 8; i++) {
+      const off = (t * 60 + i * 22.5) % 360
+      ctx.beginPath()
+      ctx.ellipse(cx, cy, 60 + Math.sin(t + i) * 2, 90, off * Math.PI / 180, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+    ctx.strokeStyle = FAINT
+    for (let i = 0; i < 5; i++) {
+      ctx.beginPath(); ctx.ellipse(cx, cy, 90, 18 + i * 18, 0, 0, Math.PI * 2); ctx.stroke()
+    }
+    const ox = cx + 160, oy = cy
+    ctx.strokeStyle = CYAN; ctx.lineWidth = 2
+    ctx.beginPath(); ctx.arc(ox, oy, 60, 0, Math.PI * 2); ctx.stroke()
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1
+    for (let i = 0; i < 12; i++) {
+      const a = i * Math.PI / 6
+      ctx.beginPath()
+      ctx.moveTo(ox + Math.cos(a) * 52, oy + Math.sin(a) * 52)
+      ctx.lineTo(ox + Math.cos(a) * 58, oy + Math.sin(a) * 58)
+      ctx.stroke()
+    }
+    const aH = t * 2.4, aM = t * 8
+    ctx.strokeStyle = CYAN; ctx.lineCap = 'round'; ctx.lineWidth = 3
+    ctx.beginPath(); ctx.moveTo(ox, oy)
+    ctx.lineTo(ox + Math.cos(aH - Math.PI / 2) * 28, oy + Math.sin(aH - Math.PI / 2) * 28); ctx.stroke()
+    ctx.lineWidth = 2
+    ctx.beginPath(); ctx.moveTo(ox, oy)
+    ctx.lineTo(ox + Math.cos(aM - Math.PI / 2) * 44, oy + Math.sin(aM - Math.PI / 2) * 44); ctx.stroke()
+    ctx.lineCap = 'butt'
+    ctx.fillStyle = FAINT; ctx.font = '11px "IBM Plex Mono", monospace'
+    ctx.fillText('Europe / Paris · UTC +02:00', cx - 110, cy + 110)
+    raf = requestAnimationFrame(draw)
+  }
+  raf = requestAnimationFrame(draw)
+  return () => cancelAnimationFrame(raf)
+}
+
+// ---- SCANNER ----
+function loaderScanner(ctx: CanvasRenderingContext2D, W: number, H: number) {
+  let raf = 0
+  const t0 = performance.now()
+  const labels: [string, string, number][] = [
+    ['ÉCRAN', '2560 × 1440', 0.10],
+    ['DPR', '1.25', 0.22],
+    ['COULEURS', '24 bits', 0.34],
+    ['TACTILE', 'non', 0.46],
+    ['CPU', '12 cœurs', 0.58],
+    ['RAM', '16 Go', 0.70],
+    ['GPU', 'RTX 4070', 0.82],
+  ]
+  function draw(now: number) {
+    clr(ctx, W, H)
+    const t = (now - t0) / 1000
+    const period = 2.4
+    const p = (t % period) / period
+    const y = p * H
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1
+    for (let i = 20; i < W; i += 40) {
+      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke()
+    }
+    for (let i = 20; i < H; i += 30) {
+      ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke()
+    }
+    const px = W / 2 - 110, py = 30, pw = 220, ph = 140
+    ctx.strokeStyle = FAINT; ctx.lineWidth = 1.5
+    ctx.strokeRect(px, py, pw, ph)
+    ctx.strokeRect(px + 80, py + ph, 60, 12)
+    ctx.strokeRect(px + 50, py + ph + 12, 120, 8)
+    const grad = ctx.createLinearGradient(0, y - 30, 0, y + 30)
+    grad.addColorStop(0, 'rgba(0,229,255,0)')
+    grad.addColorStop(0.5, 'rgba(0,229,255,0.5)')
+    grad.addColorStop(1, 'rgba(0,229,255,0)')
+    ctx.fillStyle = grad; ctx.fillRect(0, y - 30, W, 60)
+    ctx.strokeStyle = CYAN; ctx.lineWidth = 1
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke()
+    ctx.font = '12px "IBM Plex Mono", monospace'
+    labels.forEach(([k, v, anchor]) => {
+      const ly = 40 + anchor * (H - 80)
+      const lit = p > anchor
+      ctx.fillStyle = lit ? CYAN : 'rgba(255,255,255,0.18)'
+      ctx.fillText(k.padEnd(10, ' '), 20, ly)
+      ctx.fillStyle = lit ? '#fff' : 'rgba(255,255,255,0.18)'
+      ctx.fillText(v, 120, ly)
     })
-    ctx.globalAlpha = 1
-    t += .06; animId = requestAnimationFrame(draw)
+    raf = requestAnimationFrame(draw)
   }
-  draw(); return () => { running = false }
+  raf = requestAnimationFrame(draw)
+  return () => cancelAnimationFrame(raf)
 }
 
-function loaderCursor(c: HTMLCanvasElement, ctx: CanvasRenderingContext2D, W: number, H: number) {
-  let t = 0, running = true
-  const trail: { x: number; y: number; a: number }[] = []
-  const draw = () => {
-    if (!running) return
+// ---- WIREFRAME ----
+function loaderWireframe(ctx: CanvasRenderingContext2D, W: number, H: number) {
+  let raf = 0
+  const t0 = performance.now()
+  const V: [number, number, number][] = [
+    [-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
+    [-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]
+  ]
+  const E = [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]]
+  function project(v: [number, number, number], t: number, cx: number, cy: number): [number, number] {
+    const ax = t * 0.6, ay = t * 0.9
+    const [x, y, z] = v
+    const X = x * Math.cos(ay) + z * Math.sin(ay)
+    const Z = -x * Math.sin(ay) + z * Math.cos(ay)
+    const Y = y * Math.cos(ax) - Z * Math.sin(ax)
+    const Z2 = y * Math.sin(ax) + Z * Math.cos(ax)
+    const s = 90 / (4 + Z2)
+    return [cx + X * s * 4, cy + Y * s * 4]
+  }
+  function draw(now: number) {
+    clr(ctx, W, H)
+    const t = (now - t0) / 1000
+    const cx = W / 2, cy = H / 2
+    ctx.strokeStyle = 'rgba(0,229,255,0.08)'; ctx.lineWidth = 1
+    for (let i = -5; i <= 5; i++) {
+      ctx.beginPath()
+      ctx.moveTo(cx + i * 40, cy + 80); ctx.lineTo(cx + i * 8, cy + 200); ctx.stroke()
+    }
+    for (let i = 1; i < 8; i++) {
+      const fy = cy + 80 + i * 16, fw = 200 - i * 22
+      ctx.beginPath(); ctx.moveTo(cx - fw, fy); ctx.lineTo(cx + fw, fy); ctx.stroke()
+    }
+    const points = V.map(v => project(v, t, cx, cy))
+    const progress = Math.min(1, (t % 3.2) / 2.6)
+    ctx.strokeStyle = CYAN; ctx.lineWidth = 2
+    ctx.shadowColor = CYAN; ctx.shadowBlur = 8
+    E.forEach((e, i) => {
+      if (i / E.length > progress) return
+      ctx.beginPath()
+      ctx.moveTo(points[e[0]][0], points[e[0]][1])
+      ctx.lineTo(points[e[1]][0], points[e[1]][1])
+      ctx.stroke()
+    })
+    ctx.shadowBlur = 0
+    points.forEach((p, i) => {
+      if (i / points.length > progress + 0.1) return
+      ctx.fillStyle = '#fff'
+      ctx.beginPath(); ctx.arc(p[0], p[1], 2.5, 0, Math.PI * 2); ctx.fill()
+    })
+    ctx.font = '11px "IBM Plex Mono", monospace'; ctx.fillStyle = FAINT
+    ctx.fillText('WebGL 2.0  ·  ANGLE  ·  RTX 4070', 28, H - 24)
+    raf = requestAnimationFrame(draw)
+  }
+  raf = requestAnimationFrame(draw)
+  return () => cancelAnimationFrame(raf)
+}
+
+// ---- HEXRAIN ----
+function loaderHexrain(ctx: CanvasRenderingContext2D, W: number, H: number) {
+  let raf = 0
+  const t0 = performance.now()
+  const hexChars = '0123456789abcdef'
+  const drops = Array.from({ length: Math.floor(W / 14) }, () => ({
+    y: Math.random() * H, v: 80 + Math.random() * 120, s: Math.random() * 1000
+  }))
+  let last = performance.now()
+  function draw(now: number) {
+    const dt = (now - last) / 1000; last = now
     ctx.fillStyle = 'rgba(8,8,13,0.18)'; ctx.fillRect(0, 0, W, H)
-    const x = W / 2 + Math.cos(t) * W * .3
-    const y = H / 2 + Math.sin(t * 1.3) * H * .3
-    trail.push({ x, y, a: 1 })
-    if (trail.length > 40) trail.shift()
-    trail.forEach((p, i) => {
-      ctx.fillStyle = `rgba(0,229,255,${p.a * .6})`
-      ctx.beginPath(); ctx.arc(p.x, p.y, 3 * p.a, 0, Math.PI * 2); ctx.fill()
-      p.a -= .025
+    const t = (now - t0) / 1000
+    ctx.font = '13px "IBM Plex Mono", monospace'
+    drops.forEach((d, i) => {
+      d.y += d.v * dt
+      if (d.y > H + 60) { d.y = -20; d.s = Math.random() * 1000 }
+      for (let k = 0; k < 8; k++) {
+        const ch = hexChars[Math.floor((t * 6 + d.s + k * 17) % 16)]
+        const alpha = Math.max(0, 0.6 - k * 0.09)
+        ctx.fillStyle = k === 0 ? '#fff' : `rgba(0,229,255,${alpha})`
+        ctx.fillText(ch, i * 14 + 6, d.y - k * 16)
+      }
     })
-    t += .04; animId = requestAnimationFrame(draw)
+    const p = Math.min(1, t / 3)
+    if (p > 0.5) {
+      const target = 'a7f3 9c2d 4e81 b6f0'
+      const ww = 220, x = W / 2 - ww / 2, y = H - 40
+      ctx.fillStyle = 'rgba(8,8,13,0.85)'; ctx.fillRect(x - 14, y - 22, ww + 28, 36)
+      ctx.strokeStyle = CYAN; ctx.lineWidth = 1; ctx.strokeRect(x - 14, y - 22, ww + 28, 36)
+      const shown = Math.floor((p - 0.5) * 2 * target.length)
+      ctx.fillStyle = CYAN; ctx.font = '16px "IBM Plex Mono", monospace'
+      ctx.fillText(target.slice(0, shown), x, y)
+    }
+    raf = requestAnimationFrame(draw)
   }
-  draw(); return () => { running = false }
+  raf = requestAnimationFrame(draw)
+  return () => cancelAnimationFrame(raf)
 }
 
-function loaderMapzoom(c: HTMLCanvasElement, ctx: CanvasRenderingContext2D, W: number, H: number) {
-  let t = 0, running = true
-  const cx = W / 2, cy = H / 2
-  const draw = () => {
-    if (!running) return
-    ctx.fillStyle = '#08080d'; ctx.fillRect(0, 0, W, H)
-    const scale = 1 + (t % 1) * .5
-    ctx.save(); ctx.translate(cx, cy); ctx.scale(scale, scale)
-    for (let i = 1; i <= 4; i++) {
-      const r = i * 40
-      ctx.strokeStyle = `rgba(0,229,255,${.6 / i})`; ctx.lineWidth = 1
-      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke()
-      if (i < 4) {
-        ctx.strokeStyle = 'rgba(0,229,255,0.08)'
-        ctx.beginPath(); ctx.moveTo(-r, 0); ctx.lineTo(r, 0); ctx.stroke()
-        ctx.beginPath(); ctx.moveTo(0, -r); ctx.lineTo(0, r); ctx.stroke()
+// ---- DISKBAR ----
+function loaderDiskbar(ctx: CanvasRenderingContext2D, W: number, H: number) {
+  let raf = 0
+  const t0 = performance.now()
+  const cols = 32, rows = 6
+  const cellW = (W - 60) / cols, cellH = 14, startY = 60
+  const lit = new Array(cols * rows).fill(0)
+  function draw(now: number) {
+    clr(ctx, W, H)
+    const t = (now - t0) / 1000
+    const total = cols * rows
+    const target = Math.min(total, Math.floor(t * total / 3))
+    ctx.font = '11px "IBM Plex Mono", monospace'; ctx.fillStyle = FAINT
+    ctx.fillText('SCAN STORAGE  /  localStorage  /  IndexedDB  /  Cache  /  Cookies', 30, 36)
+    ctx.fillStyle = CYAN
+    ctx.fillText(Math.floor((target / total) * 100) + ' %', W - 60, 36)
+    for (let i = 0; i < total; i++) {
+      const r = Math.floor(i / cols), col = i % cols
+      const x = 30 + col * cellW, y = startY + r * (cellH + 6)
+      let state = lit[i]
+      if (i < target && state < 1) state = lit[i] = Math.min(1, state + 0.08)
+      if (state > 0) {
+        ctx.fillStyle = `rgba(0,229,255,${0.15 + state * 0.55})`
+        ctx.fillRect(x, y, cellW - 4, cellH)
+        if (state > 0.9 && Math.random() > 0.96) {
+          ctx.fillStyle = '#fff'; ctx.fillRect(x, y, cellW - 4, cellH)
+        }
+      } else {
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1
+        ctx.strokeRect(x, y, cellW - 4, cellH)
       }
     }
-    ctx.restore()
-    ctx.fillStyle = 'rgba(0,229,255,0.9)'; ctx.font = '18px sans-serif'
-    ctx.fillText('📍', cx - 9, cy + 7)
-    t += .01; animId = requestAnimationFrame(draw)
+    const py = startY + rows * (cellH + 6) + 12
+    ctx.strokeStyle = FAINT; ctx.lineWidth = 1; ctx.strokeRect(30, py, W - 60, 8)
+    ctx.fillStyle = CYAN; ctx.fillRect(30, py, (W - 60) * (target / total), 8)
+    raf = requestAnimationFrame(draw)
   }
-  draw(); return () => { running = false }
+  raf = requestAnimationFrame(draw)
+  return () => cancelAnimationFrame(raf)
+}
+
+// ---- WIFI ----
+function loaderWifi(ctx: CanvasRenderingContext2D, W: number, H: number) {
+  let raf = 0
+  const t0 = performance.now()
+  function draw(now: number) {
+    clr(ctx, W, H)
+    const t = (now - t0) / 1000
+    const cx = W / 2 - 60, cy = H / 2 + 20
+    for (let i = 0; i < 4; i++) {
+      ctx.lineWidth = 8 - i * 1.4
+      ctx.strokeStyle = `rgba(0,229,255,${0.9 - i * 0.18})`
+      ctx.beginPath(); ctx.arc(cx, cy, 20 + i * 32, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke()
+    }
+    ctx.fillStyle = CYAN; ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI * 2); ctx.fill()
+    const bx = W - 220, by = H / 2
+    for (let i = 0; i < 6; i++) {
+      const h = 12 + i * 14
+      const v = Math.min(1, Math.max(0, Math.sin(t * 2 + i * 0.7) * 0.5 + 0.6))
+      const x = bx + i * 22
+      ctx.strokeStyle = FAINT; ctx.lineWidth = 1; ctx.strokeRect(x, by - h, 14, h)
+      ctx.fillStyle = '#08080d'; ctx.fillRect(x, by - h, 14, h)
+      ctx.fillStyle = `rgba(0,229,255,${v * 0.9})`; ctx.fillRect(x, by - h * v, 14, h * v)
+    }
+    ctx.fillStyle = FAINT; ctx.font = '11px "IBM Plex Mono", monospace'
+    ctx.fillText('SIGNAL  ·  4G  ·  RTT 85 ms  ·  DOWN 12.4 Mbps', 30, H - 20)
+    raf = requestAnimationFrame(draw)
+  }
+  raf = requestAnimationFrame(draw)
+  return () => cancelAnimationFrame(raf)
+}
+
+// ---- PERMISSIONS ----
+function loaderPermissions(ctx: CanvasRenderingContext2D, W: number, H: number) {
+  let raf = 0
+  const t0 = performance.now()
+  const items = [
+    { ico: '📷', label: 'Caméra', state: 'denied' },
+    { ico: '🎤', label: 'Micro', state: 'denied' },
+    { ico: '📍', label: 'GPS', state: 'prompt' },
+    { ico: '🔔', label: 'Notif.', state: 'default' },
+    { ico: '🔋', label: 'Batterie', state: 'granted' },
+    { ico: '🔵', label: 'Bluetooth', state: 'prompt' }
+  ]
+  function draw(now: number) {
+    clr(ctx, W, H)
+    const t = (now - t0) / 1000
+    const gap = W / (items.length + 1)
+    const y = H / 2
+    items.forEach((it, i) => {
+      const appear = Math.max(0, Math.min(1, (t - i * 0.35) / 0.4))
+      if (appear <= 0) return
+      const x = gap * (i + 1)
+      ctx.strokeStyle = it.state === 'denied' ? '#ff3b30' : it.state === 'granted' ? '#6cd99a' : CYAN
+      ctx.globalAlpha = appear; ctx.lineWidth = 2
+      ctx.beginPath(); ctx.arc(x, y, 38, 0, Math.PI * 2); ctx.stroke()
+      const sweep = ((t * 0.8 - i * 0.35) % 1)
+      if (sweep > 0 && sweep < 1) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(x - 38, y - 38 + sweep * 76); ctx.lineTo(x + 38, y - 38 + sweep * 76)
+        ctx.stroke()
+      }
+      ctx.font = '28px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+      ctx.fillStyle = '#fff'; ctx.fillText(it.ico, x, y - 2)
+      ctx.fillStyle = FAINT; ctx.font = '11px "IBM Plex Mono", monospace'
+      ctx.fillText(it.label, x, y + 56)
+      ctx.fillStyle = it.state === 'denied' ? '#ff3b30' : it.state === 'granted' ? '#6cd99a' : CYAN
+      ctx.fillText(it.state.toUpperCase(), x, y + 72)
+      ctx.globalAlpha = 1
+    })
+    ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic'
+    raf = requestAnimationFrame(draw)
+  }
+  raf = requestAnimationFrame(draw)
+  return () => cancelAnimationFrame(raf)
+}
+
+// ---- CURSOR ----
+function loaderCursor(ctx: CanvasRenderingContext2D, W: number, H: number) {
+  let raf = 0
+  const t0 = performance.now()
+  const trail: { x: number; y: number }[] = []
+  function draw(now: number) {
+    ctx.fillStyle = 'rgba(8,8,13,0.18)'; ctx.fillRect(0, 0, W, H)
+    const t = (now - t0) / 1000
+    const x = W / 2 + Math.sin(t * 0.9) * 200 + Math.sin(t * 2.3) * 60
+    const y = H / 2 + Math.cos(t * 1.3) * 80 + Math.cos(t * 2.7) * 40
+    trail.push({ x, y }); if (trail.length > 80) trail.shift()
+    trail.forEach((p, i) => {
+      const k = i / trail.length
+      ctx.fillStyle = `rgba(0,229,255,${k * 0.6})`
+      ctx.beginPath(); ctx.arc(p.x, p.y, 1 + k * 3, 0, Math.PI * 2); ctx.fill()
+    })
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill()
+    ctx.strokeStyle = CYAN; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, 12, 0, Math.PI * 2); ctx.stroke()
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1
+    for (let gx = 0; gx < W; gx += 40) {
+      ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke()
+    }
+    for (let gy = 0; gy < H; gy += 40) {
+      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke()
+    }
+    raf = requestAnimationFrame(draw)
+  }
+  raf = requestAnimationFrame(draw)
+  return () => cancelAnimationFrame(raf)
+}
+
+// ---- MAPZOOM ----
+function loaderMapzoom(ctx: CanvasRenderingContext2D, W: number, H: number) {
+  let raf = 0
+  const t0 = performance.now()
+  const rings = [
+    { rMax: 260, label: 'PAYS · France' },
+    { rMax: 160, label: 'RÉGION · Île-de-France' },
+    { rMax: 80, label: 'VILLE · Paris' },
+    { rMax: 22, label: 'QUARTIER · 10e arr.' }
+  ]
+  function draw(now: number) {
+    clr(ctx, W, H)
+    const t = (now - t0) / 1000
+    const cx = W / 2, cy = H / 2
+    ctx.strokeStyle = 'rgba(0,229,255,0.08)'; ctx.lineWidth = 1
+    for (let r = 30; r < 320; r += 28) {
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke()
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,0.07)'
+    for (let i = -4; i <= 4; i++) {
+      ctx.beginPath(); ctx.moveTo(cx - 250, cy + i * 24); ctx.lineTo(cx + 250, cy + i * 24); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(cx + i * 38, cy - 120); ctx.lineTo(cx + i * 38, cy + 120); ctx.stroke()
+    }
+    const period = 3.2, p = (t % period) / period
+    const idx = Math.floor(p * rings.length)
+    const ring = rings[Math.min(idx, rings.length - 1)]
+    const r = ring.rMax * (0.6 + (p * rings.length % 1) * 0.4)
+    ctx.strokeStyle = CYAN; ctx.lineWidth = 2
+    ctx.shadowColor = CYAN; ctx.shadowBlur = 14
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke()
+    ctx.shadowBlur = 0
+    ctx.fillStyle = CYAN; ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill()
+    ctx.fillStyle = '#fff'; ctx.font = '13px "IBM Plex Mono", monospace'
+    ctx.fillText(ring.label, cx + 20, cy - 6)
+    ctx.fillStyle = FAINT; ctx.font = '11px "IBM Plex Mono", monospace'
+    ctx.fillText(`triangulation… ${Math.floor(p * 100)} %`, cx + 20, cy + 12)
+    raf = requestAnimationFrame(draw)
+  }
+  raf = requestAnimationFrame(draw)
+  return () => cancelAnimationFrame(raf)
 }
 
 watch(() => [props.visible, props.kind] as const, ([vis]) => {
-  if (vis) {
-    setTimeout(() => startLoader(props.kind), 50)
-  } else {
-    stopFn?.(); stopFn = null
-    cancelAnimationFrame(animId)
-  }
+  if (vis) setTimeout(() => startLoader(props.kind), 50)
+  else { stopFn?.(); stopFn = null }
 })
 
-onUnmounted(() => {
-  stopFn?.()
-  cancelAnimationFrame(animId)
-})
+onUnmounted(() => { stopFn?.() })
 </script>
