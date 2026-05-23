@@ -9,7 +9,7 @@
         </div>
       </div>
       <div>
-        <span class="th-count">8<small>signaux</small></span>
+        <span class="th-count">7<small>signaux</small></span>
       </div>
     </div>
 
@@ -51,18 +51,6 @@
         :span="4"
       />
       <DataCardV2
-        icon="🍪"
-        title="Cookies activés"
-        :value="st.cookiesEnabled.value ? 'Oui' : 'Non'"
-        mean="Les cookies restent le mécanisme de suivi le plus utilisé. Ils permettent le suivi cross-session et la persistance d'identifiants."
-        deduce="Avec les cookies, chaque site peut vous assigner un identifiant unique et vous suivre sur toutes vos visites."
-        tech-key="navigator.cookieEnabled"
-        :tech-val="String(st.cookiesEnabled.value)"
-        severity="eleve"
-        sev-label="élevé"
-        :span="4"
-      />
-      <DataCardV2
         icon="⚙️"
         title="Service Worker"
         :value="st.serviceWorkerAvail.value ? 'Disponible' : 'Non disponible'"
@@ -72,7 +60,7 @@
         :tech-val="String(st.serviceWorkerAvail.value)"
         severity="moyen"
         sev-label="moyen"
-        :span="4"
+        :span="6"
       />
       <DataCardV2
         icon="📡"
@@ -84,7 +72,7 @@
         :tech-val="String(st.cacheAPIAvail.value)"
         severity="moyen"
         sev-label="moyen"
-        :span="4"
+        :span="6"
       />
       <DataCardV2
         icon="💽"

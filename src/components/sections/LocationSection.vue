@@ -9,7 +9,7 @@
         </div>
       </div>
       <div>
-        <span class="th-count">6<small>signaux</small></span>
+        <span class="th-count">5<small>signaux</small></span>
       </div>
     </div>
 
@@ -88,19 +88,6 @@
         :span="6"
       />
       <DataCardV2
-        icon="🔢"
-        title="ASN & FAI"
-        :value="net.isp.value ?? '…'"
-        mean="L'ASN (Autonomous System Number) identifie le réseau et le fournisseur propriétaire de votre bloc d'IPs."
-        deduce="Révèle si vous êtes sur une connexion résidentielle, professionnelle, un datacenter ou un VPN commercial connu."
-        tech-key="ip-api.com › isp + as"
-        :tech-val="net.asn.value ?? '—'"
-        severity="moyen"
-        sev-label="moyen"
-        :loading="net.loading.value"
-        :span="6"
-      />
-      <DataCardV2
         icon="📡"
         title="Résolveur DNS"
         :value="net.dnsResolver.value ?? 'Non détecté'"
@@ -111,7 +98,7 @@
         severity="moyen"
         sev-label="moyen"
         :loading="net.loading.value"
-        :span="12"
+        :span="6"
       />
     </div>
 

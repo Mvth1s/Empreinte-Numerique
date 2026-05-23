@@ -9,7 +9,7 @@
         </div>
       </div>
       <div>
-        <span class="th-count">6<small>signaux</small></span>
+        <span class="th-count">5<small>signaux</small></span>
       </div>
     </div>
 
@@ -18,27 +18,14 @@
         icon="🌍"
         title="Adresse IP publique"
         :value="net.publicIP.value ?? '…'"
-        mean="C'est l'adresse qu'un serveur voit quand vous vous connectez. Elle identifie votre connexion internet."
-        deduce="Localisation à la ville près, identification du FAI, corrélation entre visites, possibilité de blocage géographique."
+        mean="C'est l'adresse qu'un serveur voit quand vous vous connectez. Elle identifie votre connexion internet et votre localisation à la ville près."
+        deduce="Localisation géographique approximative, identification du FAI, corrélation entre visites, blocage géographique de contenu."
         tech-key="api.ipify.org"
         :tech-val="net.publicIP.value ?? '…'"
         severity="critique"
         sev-label="critique"
         :loading="net.loading.value"
-        :span="6"
-      />
-      <DataCardV2
-        icon="📍"
-        title="Localisation géographique"
-        :value="net.city.value ?? '…'"
-        mean="Votre ville et région sont déduites de votre IP via des bases de données de géolocalisation."
-        deduce="Ciblage publicitaire géolocalisé, personnalisation de contenu, restriction d'accès selon le pays."
-        tech-key="ip-api.com › city+regionName"
-        :tech-val="net.city.value ?? '—'"
-        severity="eleve"
-        sev-label="élevé"
-        :loading="net.loading.value"
-        :span="6"
+        :span="12"
       />
       <DataCardV2
         icon="🏢"
