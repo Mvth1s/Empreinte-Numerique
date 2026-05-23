@@ -154,7 +154,7 @@ const TABS = [
   { id: 'timezone',     icon: '🕐', label: 'Fuseau horaire',      short: 'Fuseau',        loader: { kind: 'clock',       text: 'Détection de votre position temporelle' }, bg: 'clock' as const },
   { id: 'hardware',     icon: '💻', label: 'Écran & Matériel',    short: 'Matériel',      loader: { kind: 'scanner',     text: 'Analyse de votre matériel' },              bg: 'scan' as const },
   { id: 'gpu',          icon: '🎮', label: 'GPU & Rendu',         short: 'GPU',           loader: { kind: 'wireframe',   text: 'Interrogation de votre GPU' },             bg: 'tron' as const },
-  { id: 'fingerprint',  icon: '☠️', label: 'Fingerprinting',      short: 'Empreinte',     loader: { kind: 'hexrain',     text: 'Calcul de votre empreinte unique' },       bg: 'hexrain' as const },
+  { id: 'fingerprint',  icon: '🖐️', label: 'Fingerprinting',      short: 'Empreinte',     loader: { kind: 'hexrain',     text: 'Calcul de votre empreinte unique' },       bg: 'hexrain' as const },
   { id: 'storage',      icon: '💾', label: 'Stockage',            short: 'Stockage',      loader: { kind: 'diskbar',     text: 'Inspection du stockage local' },           bg: 'blocks' as const },
   { id: 'connectivity', icon: '📡', label: 'Connectivité',        short: 'Connexion',     loader: { kind: 'wifi',        text: 'Test de votre connexion' },                bg: 'wave' as const },
   { id: 'permissions',  icon: '🔐', label: 'Permissions',         short: 'Permissions',   loader: { kind: 'permissions', text: 'Vérification de vos permissions' },        bg: 'rings' as const },

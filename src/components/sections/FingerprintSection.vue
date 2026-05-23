@@ -2,7 +2,7 @@
   <section>
     <div class="tab-header">
       <div class="th-left">
-        <span class="th-ico">☠️</span>
+        <span class="th-ico">🖐️</span>
         <div>
           <h2>Fingerprinting</h2>
           <p class="th-sub">Tout ce qui précède, fondu en un seul identifiant. Sans cookie. Sans login.</p>

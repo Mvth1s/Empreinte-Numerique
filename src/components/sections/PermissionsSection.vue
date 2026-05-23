@@ -31,6 +31,7 @@
         <template #demo>
           <div class="c-inline-demo">
             <div v-if="geoResult" class="pdc-data">
+              <div class="pdc-row"><b>Ville</b><span>{{ geoCityLoading ? '🔍 Recherche…' : (geoCity ?? '—') }}</span></div>
               <div class="pdc-row"><b>Latitude</b><span>{{ geoResult.lat.toFixed(6) }}</span></div>
               <div class="pdc-row"><b>Longitude</b><span>{{ geoResult.lon.toFixed(6) }}</span></div>
               <div class="pdc-row"><b>Précision</b><span>± {{ geoResult.accuracy }} m</span></div>
@@ -325,16 +326,37 @@ function stopMic() {
 
 // ---- Geolocation ----
 const geoResult = ref<{ lat: number; lon: number; accuracy: number } | null>(null)
+const geoCity = ref<string | null>(null)
+const geoCityLoading = ref(false)
 const geoError = ref<string | null>(null)
 const geoLoading = ref(false)
+
+async function reverseGeocode(lat: number, lon: number): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=fr`,
+      { headers: { 'Accept-Language': 'fr' } }
+    )
+    const d = await res.json()
+    const a = d.address ?? {}
+    const city = a.city || a.town || a.village || a.suburb || a.municipality || null
+    const postcode = a.postcode ? ` (${a.postcode})` : ''
+    return city ? city + postcode : null
+  } catch { return null }
+}
 
 function requestGeo() {
   if (!navigator.geolocation) { geoError.value = 'Non supporté'; return }
   geoLoading.value = true
   navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      geoResult.value = { lat: pos.coords.latitude, lon: pos.coords.longitude, accuracy: Math.round(pos.coords.accuracy) }
+    async (pos) => {
+      const lat = pos.coords.latitude
+      const lon = pos.coords.longitude
+      geoResult.value = { lat, lon, accuracy: Math.round(pos.coords.accuracy) }
       geoLoading.value = false
+      geoCityLoading.value = true
+      geoCity.value = await reverseGeocode(lat, lon)
+      geoCityLoading.value = false
     },
     () => { geoError.value = 'Permission refusée'; geoLoading.value = false },
     { enableHighAccuracy: true, timeout: 10000 }
