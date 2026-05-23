@@ -6,7 +6,7 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 
 type BgKind = 'particles' | 'radar' | 'hexrain' | 'tron' | 'cursor' |
-              'terminal' | 'clock' | 'scan' | 'blocks' | 'wave' | 'rings' | 'map'
+              'terminal' | 'clock' | 'scan' | 'blocks' | 'wave' | 'rings' | 'map' | 'flow'
 
 const props = defineProps<{ kind: BgKind }>()
 
@@ -24,6 +24,8 @@ let drops:     { y: number; v: number; s: number }[] = []
 let blockCells: number[] = []
 let ringPos:   { x: number; y: number; offset: number }[] = []
 const trail: { x: number; y: number }[] = []
+let flowNodes:   { x: number; y: number }[] = []
+let flowPackets: { nodeIdx: number; progress: number; direction: 'out' | 'in'; speed: number; bright: boolean }[] = []
 
 // --- terminal state ---
 const termLines = [
@@ -71,6 +73,23 @@ function initRings() {
     x: W * (0.08 + Math.random() * 0.84),
     y: H * (0.08 + Math.random() * 0.84),
     offset: Math.random() * 5,
+  }))
+}
+function initFlow() {
+  const cx = W / 2, cy = H / 2
+  const count = innerWidth < 768 ? 5 : 8
+  const r = Math.min(W, H) * 0.38
+  flowNodes = Array.from({ length: count }, (_, i) => {
+    const angle = (i / count) * Math.PI * 2 - Math.PI / 6
+    return { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r }
+  })
+  const pkCount = innerWidth < 768 ? 10 : 22
+  flowPackets = Array.from({ length: pkCount }, () => ({
+    nodeIdx: Math.floor(Math.random() * count),
+    progress: Math.random(),
+    direction: (Math.random() > 0.5 ? 'out' : 'in') as 'out' | 'in',
+    speed: 0.0018 + Math.random() * 0.0028,
+    bright: Math.random() > 0.52,
   }))
 }
 
@@ -285,6 +304,62 @@ function drawRings(now: number) {
   })
 }
 
+// ---- flow ----
+function drawFlow(now: number) {
+  const ctx = getCtx(); if (!ctx) return
+  ctx.clearRect(0, 0, W, H)
+  const cx = W / 2, cy = H / 2
+  const t = now / 1000
+
+  // Connection lines (dim)
+  ctx.lineWidth = 1
+  flowNodes.forEach(node => {
+    ctx.strokeStyle = 'rgba(0,229,255,0.05)'
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(node.x, node.y); ctx.stroke()
+  })
+
+  // Packets
+  flowPackets.forEach(p => {
+    p.progress += p.speed
+    if (p.progress >= 1) {
+      p.progress = 0
+      p.direction = Math.random() > 0.42 ? 'out' : 'in'
+      p.nodeIdx = Math.floor(Math.random() * flowNodes.length)
+      p.bright = Math.random() > 0.48
+      p.speed = 0.0018 + Math.random() * 0.0028
+    }
+    const node = flowNodes[p.nodeIdx]
+    const isOut = p.direction === 'out'
+    const x = (isOut ? cx : node.x) + ((isOut ? node.x : cx) - (isOut ? cx : node.x)) * p.progress
+    const y = (isOut ? cy : node.y) + ((isOut ? node.y : cy) - (isOut ? cy : node.y)) * p.progress
+    // Tail
+    const tp = Math.max(0, p.progress - 0.07)
+    const tx = (isOut ? cx : node.x) + ((isOut ? node.x : cx) - (isOut ? cx : node.x)) * tp
+    const ty = (isOut ? cy : node.y) + ((isOut ? node.y : cy) - (isOut ? cy : node.y)) * tp
+    const a = p.bright ? 0.62 : 0.18
+    ctx.strokeStyle = `rgba(0,229,255,${a * 0.55})`; ctx.lineWidth = 1
+    ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(x, y); ctx.stroke()
+    ctx.fillStyle = `rgba(0,229,255,${a})`
+    ctx.beginPath(); ctx.arc(x, y, p.bright ? 2 : 1.1, 0, Math.PI * 2); ctx.fill()
+  })
+
+  // Edge nodes
+  flowNodes.forEach(node => {
+    ctx.fillStyle = 'rgba(0,229,255,0.09)'
+    ctx.beginPath(); ctx.arc(node.x, node.y, 2.5, 0, Math.PI * 2); ctx.fill()
+    ctx.strokeStyle = 'rgba(0,229,255,0.05)'; ctx.lineWidth = 1
+    ctx.beginPath(); ctx.arc(node.x, node.y, 7, 0, Math.PI * 2); ctx.stroke()
+  })
+
+  // Center node (browser) — pulsing
+  const pulse = (Math.sin(t * 1.9) + 1) / 2
+  ctx.fillStyle = `rgba(0,229,255,${0.22 + pulse * 0.18})`
+  ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill()
+  ctx.strokeStyle = `rgba(0,229,255,${0.07 + pulse * 0.08})`; ctx.lineWidth = 1
+  ctx.beginPath(); ctx.arc(cx, cy, 12 + pulse * 4, 0, Math.PI * 2); ctx.stroke()
+  ctx.beginPath(); ctx.arc(cx, cy, 24 + pulse * 6, 0, Math.PI * 2); ctx.stroke()
+}
+
 // ---- map ----
 function drawMap(now: number) {
   const ctx = getCtx(); if (!ctx) return
@@ -323,6 +398,7 @@ function tick(now: number) {
   else if (current === 'wave')     drawWave(now)
   else if (current === 'rings')    drawRings(now)
   else if (current === 'map')      drawMap(now)
+  else if (current === 'flow')     drawFlow(now)
   raf = requestAnimationFrame(tick)
 }
 
@@ -339,7 +415,7 @@ function start(kind: string) {
     return
   }
   trail.length = 0
-  initParticles(); initPulses(); initDrops(); initBlocks(); initRings()
+  initParticles(); initPulses(); initDrops(); initBlocks(); initRings(); initFlow()
   raf = requestAnimationFrame(tick)
 }
 

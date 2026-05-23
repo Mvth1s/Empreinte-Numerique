@@ -13,8 +13,9 @@
       </div>
     </div>
 
-    <!-- Status cards -->
     <div class="cards">
+
+      <!-- Géolocalisation — avec démo inline -->
       <DataCardV2
         icon="📍"
         title="Géolocalisation"
@@ -26,7 +27,23 @@
         :severity="permSeverity(pm.geolocation.value)"
         :sev-label="pm.geolocation.value"
         :span="4"
-      />
+      >
+        <template #demo>
+          <div class="c-inline-demo">
+            <div v-if="geoResult" class="pdc-data">
+              <div class="pdc-row"><b>Latitude</b><span>{{ geoResult.lat.toFixed(6) }}</span></div>
+              <div class="pdc-row"><b>Longitude</b><span>{{ geoResult.lon.toFixed(6) }}</span></div>
+              <div class="pdc-row"><b>Précision</b><span>± {{ geoResult.accuracy }} m</span></div>
+            </div>
+            <div v-else-if="geoError" class="pdc-error">⚠️ {{ geoError }}</div>
+            <button v-if="!geoResult && !geoError" class="pdc-btn" @click="requestGeo" :disabled="geoLoading">
+              {{ geoLoading ? 'Localisation…' : '📍 Voir ma position exacte' }}
+            </button>
+          </div>
+        </template>
+      </DataCardV2>
+
+      <!-- Caméra — avec démo inline -->
       <DataCardV2
         icon="📷"
         title="Caméra"
@@ -38,7 +55,25 @@
         :severity="permSeverity(pm.camera.value)"
         :sev-label="pm.camera.value"
         :span="4"
-      />
+      >
+        <template #demo>
+          <div class="c-inline-demo">
+            <video v-if="cameraStream" ref="videoEl" autoplay muted playsinline class="pdc-video"></video>
+            <div v-if="cameraStream" class="pdc-data">
+              <div v-if="cameraInfo.label" class="pdc-row"><b>Appareil</b><span>{{ cameraInfo.label }}</span></div>
+              <div class="pdc-row"><b>Résolution</b><span>{{ cameraInfo.width }}×{{ cameraInfo.height }}</span></div>
+              <div class="pdc-row"><b>Cadence</b><span>{{ cameraInfo.fps }} fps</span></div>
+            </div>
+            <div v-else-if="cameraError" class="pdc-error">⚠️ {{ cameraError }}</div>
+            <button v-if="!cameraStream && !cameraError" class="pdc-btn" @click="requestCamera" :disabled="cameraLoading">
+              {{ cameraLoading ? 'Ouverture…' : '📷 Activer la caméra' }}
+            </button>
+            <button v-if="cameraStream" class="pdc-btn pdc-btn-stop" @click="stopCamera">⏹ Couper la caméra</button>
+          </div>
+        </template>
+      </DataCardV2>
+
+      <!-- Microphone — avec démo inline -->
       <DataCardV2
         icon="🎤"
         title="Microphone"
@@ -50,7 +85,27 @@
         :severity="permSeverity(pm.microphone.value)"
         :sev-label="pm.microphone.value"
         :span="4"
-      />
+      >
+        <template #demo>
+          <div class="c-inline-demo">
+            <div v-if="micStream">
+              <div class="pdc-vumeter"><div class="pdc-vu-bar" :style="{ width: micLevel * 100 + '%' }"></div></div>
+              <div class="pdc-data" style="margin-top:8px">
+                <div v-if="micInfo.label" class="pdc-row"><b>Appareil</b><span>{{ micInfo.label }}</span></div>
+                <div v-if="micInfo.sampleRate" class="pdc-row"><b>Fréquence</b><span>{{ micInfo.sampleRate }} Hz</span></div>
+                <div class="pdc-row"><b>Niveau</b><span>{{ Math.round(micLevel * 100) }} %</span></div>
+              </div>
+            </div>
+            <div v-else-if="micError" class="pdc-error">⚠️ {{ micError }}</div>
+            <button v-if="!micStream && !micError" class="pdc-btn" @click="requestMic" :disabled="micLoading">
+              {{ micLoading ? 'Activation…' : '🎤 Activer le micro' }}
+            </button>
+            <button v-if="micStream" class="pdc-btn pdc-btn-stop" @click="stopMic">⏹ Couper le micro</button>
+          </div>
+        </template>
+      </DataCardV2>
+
+      <!-- Notifications — avec démo inline -->
       <DataCardV2
         icon="🔔"
         title="Notifications"
@@ -62,7 +117,22 @@
         :severity="permSeverity(pm.notifications.value)"
         :sev-label="pm.notifications.value"
         :span="4"
-      />
+      >
+        <template #demo>
+          <div class="c-inline-demo">
+            <div v-if="notifSent" class="pdc-data">
+              <div class="pdc-row"><b>Statut</b><span style="color:var(--green)">✓ Notification envoyée</span></div>
+              <div class="pdc-row"><b>Portée</b><span>Onglet fermé inclus</span></div>
+            </div>
+            <div v-else-if="notifError" class="pdc-error">⚠️ {{ notifError }}</div>
+            <button v-if="!notifSent && !notifError" class="pdc-btn" @click="requestNotifications" :disabled="notifLoading">
+              {{ notifLoading ? 'Demande…' : '🔔 Envoyer une notification' }}
+            </button>
+          </div>
+        </template>
+      </DataCardV2>
+
+      <!-- Presse-papiers — avec démo inline -->
       <DataCardV2
         icon="📋"
         title="Presse-papiers"
@@ -74,7 +144,25 @@
         :severity="permSeverity(pm.clipboard.value)"
         :sev-label="pm.clipboard.value"
         :span="4"
-      />
+      >
+        <template #demo>
+          <div class="c-inline-demo">
+            <div v-if="clipContent !== null">
+              <div class="pdc-clip-preview">{{ clipPreview }}</div>
+              <div class="pdc-data" style="margin-top:8px">
+                <div class="pdc-row"><b>Longueur</b><span>{{ clipContent.length }} caractères</span></div>
+              </div>
+            </div>
+            <div v-else-if="clipError" class="pdc-error">⚠️ {{ clipError }}</div>
+            <div v-else class="pdc-clip-warn">⚠ Très sensible — peut exposer mots de passe et clés copiées.</div>
+            <button v-if="clipContent === null && !clipError" class="pdc-btn" @click="requestClipboard">
+              📋 Lire le presse-papiers
+            </button>
+          </div>
+        </template>
+      </DataCardV2>
+
+      <!-- Stockage persistant -->
       <DataCardV2
         icon="💾"
         title="Stockage persistant"
@@ -87,6 +175,8 @@
         :sev-label="pm.persistentStorage.value"
         :span="4"
       />
+
+      <!-- MIDI -->
       <DataCardV2
         icon="🎹"
         title="MIDI"
@@ -99,6 +189,8 @@
         :sev-label="pm.midi.value"
         :span="4"
       />
+
+      <!-- Gyroscope -->
       <DataCardV2
         icon="📱"
         title="Gyroscope / Accéléromètre"
@@ -111,6 +203,8 @@
         sev-label="faible"
         :span="4"
       />
+
+      <!-- Orientation -->
       <DataCardV2
         icon="🔄"
         title="Orientation écran"
@@ -123,151 +217,7 @@
         sev-label="faible"
         :span="4"
       />
-    </div>
 
-    <!-- Demo section -->
-    <div class="perm-demo-section">
-      <div class="perm-demo-head">
-        <span class="pdh-tag">// DÉMONSTRATION LIVE</span>
-        <p>Accordez une permission et voyez exactement ce qu'un site peut obtenir.</p>
-      </div>
-
-      <div class="perm-demo-grid">
-
-        <!-- Camera -->
-        <div class="perm-demo-card" :class="{ active: !!cameraStream }">
-          <div class="pdc-top">
-            <span class="pdc-ico">📷</span>
-            <div>
-              <div class="pdc-title">Caméra</div>
-              <div class="pdc-state" :class="stateClass(pm.camera.value)">{{ permLabel(pm.camera.value) }}</div>
-            </div>
-          </div>
-          <div v-if="cameraStream" class="pdc-result">
-            <video ref="videoEl" autoplay muted playsinline class="pdc-video"></video>
-            <div class="pdc-data">
-              <div v-if="cameraInfo.label" class="pdc-row"><b>Appareil</b><span>{{ cameraInfo.label }}</span></div>
-              <div class="pdc-row"><b>Résolution</b><span>{{ cameraInfo.width }}×{{ cameraInfo.height }}</span></div>
-              <div class="pdc-row"><b>Cadence</b><span>{{ cameraInfo.fps }} fps</span></div>
-            </div>
-          </div>
-          <div v-else-if="cameraError" class="pdc-error">⚠️ {{ cameraError }}</div>
-          <div v-else class="pdc-desc">Voir en direct ce que votre caméra capte, le modèle et la résolution détectée.</div>
-          <div class="pdc-actions">
-            <button v-if="!cameraStream && !cameraError" class="pdc-btn" @click="requestCamera" :disabled="cameraLoading">
-              {{ cameraLoading ? 'Ouverture…' : '📷 Activer la caméra' }}
-            </button>
-            <button v-if="cameraStream" class="pdc-btn pdc-btn-stop" @click="stopCamera">⏹ Couper la caméra</button>
-          </div>
-        </div>
-
-        <!-- Microphone -->
-        <div class="perm-demo-card" :class="{ active: !!micStream }">
-          <div class="pdc-top">
-            <span class="pdc-ico">🎤</span>
-            <div>
-              <div class="pdc-title">Microphone</div>
-              <div class="pdc-state" :class="stateClass(pm.microphone.value)">{{ permLabel(pm.microphone.value) }}</div>
-            </div>
-          </div>
-          <div v-if="micStream" class="pdc-result">
-            <div class="pdc-vumeter">
-              <div class="pdc-vu-bar" :style="{ width: micLevel * 100 + '%' }"></div>
-            </div>
-            <div class="pdc-data">
-              <div v-if="micInfo.label" class="pdc-row"><b>Appareil</b><span>{{ micInfo.label }}</span></div>
-              <div v-if="micInfo.sampleRate" class="pdc-row"><b>Fréquence</b><span>{{ micInfo.sampleRate }} Hz</span></div>
-              <div class="pdc-row"><b>Niveau</b><span>{{ Math.round(micLevel * 100) }} %</span></div>
-            </div>
-          </div>
-          <div v-else-if="micError" class="pdc-error">⚠️ {{ micError }}</div>
-          <div v-else class="pdc-desc">Mesurer votre niveau audio en temps réel et identifier votre microphone.</div>
-          <div class="pdc-actions">
-            <button v-if="!micStream && !micError" class="pdc-btn" @click="requestMic" :disabled="micLoading">
-              {{ micLoading ? 'Activation…' : '🎤 Activer le micro' }}
-            </button>
-            <button v-if="micStream" class="pdc-btn pdc-btn-stop" @click="stopMic">⏹ Couper le micro</button>
-          </div>
-        </div>
-
-        <!-- Geolocation -->
-        <div class="perm-demo-card" :class="{ active: !!geoResult }">
-          <div class="pdc-top">
-            <span class="pdc-ico">📍</span>
-            <div>
-              <div class="pdc-title">Géolocalisation GPS</div>
-              <div class="pdc-state" :class="stateClass(pm.geolocation.value)">{{ permLabel(pm.geolocation.value) }}</div>
-            </div>
-          </div>
-          <div v-if="geoResult" class="pdc-result">
-            <div class="pdc-data">
-              <div class="pdc-row"><b>Latitude</b><span>{{ geoResult.lat.toFixed(6) }}</span></div>
-              <div class="pdc-row"><b>Longitude</b><span>{{ geoResult.lon.toFixed(6) }}</span></div>
-              <div class="pdc-row"><b>Précision</b><span>± {{ geoResult.accuracy }} m</span></div>
-              <div v-if="geoResult.altitude !== null" class="pdc-row"><b>Altitude</b><span>{{ geoResult.altitude?.toFixed(0) }} m</span></div>
-            </div>
-          </div>
-          <div v-else-if="geoError" class="pdc-error">⚠️ {{ geoError }}</div>
-          <div v-else class="pdc-desc">Obtenir votre position GPS exacte, à quelques mètres près.</div>
-          <div class="pdc-actions">
-            <button v-if="!geoResult && !geoError" class="pdc-btn" @click="requestGeo" :disabled="geoLoading">
-              {{ geoLoading ? 'Localisation…' : '📍 Localiser précisément' }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Notifications -->
-        <div class="perm-demo-card" :class="{ active: notifSent }">
-          <div class="pdc-top">
-            <span class="pdc-ico">🔔</span>
-            <div>
-              <div class="pdc-title">Notifications push</div>
-              <div class="pdc-state" :class="stateClass(pm.notifications.value)">{{ permLabel(pm.notifications.value) }}</div>
-            </div>
-          </div>
-          <div v-if="notifSent" class="pdc-result">
-            <div class="pdc-data">
-              <div class="pdc-row"><b>Statut</b><span style="color:var(--green)">✓ Notification envoyée</span></div>
-              <div class="pdc-row"><b>Portée</b><span>Même onglet fermé</span></div>
-              <div class="pdc-row"><b>Usage publicitaire</b><span>Oui — possible</span></div>
-            </div>
-          </div>
-          <div v-else-if="notifError" class="pdc-error">⚠️ {{ notifError }}</div>
-          <div v-else class="pdc-desc">Envoyer une notification réelle — visible même quand cet onglet est en arrière-plan.</div>
-          <div class="pdc-actions">
-            <button v-if="!notifSent && !notifError" class="pdc-btn" @click="requestNotifications" :disabled="notifLoading">
-              {{ notifLoading ? 'Demande…' : '🔔 Envoyer une notification' }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Clipboard -->
-        <div class="perm-demo-card" :class="{ active: clipContent !== null }">
-          <div class="pdc-top">
-            <span class="pdc-ico">📋</span>
-            <div>
-              <div class="pdc-title">Presse-papiers</div>
-              <div class="pdc-state" :class="stateClass(pm.clipboard.value)">{{ permLabel(pm.clipboard.value) }}</div>
-            </div>
-          </div>
-          <div v-if="clipContent !== null" class="pdc-result">
-            <div class="pdc-clip-preview">{{ clipPreview }}</div>
-            <div class="pdc-data" style="margin-top:8px">
-              <div class="pdc-row"><b>Longueur</b><span>{{ clipContent.length }} caractères</span></div>
-            </div>
-          </div>
-          <div v-else-if="clipError" class="pdc-error">⚠️ {{ clipError }}</div>
-          <div v-else class="pdc-desc">
-            <span style="color:var(--red)">⚠ Très sensible</span> — lire votre presse-papiers peut exposer mots de passe, clés API ou données copiées.
-          </div>
-          <div class="pdc-actions">
-            <button v-if="clipContent === null && !clipError" class="pdc-btn" @click="requestClipboard">
-              📋 Lire le presse-papiers
-            </button>
-          </div>
-        </div>
-
-      </div>
     </div>
 
     <div class="tab-foot">
@@ -301,12 +251,6 @@ function permSeverity(state: PermState): Sev {
   return 'faible'
 }
 
-function stateClass(state: PermState) {
-  if (state === 'granted') return 'pdc-granted'
-  if (state === 'denied') return 'pdc-denied'
-  return 'pdc-prompt'
-}
-
 // ---- Camera ----
 const cameraStream = ref<MediaStream | null>(null)
 const cameraError = ref<string | null>(null)
@@ -321,14 +265,9 @@ async function requestCamera() {
     cameraStream.value = stream
     const track = stream.getVideoTracks()[0]
     const s = track.getSettings()
-    cameraInfo.value = {
-      label: track.label || '',
-      width: s.width ?? 0,
-      height: s.height ?? 0,
-      fps: Math.round(s.frameRate ?? 0),
-    }
+    cameraInfo.value = { label: track.label || '', width: s.width ?? 0, height: s.height ?? 0, fps: Math.round(s.frameRate ?? 0) }
     await nextTick()
-    if (videoEl.value) { videoEl.value.srcObject = stream }
+    if (videoEl.value) videoEl.value.srcObject = stream
   } catch {
     cameraError.value = 'Permission refusée ou caméra non disponible'
   } finally {
@@ -338,8 +277,7 @@ async function requestCamera() {
 
 function stopCamera() {
   cameraStream.value?.getTracks().forEach(t => t.stop())
-  cameraStream.value = null
-  cameraError.value = null
+  cameraStream.value = null; cameraError.value = null
 }
 
 // ---- Microphone ----
@@ -359,18 +297,15 @@ async function requestMic() {
     const track = stream.getAudioTracks()[0]
     const s = track.getSettings()
     micInfo.value = { label: track.label || '', sampleRate: s.sampleRate ?? 0 }
-
     audioCtx = new AudioContext()
     const src = audioCtx.createMediaStreamSource(stream)
     const analyser = audioCtx.createAnalyser()
     analyser.fftSize = 256
     src.connect(analyser)
     const data = new Uint8Array(analyser.frequencyBinCount)
-
     function tick() {
       analyser.getByteFrequencyData(data)
-      const max = data.reduce((a, b) => Math.max(a, b), 0)
-      micLevel.value = max / 255
+      micLevel.value = data.reduce((a, b) => Math.max(a, b), 0) / 255
       micRaf = requestAnimationFrame(tick)
     }
     tick()
@@ -385,13 +320,11 @@ function stopMic() {
   cancelAnimationFrame(micRaf)
   micStream.value?.getTracks().forEach(t => t.stop())
   audioCtx?.close()
-  micStream.value = null
-  micLevel.value = 0
-  micError.value = null
+  micStream.value = null; micLevel.value = 0; micError.value = null
 }
 
 // ---- Geolocation ----
-const geoResult = ref<{ lat: number; lon: number; accuracy: number; altitude: number | null } | null>(null)
+const geoResult = ref<{ lat: number; lon: number; accuracy: number } | null>(null)
 const geoError = ref<string | null>(null)
 const geoLoading = ref(false)
 
@@ -400,12 +333,7 @@ function requestGeo() {
   geoLoading.value = true
   navigator.geolocation.getCurrentPosition(
     (pos) => {
-      geoResult.value = {
-        lat: pos.coords.latitude,
-        lon: pos.coords.longitude,
-        accuracy: Math.round(pos.coords.accuracy),
-        altitude: pos.coords.altitude,
-      }
+      geoResult.value = { lat: pos.coords.latitude, lon: pos.coords.longitude, accuracy: Math.round(pos.coords.accuracy) }
       geoLoading.value = false
     },
     () => { geoError.value = 'Permission refusée'; geoLoading.value = false },
@@ -444,8 +372,7 @@ const clipError = ref<string | null>(null)
 
 async function requestClipboard() {
   try {
-    const text = await navigator.clipboard.readText()
-    clipContent.value = text
+    clipContent.value = await navigator.clipboard.readText()
   } catch {
     clipError.value = 'Permission refusée — activez-la dans les paramètres du site'
   }
@@ -457,8 +384,5 @@ const clipPreview = computed(() => {
   return c.length > 120 ? c.slice(0, 117) + '…' : c
 })
 
-onUnmounted(() => {
-  stopCamera()
-  stopMic()
-})
+onUnmounted(() => { stopCamera(); stopMic() })
 </script>

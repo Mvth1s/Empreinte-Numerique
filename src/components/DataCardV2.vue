@@ -20,6 +20,8 @@
       <p>{{ deduce }}</p>
     </div>
 
+    <slot name="demo" />
+
     <footer class="c-tech">
       <span class="t-key" :title="techKey">{{ techKey }}</span>
       <span class="t-arrow">→</span>

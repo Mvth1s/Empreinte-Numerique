@@ -117,10 +117,10 @@
       v-if="gpsCoords"
       icon="📡"
       title="Position GPS réelle"
-      :value="`${gpsCoords.lat.toFixed(6)}, ${gpsCoords.lon.toFixed(6)}`"
+      :value="gpsCity ?? `${gpsCoords.lat.toFixed(5)}, ${gpsCoords.lon.toFixed(5)}`"
       mean="Ces coordonnées proviennent directement du GPS ou de la triangulation Wi-Fi de votre appareil — avec votre autorisation explicite."
       :deduce="`Précision : ±${gpsCoords.accuracy} m. C'est votre position à quelques mètres près — suffisant pour localiser votre domicile, votre bureau, ou la pièce où vous vous trouvez.`"
-      tech-key="navigator.geolocation.getCurrentPosition()"
+      tech-key="getCurrentPosition() + Nominatim reverse"
       :tech-val="`${gpsCoords.lat.toFixed(6)}, ${gpsCoords.lon.toFixed(6)} ±${gpsCoords.accuracy}m`"
       severity="critique"
       sev-label="critique"
@@ -144,16 +144,34 @@ const net = useNetwork()
 const tz = useTimezone()
 
 const gpsCoords = ref<{ lat: number; lon: number; accuracy: number } | null>(null)
+const gpsCity = ref<string | null>(null)
 const gpsError = ref<string | null>(null)
 const gpsLoading = ref(false)
+
+async function reverseGeocode(lat: number, lon: number): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=fr`,
+      { headers: { 'Accept-Language': 'fr' } }
+    )
+    const d = await res.json()
+    const a = d.address ?? {}
+    const city = a.city || a.town || a.village || a.suburb || a.municipality || null
+    const postcode = a.postcode ? ` (${a.postcode})` : ''
+    return city ? city + postcode : null
+  } catch { return null }
+}
 
 function requestGPS() {
   if (!navigator.geolocation) { gpsError.value = 'Géolocalisation non supportée'; return }
   gpsLoading.value = true
   navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      gpsCoords.value = { lat: pos.coords.latitude, lon: pos.coords.longitude, accuracy: Math.round(pos.coords.accuracy) }
+    async (pos) => {
+      const lat = pos.coords.latitude
+      const lon = pos.coords.longitude
+      gpsCoords.value = { lat, lon, accuracy: Math.round(pos.coords.accuracy) }
       gpsLoading.value = false
+      gpsCity.value = await reverseGeocode(lat, lon)
     },
     (err) => {
       gpsError.value = err.code === 1 ? 'Permission refusée' : 'Impossible d\'obtenir la position'

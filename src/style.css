@@ -639,6 +639,14 @@ body::before {
 }
 .tip.show { opacity: 1; }
 
+/* ---- Permission inline demo (inside DataCardV2 slot) ---- */
+.c-inline-demo {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.pdc-clip-warn { font-size: 11px; color: var(--red); font-family: var(--mono); }
+
 /* ---- Permission demo section ---- */
 .perm-demo-section { margin-top: 28px; }
 .perm-demo-head {

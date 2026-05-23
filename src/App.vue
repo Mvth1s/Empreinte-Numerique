@@ -150,7 +150,7 @@ const conn = useConnectivity()
 
 const TABS = [
   { id: 'network',      icon: '🌐', label: 'Réseau & IP',        short: 'Réseau',        loader: { kind: 'radar',       text: 'Localisation de votre IP en cours' },     bg: 'radar' as const },
-  { id: 'browser',      icon: '🖥️', label: 'Navigateur & OS',    short: 'Navigateur',    loader: { kind: 'terminal',    text: 'Lecture de votre navigateur' },            bg: 'tron' as const },
+  { id: 'browser',      icon: '🖥️', label: 'Navigateur & OS',    short: 'Navigateur',    loader: { kind: 'terminal',    text: 'Lecture de votre navigateur' },            bg: 'flow' as const },
   { id: 'timezone',     icon: '🕐', label: 'Fuseau horaire',      short: 'Fuseau',        loader: { kind: 'clock',       text: 'Détection de votre position temporelle' }, bg: 'clock' as const },
   { id: 'hardware',     icon: '💻', label: 'Écran & Matériel',    short: 'Matériel',      loader: { kind: 'scanner',     text: 'Analyse de votre matériel' },              bg: 'scan' as const },
   { id: 'gpu',          icon: '🎮', label: 'GPU & Rendu',         short: 'GPU',           loader: { kind: 'wireframe',   text: 'Interrogation de votre GPU' },             bg: 'tron' as const },
@@ -160,11 +160,11 @@ const TABS = [
   { id: 'permissions',  icon: '🔐', label: 'Permissions',         short: 'Permissions',   loader: { kind: 'permissions', text: 'Vérification de vos permissions' },        bg: 'rings' as const },
   { id: 'behavior',     icon: '🖱️', label: 'Comportement',        short: 'Comportement',  loader: { kind: 'cursor',      text: 'Observation de votre comportement' },      bg: 'cursor' as const },
   { id: 'location',     icon: '📍', label: 'Localisation',        short: 'Localisation',  loader: { kind: 'mapzoom',     text: 'Triangulation de votre position' },        bg: 'map' as const },
-  { id: 'conclusion',   icon: '🛡️', label: 'Se protéger',         short: 'Protection',    loader: { kind: 'radar',       text: 'Analyse de vos protections' },             bg: 'particles' as const },
+  { id: 'conclusion',   icon: '🛡️', label: 'Se protéger',         short: 'Protection',    loader: { kind: 'shield',      text: 'Analyse de vos protections' },             bg: 'particles' as const },
 ]
 
 type TabId = typeof TABS[number]['id']
-type BgKind = 'particles' | 'radar' | 'hexrain' | 'tron' | 'cursor' | 'terminal' | 'clock' | 'scan' | 'blocks' | 'wave' | 'rings' | 'map'
+type BgKind = 'particles' | 'radar' | 'hexrain' | 'tron' | 'cursor' | 'terminal' | 'clock' | 'scan' | 'blocks' | 'wave' | 'rings' | 'map' | 'flow'
 
 const sections: Record<TabId, ReturnType<typeof defineAsyncComponent>> = {
   network:      defineAsyncComponent(() => import('./components/sections/NetworkSection.vue')),

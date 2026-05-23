@@ -60,6 +60,7 @@ function startLoader(kind: string) {
     case 'permissions': stopFn = loaderPermissions(ctx, W, H);    break
     case 'cursor':      stopFn = loaderCursor(ctx, W, H);         break
     case 'mapzoom':     stopFn = loaderMapzoom(ctx, W, H, d);     break
+    case 'shield':      stopFn = loaderShield(ctx, W, H);         break
     default:            stopFn = loaderScanner(ctx, W, H, d)
   }
 }
@@ -537,6 +538,84 @@ function loaderMapzoom(ctx: CanvasRenderingContext2D, W: number, H: number, data
     ctx.fillText(ring.label, cx + 20, cy - 6)
     ctx.fillStyle = FAINT; ctx.font = '11px "IBM Plex Mono", monospace'
     ctx.fillText(`triangulation… ${Math.floor(p * 100)} %`, cx + 20, cy + 12)
+    raf = requestAnimationFrame(draw)
+  }
+  raf = requestAnimationFrame(draw)
+  return () => cancelAnimationFrame(raf)
+}
+
+// ---- SHIELD ----
+function loaderShield(ctx: CanvasRenderingContext2D, W: number, H: number) {
+  let raf = 0
+  const t0 = performance.now()
+  const cx = W / 2, cy = H / 2 - 10
+  const sh = 72, sw = 58
+
+  function shieldPath() {
+    ctx.beginPath()
+    ctx.moveTo(cx, cy - sh)
+    ctx.lineTo(cx + sw, cy - sh * 0.44)
+    ctx.lineTo(cx + sw, cy + sh * 0.08)
+    ctx.quadraticCurveTo(cx + sw * 0.88, cy + sh * 0.62, cx, cy + sh)
+    ctx.quadraticCurveTo(cx - sw * 0.88, cy + sh * 0.62, cx - sw, cy + sh * 0.08)
+    ctx.lineTo(cx - sw, cy - sh * 0.44)
+    ctx.closePath()
+  }
+
+  function draw(now: number) {
+    const t = (now - t0) / 1000
+    clr(ctx, W, H)
+    const fillProg = Math.min(1, t / 2.0)
+
+    // Shield fill (bottom to top)
+    ctx.save()
+    shieldPath(); ctx.clip()
+    const fillTop = cy + sh - fillProg * (sh * 2.05)
+    const grad = ctx.createLinearGradient(0, fillTop, 0, cy + sh)
+    grad.addColorStop(0, `rgba(0,229,255,${0.05 + fillProg * 0.12})`)
+    grad.addColorStop(1, 'rgba(0,229,255,0.03)')
+    ctx.fillStyle = grad
+    ctx.fillRect(cx - sw - 4, fillTop, (sw + 4) * 2, cy + sh - fillTop + 4)
+    // Scan line inside shield
+    const scanY = (cy - sh) + ((t * 58) % (sh * 2))
+    ctx.strokeStyle = `rgba(0,229,255,${0.15 + fillProg * 0.1})`; ctx.lineWidth = 1
+    ctx.beginPath(); ctx.moveTo(cx - sw, scanY); ctx.lineTo(cx + sw, scanY); ctx.stroke()
+    ctx.restore()
+
+    // Outline (brightens as fill rises)
+    ctx.strokeStyle = `rgba(0,229,255,${0.14 + fillProg * 0.42})`; ctx.lineWidth = 1.5
+    shieldPath(); ctx.stroke()
+
+    // Checkmark (draws itself after fill done)
+    if (fillProg >= 0.9) {
+      const ca = Math.min(1, (t - 2.0) / 0.35)
+      ctx.strokeStyle = `rgba(0,229,255,${ca * 0.88})`
+      ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+      ctx.beginPath()
+      ctx.moveTo(cx - 20, cy + 6)
+      ctx.lineTo(cx - 4, cy + 21)
+      ctx.lineTo(cx + 24, cy - 15)
+      ctx.stroke()
+      ctx.lineCap = 'butt'
+    }
+
+    // Orbiting sentinel dots
+    for (let i = 0; i < 4; i++) {
+      const angle = t * 1.05 + i * (Math.PI / 2)
+      const orb = 96 + Math.sin(t * 0.9 + i * 1.3) * 6
+      ctx.fillStyle = `rgba(0,229,255,${0.1 + Math.sin(t * 1.8 + i) * 0.04})`
+      ctx.beginPath()
+      ctx.arc(cx + Math.cos(angle) * orb, cy + Math.sin(angle) * (orb * 0.52), 2, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
+    // Outer pulse rings
+    for (let i = 0; i < 3; i++) {
+      const phase = ((t * 0.45 + i * 0.5) % 2) / 2
+      ctx.strokeStyle = `rgba(0,229,255,${(1 - phase) * 0.05})`; ctx.lineWidth = 1
+      ctx.beginPath(); ctx.arc(cx, cy - 6, 100 + phase * 90, 0, Math.PI * 2); ctx.stroke()
+    }
+
     raf = requestAnimationFrame(draw)
   }
   raf = requestAnimationFrame(draw)
