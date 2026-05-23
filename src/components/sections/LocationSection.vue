@@ -45,7 +45,7 @@
       </div>
     </div>
 
-    <div v-if="gpsCoords" class="cards" style="margin-bottom:0">
+    <div v-if="gpsCoords" class="cards" style="margin-bottom:18px">
       <DataCardV2
         icon="📍"
         title="Position GPS réelle"
