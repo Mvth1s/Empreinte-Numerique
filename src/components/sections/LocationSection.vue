@@ -4,18 +4,18 @@
       <div class="th-left">
         <span class="th-ico">📍</span>
         <div>
-          <h2>Localisation sans GPS</h2>
-          <p class="th-sub">Sans demander votre position GPS, votre IP permet de vous localiser à la ville, parfois au quartier. Croisée avec le fuseau horaire, la précision est redoutable.</p>
+          <h2>Localisation</h2>
+          <p class="th-sub">Sans GPS, sans permission, juste avec l'IP : votre quartier suffit.</p>
         </div>
       </div>
       <div>
-        <span class="th-count">6<small>signaux collectés</small></span>
+        <span class="th-count">6<small>signaux</small></span>
       </div>
     </div>
 
     <!-- Location hero -->
     <div class="hero-block loc-block">
-      <div class="loc-map">
+      <div class="loc-map" id="loc-map" aria-hidden="true">
         <div class="ring r-pays"></div>
         <div class="ring r-region"></div>
         <div class="ring r-city"></div>
@@ -23,13 +23,13 @@
         <span class="pin">📍</span>
       </div>
       <div class="loc-info">
+        <div class="hb-label">SANS PERMISSION GPS</div>
         <div class="loc-line"><b>Pays</b><span>{{ net.country.value ?? '…' }}</span></div>
+        <div class="loc-line"><b>Région</b><span>{{ regionName }}</span></div>
         <div class="loc-line"><b>Ville</b><span>{{ net.city.value ?? '…' }}</span></div>
-        <div class="loc-line"><b>Latitude</b><span>{{ net.lat.value ?? '—' }}</span></div>
-        <div class="loc-line"><b>Longitude</b><span>{{ net.lon.value ?? '—' }}</span></div>
-        <div class="loc-line"><b>FAI</b><span>{{ net.isp.value ?? '—' }}</span></div>
-        <div v-if="net.isVPN.value" class="loc-warn">
-          <b>⚠️ VPN/Proxy détecté</b> — Votre localisation réelle peut différer de celle affichée.
+        <div class="loc-line"><b>Quartier</b><span>{{ coordStr }} (±15 km)</span></div>
+        <div class="loc-warn">
+          Avec votre permission GPS → <b>précision &lt; 10 m</b>
         </div>
       </div>
     </div>
@@ -117,16 +117,28 @@
 
     <div class="tab-foot">
       <span class="tf-key">⚠️</span>
-      <span>La triangulation <strong>IP + fuseau IANA + résolveur DNS</strong> permet de localiser un utilisateur même derrière un VPN si les trois sources sont incohérentes entre elles.</span>
+      <span>Toutes ces données ont été obtenues <strong>sans aucune permission</strong> de votre part.</span>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useNetwork } from '../../composables/useNetwork'
 import { useTimezone } from '../../composables/useTimezone'
 import DataCardV2 from '../DataCardV2.vue'
 
 const net = useNetwork()
 const tz = useTimezone()
+
+const regionName = computed(() => {
+  const city = net.city.value ?? ''
+  const parts = city.split(', ')
+  return parts.length > 1 ? parts[1] : '—'
+})
+
+const coordStr = computed(() => {
+  if (net.lat.value && net.lon.value) return `${net.lat.value.toFixed(2)}, ${net.lon.value.toFixed(2)}`
+  return '—'
+})
 </script>

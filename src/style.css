@@ -212,7 +212,6 @@ body::before {
   color: var(--fg); padding: 8px 12px;
   font-family: var(--mono); font-size: 11px; letter-spacing: .15em;
   cursor: pointer; text-transform: uppercase;
-  margin: 12px 16px;
 }
 .mobile-nav {
   position: fixed; inset: 0; z-index: 200;
@@ -383,7 +382,7 @@ body::before {
 }
 .c-value {
   font-family: var(--sans); font-weight: 500;
-  font-size: clamp(20px, 2.6vw, 28px);
+  font-size: clamp(22px, 2.6vw, 30px);
   color: var(--cyan); letter-spacing: -0.01em;
   line-height: 1.15;
   text-shadow: 0 0 16px rgba(0, 229, 255, 0.18);

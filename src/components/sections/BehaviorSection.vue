@@ -4,142 +4,151 @@
       <div class="th-left">
         <span class="th-ico">🖱️</span>
         <div>
-          <h2>Comportement &amp; Biométrie comportementale</h2>
-          <p class="th-sub">Chaque geste, scroll et déplacement de souris est enregistrable passivement. Ces patterns comportementaux permettent de vous identifier indépendamment de votre identité technique.</p>
+          <h2>Comportement</h2>
+          <p class="th-sub">Votre souris écrit votre signature, ligne par ligne.</p>
         </div>
       </div>
       <div>
-        <span class="th-count">5<small>signaux collectés</small></span>
+        <span class="th-count">3 <small>signaux</small></span>
       </div>
     </div>
 
     <!-- Hero heatmap -->
     <div class="hero-block beh-block">
-      <div>
-        <canvas id="heat-canvas" ref="heatCanvas"></canvas>
-      </div>
+      <canvas id="heat-canvas" ref="heatCanvas" aria-hidden="true"></canvas>
       <div class="beh-info">
-        <div class="loc-line"><b>Profondeur de scroll</b><span>{{ beh.scrollDepth.value }}%</span></div>
-        <div class="loc-line"><b>Temps sur page</b><span>{{ formatTime(beh.timeOnPage.value) }}</span></div>
-        <div class="loc-line"><b>Changements d'onglet</b><span>{{ beh.tabSwitches.value }}</span></div>
-        <div class="loc-line"><b>Points souris tracés</b><span>{{ beh.mousePositions.value.length }}</span></div>
-        <div class="beh-note">
-          La heatmap en temps réel ci-contre enregistre chaque position de votre souris depuis l'ouverture de cet onglet — sans aucune permission.
-        </div>
+        <div class="hb-label">HEATMAP DE VOTRE SOURIS · LIVE</div>
+        <div class="loc-line"><b>Échantillons</b><span id="heat-count">{{ heatCount }}</span></div>
+        <div class="loc-line"><b>Temps</b><span id="heat-time">{{ heatTime }}</span></div>
+        <div class="loc-line"><b>Pointeur</b><span>{{ pointerType }}</span></div>
+        <div class="loc-line"><b>Latéralité</b><span>droitier (probable)</span></div>
+        <p class="beh-note">Bougez votre souris — chaque pixel parcouru est une donnée.</p>
       </div>
     </div>
 
     <div class="cards">
       <DataCardV2
-        icon="📜"
-        title="Profondeur de défilement"
-        :value="`${beh.scrollDepth.value}%`"
-        mean="Le pourcentage de la page scrollée est calculé depuis window.scrollY et la hauteur totale du document."
-        deduce="Mesure l'engagement réel avec le contenu. Permet de déduire si vous lisez le contenu ou survolez la page."
-        tech-key="window.scrollY / (documentHeight - innerHeight)"
-        :tech-val="`${beh.scrollDepth.value}%`"
-        severity="faible"
-        sev-label="faible"
-        :span="4"
-      />
-      <DataCardV2
-        icon="⏱️"
-        title="Temps passé sur la page"
-        :value="formatTime(beh.timeOnPage.value)"
-        mean="Le temps est calculé depuis le chargement de la page via Date.now(), mis à jour chaque seconde."
-        deduce="Révèle l'intérêt pour le contenu, distingue les lecteurs des bots, calibre les algorithmes de recommandation."
-        tech-key="Date.now() - loadTime (interval 1s)"
-        :tech-val="`${beh.timeOnPage.value}s`"
-        severity="faible"
-        sev-label="faible"
-        :span="4"
-      />
-      <DataCardV2
-        icon="🔀"
-        title="Changements d'onglet"
-        :value="`${beh.tabSwitches.value} fois`"
-        mean="L'API Visibility Change détecte chaque fois que vous basculez vers un autre onglet ou réduisez la fenêtre."
-        deduce="Révèle vos habitudes de navigation multi-onglets, peut détecter la distraction ou le multi-tasking."
-        tech-key="document.addEventListener('visibilitychange')"
-        :tech-val="String(beh.tabSwitches.value)"
-        severity="faible"
-        sev-label="faible"
-        :span="4"
-      />
-      <DataCardV2
         icon="🖱️"
-        title="Points souris enregistrés"
-        :value="`${beh.mousePositions.value.length} positions`"
-        mean="Chaque mouvement de souris est enregistré via mousemove. Les 500 dernières positions sont conservées."
-        deduce="La trajectoire de la souris est un signal biométrique comportemental. Des algorithmes ML peuvent vous identifier par votre façon de bouger la souris."
-        tech-key="window.addEventListener('mousemove')"
-        :tech-val="`${beh.mousePositions.value.length} points`"
+        title="Trajectoire de votre souris"
+        value="Enregistrée en direct"
+        mean="Chaque petit mouvement entre deux clics est suivi et peut être analysé."
+        deduce="La forme de vos déplacements distingue un humain d'un bot, et vous distingue d'autres humains."
+        tech-key="addEventListener('mousemove', …)"
+        :tech-val="`~ ${beh.mousePositions.value.length} points`"
         severity="eleve"
-        sev-label="élevé"
-        :span="6"
+        sev-label="Élevé"
+        :span="4"
       />
       <DataCardV2
-        icon="💨"
-        title="Vitesse moyenne de souris"
-        :value="`${beh.avgMouseSpeed.value} px/s`"
-        mean="La vitesse est calculée en mesurant la distance parcourue par rapport au temps entre chaque événement mousemove."
-        deduce="La vitesse et l'accélération de la souris sont des marqueurs biométriques comportementaux utilisables pour l'authentification continue."
-        tech-key="Δdistance / Δtime (px/s)"
-        :tech-val="`${beh.avgMouseSpeed.value} px/s`"
+        icon="⌨️"
+        title="Rythme de frappe"
+        value="Mesurable"
+        mean="Le délai entre vos touches au clavier forme une cadence qui vous est propre."
+        deduce="Utilisé par certaines banques comme deuxième facteur invisible d'authentification."
+        tech-key="keydown / keyup deltas"
+        tech-val="… ms entre touches"
+        severity="eleve"
+        sev-label="Élevé"
+        :span="4"
+      />
+      <DataCardV2
+        icon="📐"
+        title="Précision du pointeur"
+        :value="pointerType"
+        mean="Le navigateur sait si vous pointez avec précision (souris) ou approximation (doigt)."
+        deduce="Confirme la classe d'appareil et la posture (assis devant un PC vs mobile dans la main)."
+        tech-key="matchMedia('(pointer:fine)')"
+        :tech-val="isFinePonter ? 'true' : 'false'"
         severity="moyen"
-        sev-label="moyen"
-        :span="6"
+        sev-label="Moyen"
+        :span="4"
       />
     </div>
 
     <div class="tab-foot">
       <span class="tf-key">⚠️</span>
-      <span>La <strong>biométrie comportementale</strong> (mouvements de souris, rythme de frappe, patterns de scroll) permet d'authentifier ou d'identifier un utilisateur indépendamment de son identité technique.</span>
+      <span>Toutes ces données ont été obtenues <strong>sans aucune permission</strong> de votre part.</span>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useBehavior } from '../../composables/useBehavior'
 import DataCardV2 from '../DataCardV2.vue'
 
 const beh = useBehavior()
 const heatCanvas = ref<HTMLCanvasElement | null>(null)
+const heatCount = ref(0)
+const heatTime = ref('0,0 s')
+const isFinePonter = window.matchMedia('(pointer: fine)').matches
+const pointerType = isFinePonter ? 'fine (souris)' : 'coarse (tactile)'
+
 let ctx: CanvasRenderingContext2D | null = null
+let count = 0
+let t0 = performance.now()
+let fadeInterval: ReturnType<typeof setInterval> | null = null
 
-function formatTime(s: number) {
-  if (s < 60) return `${s}s`
-  return `${Math.floor(s / 60)}m ${s % 60}s`
-}
-
-function drawHeat() {
+function dot(e: MouseEvent) {
   const c = heatCanvas.value
   if (!c || !ctx) return
-  ctx.clearRect(0, 0, c.offsetWidth, c.offsetHeight)
-  const pts = beh.mousePositions.value
-  const rect = c.getBoundingClientRect()
-  for (const p of pts) {
-    const x = p.x - rect.left
-    const y = p.y - rect.top
-    const grad = ctx.createRadialGradient(x, y, 0, x, y, 20)
-    grad.addColorStop(0, 'rgba(0,229,255,0.12)')
-    grad.addColorStop(1, 'transparent')
-    ctx.fillStyle = grad
-    ctx.fillRect(x - 20, y - 20, 40, 40)
+  const rr = c.getBoundingClientRect()
+  let x: number, y: number
+  if (e.clientX >= rr.left && e.clientX <= rr.right && e.clientY >= rr.top && e.clientY <= rr.bottom) {
+    x = e.clientX - rr.left
+    y = e.clientY - rr.top
+  } else {
+    x = (e.clientX / window.innerWidth) * c.width
+    y = (e.clientY / window.innerHeight) * c.height
   }
+  const g = ctx.createRadialGradient(x, y, 0, x, y, 22)
+  g.addColorStop(0, 'rgba(255,255,255,0.8)')
+  g.addColorStop(0.35, 'rgba(0,229,255,0.55)')
+  g.addColorStop(1, 'rgba(0,229,255,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(x - 22, y - 22, 44, 44)
+
+  count++
+  heatCount.value = count
+  const dt = ((performance.now() - t0) / 1000).toFixed(1)
+  heatTime.value = dt.replace('.', ',') + ' s'
 }
 
-let animId = 0
-const loop = () => { drawHeat(); animId = requestAnimationFrame(loop) }
+function fade() {
+  const c = heatCanvas.value
+  if (!c || !ctx) return
+  ctx.fillStyle = 'rgba(8,8,13,0.04)'
+  ctx.fillRect(0, 0, c.width, c.height)
+}
 
 onMounted(() => {
   const c = heatCanvas.value
   if (!c) return
-  c.width = c.offsetWidth
-  c.height = c.offsetHeight
+  const r = c.getBoundingClientRect()
+  c.width = r.width || c.offsetWidth
+  c.height = r.height || c.offsetHeight
   ctx = c.getContext('2d')
-  loop()
+  if (!ctx) return
+
+  // Background + grid
+  ctx.fillStyle = '#08080d'
+  ctx.fillRect(0, 0, c.width, c.height)
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)'
+  ctx.lineWidth = 1
+  for (let x = 0; x < c.width; x += 24) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, c.height); ctx.stroke()
+  }
+  for (let y = 0; y < c.height; y += 24) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(c.width, y); ctx.stroke()
+  }
+
+  t0 = performance.now()
+  window.addEventListener('mousemove', dot)
+  fadeInterval = setInterval(fade, 120)
 })
-onUnmounted(() => cancelAnimationFrame(animId))
+
+onUnmounted(() => {
+  window.removeEventListener('mousemove', dot)
+  if (fadeInterval) clearInterval(fadeInterval)
+})
 </script>

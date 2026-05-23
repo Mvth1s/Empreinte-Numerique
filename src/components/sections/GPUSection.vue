@@ -4,12 +4,12 @@
       <div class="th-left">
         <span class="th-ico">🎮</span>
         <div>
-          <h2>GPU &amp; Rendu graphique</h2>
-          <p class="th-sub">Via l'extension WebGL, le navigateur expose le nom exact de votre GPU et de son fabricant — une donnée hautement identifiante qui ne demande aucune permission.</p>
+          <h2>GPU &amp; Rendu</h2>
+          <p class="th-sub">Votre carte graphique a une voix : on l'entend dès qu'elle dessine.</p>
         </div>
       </div>
       <div>
-        <span class="th-count">6<small>signaux collectés</small></span>
+        <span class="th-count">6<small>signaux</small></span>
       </div>
     </div>
 
@@ -90,7 +90,7 @@
 
     <div class="tab-foot">
       <span class="tf-key">⚠️</span>
-      <span>Le modèle GPU exact est l'une des données les plus <strong>identifiantes</strong> du navigateur. Combiné au hash de rendu, il crée une empreinte graphique quasi-impossible à falsifier sans bloquer WebGL.</span>
+      <span>Toutes ces données ont été obtenues <strong>sans aucune permission</strong> de votre part.</span>
     </div>
   </section>
 </template>

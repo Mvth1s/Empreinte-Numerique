@@ -4,12 +4,12 @@
       <div class="th-left">
         <span class="th-ico">🌐</span>
         <div>
-          <h2>Réseau &amp; Identification IP</h2>
-          <p class="th-sub">Chaque connexion expose votre adresse IP, votre FAI, votre localisation approximative et vos IPs locales via WebRTC — sans aucune permission.</p>
+          <h2>Réseau &amp; IP</h2>
+          <p class="th-sub">Votre connexion vous trahit avant même que vous ne cliquiez.</p>
         </div>
       </div>
       <div>
-        <span class="th-count">6<small>signaux collectés</small></span>
+        <span class="th-count">6<small>signaux</small></span>
       </div>
     </div>
 
@@ -96,7 +96,7 @@
 
     <div class="tab-foot">
       <span class="tf-key">⚠️</span>
-      <span>Ces données sont collectées <strong>automatiquement</strong> à chaque connexion, sans cookie ni consentement. Un VPN masque l'IP publique mais les IPs locales peuvent rester exposées via WebRTC.</span>
+      <span>Toutes ces données ont été obtenues <strong>sans aucune permission</strong> de votre part.</span>
     </div>
   </section>
 </template>

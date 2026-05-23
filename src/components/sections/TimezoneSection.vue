@@ -4,12 +4,12 @@
       <div class="th-left">
         <span class="th-ico">🕐</span>
         <div>
-          <h2>Fuseau horaire &amp; Localisation culturelle</h2>
-          <p class="th-sub">Votre fuseau IANA, votre locale et vos formats de date révèlent votre pays, votre langue et votre position géographique avec une précision redoutable.</p>
+          <h2>Fuseau horaire</h2>
+          <p class="th-sub">L'heure de votre machine raconte où vous vivez.</p>
         </div>
       </div>
       <div>
-        <span class="th-count">7<small>signaux collectés</small></span>
+        <span class="th-count">7<small>signaux</small></span>
       </div>
     </div>
 
@@ -102,7 +102,7 @@
 
     <div class="tab-foot">
       <span class="tf-key">⚠️</span>
-      <span>Le fuseau horaire IANA est lu <strong>sans permission</strong> depuis l'API Intl. Croisé avec votre IP, il permet de détecter l'utilisation d'un VPN géographiquement incohérent.</span>
+      <span>Toutes ces données ont été obtenues <strong>sans aucune permission</strong> de votre part.</span>
     </div>
   </section>
 </template>

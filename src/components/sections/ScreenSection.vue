@@ -4,12 +4,12 @@
       <div class="th-left">
         <span class="th-ico">💻</span>
         <div>
-          <h2>Matériel &amp; Capacités de l'écran</h2>
-          <p class="th-sub">Résolution, ratio de pixels, nombre de cœurs CPU, RAM disponible — votre configuration matérielle est lisible sans permission via les APIs du navigateur.</p>
+          <h2>Écran &amp; Matériel</h2>
+          <p class="th-sub">La forme de votre écran, à elle seule, est presque une signature.</p>
         </div>
       </div>
       <div>
-        <span class="th-count">9<small>signaux collectés</small></span>
+        <span class="th-count">9<small>signaux</small></span>
       </div>
     </div>
 
@@ -126,7 +126,7 @@
 
     <div class="tab-foot">
       <span class="tf-key">⚠️</span>
-      <span>Combinés, ces signaux matériels créent une empreinte <strong>quasi-unique</strong>. La combinaison résolution + DPR + cœurs CPU + RAM identifie votre appareil avec une précision élevée.</span>
+      <span>Toutes ces données ont été obtenues <strong>sans aucune permission</strong> de votre part.</span>
     </div>
   </section>
 </template>

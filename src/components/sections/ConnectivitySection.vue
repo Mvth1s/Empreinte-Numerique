@@ -4,12 +4,12 @@
       <div class="th-left">
         <span class="th-ico">📡</span>
         <div>
-          <h2>Connectivité &amp; Qualité réseau</h2>
-          <p class="th-sub">L'API Network Information expose le type de connexion, la bande passante estimée et la latence — des signaux qui révèlent votre contexte de connexion.</p>
+          <h2>Connectivité</h2>
+          <p class="th-sub">Type de connexion, débit, latence : tout est mesuré en silence.</p>
         </div>
       </div>
       <div>
-        <span class="th-count">6<small>signaux collectés</small></span>
+        <span class="th-count">6<small>signaux</small></span>
       </div>
     </div>
 
@@ -90,7 +90,7 @@
 
     <div class="tab-foot">
       <span class="tf-key">⚠️</span>
-      <span>L'API Network Information est <strong>expérimentale</strong> et principalement disponible sur Chrome/Android. Les données exposées permettent de cibler le contenu selon la qualité de connexion perçue.</span>
+      <span>Toutes ces données ont été obtenues <strong>sans aucune permission</strong> de votre part.</span>
     </div>
   </section>
 </template>

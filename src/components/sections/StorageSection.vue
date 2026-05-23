@@ -4,12 +4,12 @@
       <div class="th-left">
         <span class="th-ico">💾</span>
         <div>
-          <h2>Stockage &amp; Persistance des données</h2>
-          <p class="th-sub">Votre navigateur dispose de multiples mécanismes de stockage. Leur disponibilité et leur timing révèlent votre configuration et vos habitudes de navigation.</p>
+          <h2>Stockage</h2>
+          <p class="th-sub">Bloquer les cookies ne suffit plus depuis longtemps.</p>
         </div>
       </div>
       <div>
-        <span class="th-count">8<small>signaux collectés</small></span>
+        <span class="th-count">8<small>signaux</small></span>
       </div>
     </div>
 
@@ -114,7 +114,7 @@
 
     <div class="tab-foot">
       <span class="tf-key">⚠️</span>
-      <span>Le <strong>timing de cache CDN</strong> peut reconstruire un historique partiel de vos visites web, sans aucune permission. Cette technique est désormais partiellement bloquée par les navigateurs modernes.</span>
+      <span>Toutes ces données ont été obtenues <strong>sans aucune permission</strong> de votre part.</span>
     </div>
   </section>
 </template>

@@ -4,12 +4,12 @@
       <div class="th-left">
         <span class="th-ico">🔐</span>
         <div>
-          <h2>Permissions &amp; Accès aux capteurs</h2>
-          <p class="th-sub">L'API Permissions révèle l'état d'accès à votre géolocalisation, caméra, micro et bien d'autres — même sans que vous les ayez accordées.</p>
+          <h2>Permissions</h2>
+          <p class="th-sub">Même un refus est une information.</p>
         </div>
       </div>
       <div>
-        <span class="th-count">9<small>signaux collectés</small></span>
+        <span class="th-count">9<small>signaux</small></span>
       </div>
     </div>
 
@@ -126,7 +126,7 @@
 
     <div class="tab-foot">
       <span class="tf-key">⚠️</span>
-      <span>L'API Permissions permet de <strong>sonder silencieusement</strong> l'état de toutes vos autorisations sans déclencher aucune popup. Un état "granted" révèle des accès accordés précédemment.</span>
+      <span>Toutes ces données ont été obtenues <strong>sans aucune permission</strong> de votre part.</span>
     </div>
   </section>
 </template>

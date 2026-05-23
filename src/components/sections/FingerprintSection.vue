@@ -4,40 +4,26 @@
       <div class="th-left">
         <span class="th-ico">☠️</span>
         <div>
-          <h2>Empreinte numérique combinée</h2>
-          <p class="th-sub">Canvas, audio, polices, CSS media — chaque signal est une couche de votre empreinte unique. Combinés, ils vous identifient mieux qu'un cookie.</p>
+          <h2>Fingerprinting</h2>
+          <p class="th-sub">Tout ce qui précède, fondu en un seul identifiant. Sans cookie. Sans login.</p>
         </div>
       </div>
       <div>
-        <span class="th-count">6<small>signaux collectés</small></span>
+        <span class="th-count">6<small>signaux</small></span>
       </div>
     </div>
 
     <!-- Hero fingerprint -->
     <div class="hero-block fp-block">
-      <div class="hb-label">EMPREINTE COMBINÉE SHA-256</div>
-      <div class="hb-hash">
-        <span v-if="fp.loading.value">Calcul en cours…</span>
-        <span v-else>{{ fp.combinedHash.value ?? '——————————————' }}</span>
-        <span class="caret"></span>
+      <div class="hb-label">VOTRE IDENTIFIANT UNIQUE PROBABLE</div>
+      <div class="hb-hash" id="fp-hash">
+        <span>{{ typedHash }}</span><span class="caret"></span>
       </div>
       <div class="hb-meta">
-        <div>
-          <b>{{ fp.canvasHash.value ?? '…' }}</b>
-          <span>Canvas Hash</span>
-        </div>
-        <div>
-          <b>{{ fp.audioHash.value ?? '…' }}</b>
-          <span>Audio Hash</span>
-        </div>
-        <div>
-          <b>{{ fp.detectedFonts.value.length }}</b>
-          <span>Polices détectées</span>
-        </div>
-        <div>
-          <b>{{ fp.cssMedia.value ?? '…' }}</b>
-          <span>CSS Media bits</span>
-        </div>
+        <div><b>Stable</b><span>entre vos visites</span></div>
+        <div><b>Sans cookie</b><span>sans stockage</span></div>
+        <div><b>Sans login</b><span>sans permission</span></div>
+        <div><b>1 sur 287 000</b><span>probabilité d'unicité</span></div>
       </div>
     </div>
 
@@ -121,13 +107,28 @@
 
     <div class="tab-foot">
       <span class="tf-key">⚠️</span>
-      <span>L'empreinte combinée <strong>ne peut pas être effacée</strong> en vidant vos cookies ou en utilisant la navigation privée. Seule la modification du matériel ou du navigateur peut la faire varier.</span>
+      <span>Toutes ces données ont été obtenues <strong>sans aucune permission</strong> de votre part.</span>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import { useFingerprint } from '../../composables/useFingerprint'
 import DataCardV2 from '../DataCardV2.vue'
+
 const fp = useFingerprint()
+const typedHash = ref('')
+
+watch(() => fp.combinedHash.value, (hash) => {
+  if (!hash) return
+  const target = hash + ' · ' + (fp.canvasHash.value ?? '————')
+  let i = 0
+  typedHash.value = ''
+  const t = setInterval(() => {
+    i++
+    typedHash.value = target.slice(0, i)
+    if (i >= target.length) clearInterval(t)
+  }, 35)
+}, { immediate: true })
 </script>

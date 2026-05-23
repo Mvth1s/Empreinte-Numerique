@@ -4,12 +4,12 @@
       <div class="th-left">
         <span class="th-ico">🔍</span>
         <div>
-          <h2>Navigateur &amp; Système d'exploitation</h2>
-          <p class="th-sub">Votre navigateur transmet des dizaines de métadonnées à chaque requête — langue, OS, version, préférences — sans que vous puissiez le contrôler.</p>
+          <h2>Navigateur &amp; OS</h2>
+          <p class="th-sub">Chaque visite envoie une carte d'identité technique très bavarde.</p>
         </div>
       </div>
       <div>
-        <span class="th-count">8<small>signaux collectés</small></span>
+        <span class="th-count">8<small>signaux</small></span>
       </div>
     </div>
 
@@ -114,7 +114,7 @@
 
     <div class="tab-foot">
       <span class="tf-key">⚠️</span>
-      <span>Le <strong>User-Agent</strong> est transmis automatiquement dans chaque requête HTTP. Même en navigation privée, votre navigateur et votre OS restent identifiables.</span>
+      <span>Toutes ces données ont été obtenues <strong>sans aucune permission</strong> de votre part.</span>
     </div>
   </section>
 </template>

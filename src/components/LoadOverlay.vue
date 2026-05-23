@@ -6,7 +6,7 @@
     <div class="load-foot">
       <span>{{ text }}</span>
       <span class="dots"></span>
-      <button class="load-skip" @click="emit('skip')">Passer</button>
+      <button class="load-skip" id="load-skip" @click="emit('skip')">Passer →</button>
     </div>
   </div>
 </template>
