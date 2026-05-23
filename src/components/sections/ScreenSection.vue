@@ -9,7 +9,7 @@
         </div>
       </div>
       <div>
-        <span class="th-count">9<small>signaux</small></span>
+        <span class="th-count">11<small>signaux</small></span>
       </div>
     </div>
 
@@ -121,6 +121,30 @@
         severity="faible"
         sev-label="faible"
         :span="4"
+      />
+      <DataCardV2
+        icon="🧮"
+        title="Mémoire JS (Heap)"
+        :value="sc.heapUsed.value !== null ? `${sc.heapUsed.value} Mo utilisés / ${sc.heapLimit.value} Mo max` : 'Non disponible (Firefox/Safari)'"
+        mean="performance.memory expose l'utilisation du tas JavaScript : mémoire utilisée, allouée et limite maximale autorisée."
+        deduce="Révèle approximativement la mémoire libre de votre appareil. Chrome uniquement — son absence identifie Firefox ou Safari."
+        tech-key="performance.memory.usedJSHeapSize"
+        :tech-val="sc.heapUsed.value !== null ? `${sc.heapUsed.value}MB / ${sc.heapLimit.value}MB` : 'N/A'"
+        severity="moyen"
+        sev-label="moyen"
+        :span="6"
+      />
+      <DataCardV2
+        icon="🖥️"
+        title="Écrans multiples"
+        :value="sc.isExtended.value === null ? 'Non disponible' : sc.isExtended.value ? 'Oui — multi-moniteur détecté' : 'Non — écran unique'"
+        mean="screen.isExtended indique si l'écran fait partie d'un setup multi-moniteur. Disponible dans les navigateurs récents."
+        deduce="Un setup multi-écrans est un signal rare qui réduit significativement l'ensemble d'anonymat. Révèle un profil pro/développeur."
+        tech-key="screen.isExtended"
+        :tech-val="String(sc.isExtended.value)"
+        severity="faible"
+        sev-label="faible"
+        :span="6"
       />
     </div>
 

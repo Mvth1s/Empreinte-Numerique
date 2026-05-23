@@ -9,7 +9,7 @@
         </div>
       </div>
       <div>
-        <span class="th-count">6<small>signaux</small></span>
+        <span class="th-count">8<small>signaux</small></span>
       </div>
     </div>
 
@@ -99,6 +99,30 @@
         deduce="La combinaison de codecs supportés dépend du navigateur, de l'OS et du matériel. Elle contribue au profil d'empreinte."
         tech-key="video.canPlayType() + audio.canPlayType()"
         :tech-val="Object.keys(fp.codecs.value).join(', ')"
+        severity="faible"
+        sev-label="faible"
+        :span="6"
+      />
+      <DataCardV2
+        icon="🔊"
+        title="Voix TTS installées"
+        :value="fp.ttsVoices.value.length ? `${fp.ttsVoices.value.length} voix détectées` : '…'"
+        mean="speechSynthesis.getVoices() retourne la liste complète des moteurs de synthèse vocale installés sur le système."
+        deduce="La liste de voix est unique par OS/langue/région. Elle révèle la langue système, les packs de langues installés et la plateforme."
+        tech-key="speechSynthesis.getVoices()"
+        :tech-val="`${fp.ttsVoices.value.length} voix`"
+        severity="moyen"
+        sev-label="moyen"
+        :span="6"
+      />
+      <DataCardV2
+        icon="📷"
+        title="Périphériques médias"
+        :value="fp.mediaDeviceCount.value !== null ? `${fp.mediaDeviceCount.value} périphérique(s) détecté(s)` : 'Non disponible'"
+        mean="mediaDevices.enumerateDevices() retourne le nombre de périphériques audio/vidéo sans révéler leurs labels (ceux-ci nécessitent une permission)."
+        deduce="Le nombre de caméras, micros et haut-parleurs révèle la configuration matérielle. Un setup studio ou une caméra externe est identifiant."
+        tech-key="navigator.mediaDevices.enumerateDevices()"
+        :tech-val="String(fp.mediaDeviceCount.value)"
         severity="faible"
         sev-label="faible"
         :span="12"

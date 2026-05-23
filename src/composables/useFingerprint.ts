@@ -121,6 +121,29 @@ function getCodecs(): Record<string, string> {
   }
 }
 
+async function getTTSVoices(): Promise<string[]> {
+  if (!window.speechSynthesis) return []
+  return new Promise(resolve => {
+    const voices = speechSynthesis.getVoices()
+    if (voices.length > 0) { resolve(voices.map(v => v.name)); return }
+    let done = false
+    const handler = () => {
+      if (done) return; done = true
+      resolve(speechSynthesis.getVoices().map(v => v.name))
+    }
+    speechSynthesis.addEventListener('voiceschanged', handler, { once: true })
+    setTimeout(() => { if (!done) { done = true; resolve([]) } }, 2000)
+  })
+}
+
+async function getMediaDeviceCount(): Promise<number | null> {
+  try {
+    if (!navigator.mediaDevices?.enumerateDevices) return null
+    const devices = await navigator.mediaDevices.enumerateDevices()
+    return devices.length
+  } catch { return null }
+}
+
 export function useFingerprint() {
   const canvasHash = ref<string | null>(null)
   const audioHash = ref<string | null>(null)
@@ -130,22 +153,28 @@ export function useFingerprint() {
   const codecs = ref<Record<string, string>>({})
   const combinedHash = ref<string | null>(null)
   const loading = ref(true)
+  const ttsVoices = ref<string[]>([])
+  const mediaDeviceCount = ref<number | null>(null)
 
   onMounted(async () => {
     cssMedia.value = cssMediaFingerprint()
     plugins.value = getPlugins()
     codecs.value = getCodecs()
 
-    const [cvs, aud] = await Promise.all([canvasFingerprint(), audioFingerprint()])
+    const [cvs, aud, devCount] = await Promise.all([
+      canvasFingerprint(), audioFingerprint(), getMediaDeviceCount()
+    ])
     canvasHash.value = cvs || null
     audioHash.value = aud || null
+    mediaDeviceCount.value = devCount
 
     detectedFonts.value = detectFonts()
+    getTTSVoices().then(v => { ttsVoices.value = v })
 
     const combined = [cvs, aud, cssMedia.value, detectedFonts.value.join(',')].join('|')
     combinedHash.value = shortHash(await sha256(combined))
     loading.value = false
   })
 
-  return { canvasHash, audioHash, cssMedia, detectedFonts, plugins, codecs, combinedHash, loading }
+  return { canvasHash, audioHash, cssMedia, detectedFonts, plugins, codecs, combinedHash, loading, ttsVoices, mediaDeviceCount }
 }

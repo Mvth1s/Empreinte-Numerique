@@ -9,7 +9,7 @@
         </div>
       </div>
       <div>
-        <span class="th-count">8<small>signaux</small></span>
+        <span class="th-count">12<small>signaux</small></span>
       </div>
     </div>
 
@@ -106,6 +106,66 @@
         deduce="Protection contre les bots, CAPTCHA ciblé, différenciation humain/machine pour contenu et accès."
         tech-key="navigator.webdriver + heuristiques"
         :tech-val="String(br.headless.value)"
+        severity="faible"
+        sev-label="faible"
+        :span="4"
+      />
+      <DataCardV2
+        icon="🔬"
+        title="Client Hints (UA-CH)"
+        :value="br.clientHintBrands.value ?? 'Non supporté (Firefox/Safari)'"
+        mean="L'API User-Agent Client Hints expose la liste des navigateurs Chromium et leurs versions de façon structurée, sans parser le User-Agent."
+        deduce="Plus précis que le UA classique pour identifier Chromium, Edge, Chrome. Permet de détecter les faux UA facilement."
+        tech-key="navigator.userAgentData.brands"
+        :tech-val="br.clientHintBrands.value ?? 'null'"
+        severity="moyen"
+        sev-label="moyen"
+        :span="6"
+      />
+      <DataCardV2
+        icon="📐"
+        title="Chrome navigateur (taille)"
+        :value="`Δ ${br.chromeSizeW.value}×${br.chromeSizeH.value} px`"
+        mean="La différence entre outerWidth/outerHeight et innerWidth/innerHeight correspond à la taille des barres d'outils du navigateur."
+        deduce="Révèle si vous avez des barres d'outils, la hauteur de la barre d'URL, permet de distinguer les profils navigateur."
+        tech-key="outerWidth - innerWidth / outerHeight - innerHeight"
+        :tech-val="`${br.chromeSizeW.value}px / ${br.chromeSizeH.value}px`"
+        severity="faible"
+        sev-label="faible"
+        :span="6"
+      />
+      <DataCardV2
+        icon="📄"
+        title="Lecteur PDF natif"
+        :value="br.pdfViewerEnabled.value === null ? 'Non disponible' : br.pdfViewerEnabled.value ? 'Intégré au navigateur' : 'Absent'"
+        mean="navigator.pdfViewerEnabled indique si le navigateur peut afficher les PDF nativement, sans plugin externe."
+        deduce="Contribue au profil navigateur. Un PDF viewer intégré signale Chrome/Edge récent, son absence peut indiquer Firefox ou une config minimale."
+        tech-key="navigator.pdfViewerEnabled"
+        :tech-val="String(br.pdfViewerEnabled.value)"
+        severity="faible"
+        sev-label="faible"
+        :span="4"
+      />
+      <DataCardV2
+        icon="🔏"
+        title="Global Privacy Control"
+        :value="br.globalPrivacyControl.value === null ? 'Non supporté' : br.globalPrivacyControl.value ? 'Activé (GPC=1)' : 'Désactivé'"
+        mean="Le GPC est un signal de confidentialité standardisé envoyé aux sites pour demander la non-vente de vos données personnelles."
+        deduce="Comme le DNT, il est ignoré par la majorité des sites. Sa présence peut paradoxalement vous rendre plus identifiable."
+        tech-key="navigator.globalPrivacyControl"
+        :tech-val="String(br.globalPrivacyControl.value)"
+        severity="faible"
+        sev-label="faible"
+        :span="4"
+      />
+      <DataCardV2
+        icon="📱"
+        title="Mobile (Client Hints)"
+        :value="br.clientHintMobile.value === null ? 'Non disponible' : br.clientHintMobile.value ? 'Oui — appareil mobile' : 'Non — desktop'"
+        mean="L'API Client Hints expose un flag booléen indiquant si le navigateur est en mode mobile, plus fiable que la détection par UA."
+        deduce="Distinction mobile/desktop sans ambiguïté, utile pour ciblage publicitaire et adaptation de contenu sans User-Agent classique."
+        tech-key="navigator.userAgentData.mobile"
+        :tech-val="String(br.clientHintMobile.value)"
         severity="faible"
         sev-label="faible"
         :span="4"

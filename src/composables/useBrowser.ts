@@ -48,6 +48,18 @@ function isHeadless(): boolean {
   return false
 }
 
+declare global {
+  interface Navigator {
+    userAgentData?: {
+      brands: { brand: string; version: string }[]
+      mobile: boolean
+      platform: string
+    }
+    pdfViewerEnabled?: boolean
+    globalPrivacyControl?: boolean
+  }
+}
+
 export function useBrowser() {
   const userAgent = ref(navigator.userAgent)
   const { os, browser, browserVersion } = parseUA(navigator.userAgent)
@@ -61,9 +73,30 @@ export function useBrowser() {
   const thirdPartyCookies = ref<boolean | null>(null)
   const headless = ref(isHeadless())
 
+  const uad = navigator.userAgentData
+  const clientHintBrands = ref<string | null>(
+    uad ? uad.brands.filter(b => !b.brand.includes('Not')).map(b => `${b.brand} ${b.version}`).join(', ') : null
+  )
+  const clientHintMobile = ref<boolean | null>(uad?.mobile ?? null)
+  const clientHintPlatform = ref<string | null>(uad?.platform ?? null)
+
+  const pdfViewerEnabled = ref<boolean | null>(navigator.pdfViewerEnabled ?? null)
+  const globalPrivacyControl = ref<boolean | null>(navigator.globalPrivacyControl ?? null)
+
+  const chromeSizeW = ref(window.outerWidth - window.innerWidth)
+  const chromeSizeH = ref(window.outerHeight - window.innerHeight)
+
   onMounted(async () => {
     thirdPartyCookies.value = await detectThirdPartyCookies()
+    chromeSizeW.value = window.outerWidth - window.innerWidth
+    chromeSizeH.value = window.outerHeight - window.innerHeight
   })
 
-  return { userAgent, detectedOS, detectedBrowser, language, languages, platform, doNotTrack, cookiesEnabled, thirdPartyCookies, headless }
+  return {
+    userAgent, detectedOS, detectedBrowser, language, languages, platform,
+    doNotTrack, cookiesEnabled, thirdPartyCookies, headless,
+    clientHintBrands, clientHintMobile, clientHintPlatform,
+    pdfViewerEnabled, globalPrivacyControl,
+    chromeSizeW, chromeSizeH,
+  }
 }
