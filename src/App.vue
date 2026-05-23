@@ -91,6 +91,7 @@
           :visible="loading"
           :kind="loadKind"
           :text="loadText"
+          :loader-data="loaderData"
           @skip="skipLoad"
         />
 
@@ -132,11 +133,13 @@ import { useNetwork } from './composables/useNetwork'
 import { useFingerprint } from './composables/useFingerprint'
 import { useScreen } from './composables/useScreen'
 import { useGPU } from './composables/useGPU'
+import { useConnectivity } from './composables/useConnectivity'
 
 const network = useNetwork()
 const fingerprint = useFingerprint()
 const screen = useScreen()
 const gpu = useGPU()
+const conn = useConnectivity()
 
 const TABS = [
   { id: 'network',      icon: '🌐', label: 'Réseau & IP',        short: 'Réseau',        loader: { kind: 'radar',       text: 'Localisation de votre IP en cours' },     bg: 'radar' as const },
@@ -203,13 +206,54 @@ const sessionDate = computed(() => {
 let loadTimer: ReturnType<typeof setTimeout> | null = null
 const LOAD_DURATION = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 500 : 2800
 
+const loaderData = computed((): Record<string, string> => {
+  const off = -new Date().getTimezoneOffset()
+  const sign = off >= 0 ? '+' : '-'
+  const hh = String(Math.floor(Math.abs(off) / 60)).padStart(2, '0')
+  const mm = String(Math.abs(off) % 60).padStart(2, '0')
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const ua = navigator.userAgent
+  return {
+    ip: network.publicIP.value ?? '…',
+    cityCountry: `${network.city.value ?? '…'} · ${network.country.value ?? '…'}`,
+    country: network.country.value ?? '…',
+    city: network.city.value ?? '…',
+    isp: network.isp.value ?? '…',
+    tz: `${tz} · UTC ${sign}${hh}:${mm}`,
+    screen: screen.resolution.value ?? '…',
+    dpr: String(screen.pixelRatio.value ?? '…'),
+    colorDepth: `${screen.colorDepth.value ?? '…'} bits`,
+    touch: screen.touchPoints.value === 0 ? 'non' : String(screen.touchPoints.value),
+    cores: screen.cores.value ? `${screen.cores.value} cœurs` : 'N/A',
+    ram: screen.memory.value ? `${screen.memory.value} Go` : 'N/A',
+    gpu: gpu.renderer.value ?? 'N/A',
+    glVersion: gpu.webgl2.value ? 'WebGL 2.0' : 'WebGL 1.0',
+    glVendor: gpu.vendor.value ?? 'ANGLE',
+    glRenderer: gpu.renderer.value ?? '…',
+    connType: conn.effectiveType.value ?? conn.connectionType.value ?? '4G',
+    rtt: conn.rtt.value !== null ? `${conn.rtt.value} ms` : '…',
+    downlink: conn.downlink.value !== null ? `${conn.downlink.value} Mbps` : '…',
+    ua: ua.length > 55 ? ua.slice(0, 52) + '…' : ua,
+    platform: navigator.platform,
+    languages: navigator.languages?.join(', ') ?? navigator.language,
+    concurrency: String(navigator.hardwareConcurrency ?? 'N/A'),
+    deviceMemory: String((navigator as { deviceMemory?: number }).deviceMemory ?? 'N/A'),
+    cookies: String(navigator.cookieEnabled),
+    touch2: String(navigator.maxTouchPoints),
+    dnt: navigator.doNotTrack ?? 'null',
+    screenRes: `${window.screen.width} × ${window.screen.height}`,
+    screenColor: String(window.screen.colorDepth),
+    plugins: String(navigator.plugins?.length ?? 0),
+  }
+})
+
 function dismissWelcome() {
   showWelcome.value = false
-  switchTab('network')
+  switchTab('network', true)
 }
 
-async function switchTab(id: TabId) {
-  if (id === activeTab.value && !showWelcome.value && !loading.value) return
+async function switchTab(id: TabId, force = false) {
+  if (!force && id === activeTab.value && !showWelcome.value && !loading.value) return
   const tab = TABS.find(t => t.id === id)!
 
   activeTab.value = id

@@ -1,5 +1,5 @@
 <template>
-  <article :class="['card', `sev-${severity}`]" :style="{ gridColumn: `span ${span}` }">
+  <article :class="['card', `sev-${severity}`, `col-${span || 4}`]">
     <header class="c-head">
       <div class="c-title">
         <span class="c-ico">{{ icon }}</span>

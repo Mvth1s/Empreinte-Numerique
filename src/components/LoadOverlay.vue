@@ -14,7 +14,12 @@
 <script setup lang="ts">
 import { ref, watch, onUnmounted } from 'vue'
 
-const props = defineProps<{ visible: boolean; kind: string; text: string }>()
+const props = withDefaults(defineProps<{
+  visible: boolean
+  kind: string
+  text: string
+  loaderData?: Record<string, string>
+}>(), { loaderData: () => ({}) })
 const emit = defineEmits<{ (e: 'skip'): void }>()
 
 const canvasEl = ref<HTMLCanvasElement | null>(null)
@@ -41,25 +46,26 @@ function startLoader(kind: string) {
   const H = c.offsetHeight || 300
   c.width = W * DPR; c.height = H * DPR
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
+  const d = props.loaderData ?? {}
 
   switch (kind) {
-    case 'radar':       stopFn = loaderRadar(ctx, W, H);       break
-    case 'terminal':    stopFn = loaderTerminal(ctx, W, H);    break
-    case 'clock':       stopFn = loaderClock(ctx, W, H);       break
-    case 'scanner':     stopFn = loaderScanner(ctx, W, H);     break
-    case 'wireframe':   stopFn = loaderWireframe(ctx, W, H);   break
-    case 'hexrain':     stopFn = loaderHexrain(ctx, W, H);     break
-    case 'diskbar':     stopFn = loaderDiskbar(ctx, W, H);     break
-    case 'wifi':        stopFn = loaderWifi(ctx, W, H);        break
-    case 'permissions': stopFn = loaderPermissions(ctx, W, H); break
-    case 'cursor':      stopFn = loaderCursor(ctx, W, H);      break
-    case 'mapzoom':     stopFn = loaderMapzoom(ctx, W, H);     break
-    default:            stopFn = loaderScanner(ctx, W, H)
+    case 'radar':       stopFn = loaderRadar(ctx, W, H, d);       break
+    case 'terminal':    stopFn = loaderTerminal(ctx, W, H, d);    break
+    case 'clock':       stopFn = loaderClock(ctx, W, H, d);       break
+    case 'scanner':     stopFn = loaderScanner(ctx, W, H, d);     break
+    case 'wireframe':   stopFn = loaderWireframe(ctx, W, H, d);   break
+    case 'hexrain':     stopFn = loaderHexrain(ctx, W, H);        break
+    case 'diskbar':     stopFn = loaderDiskbar(ctx, W, H);        break
+    case 'wifi':        stopFn = loaderWifi(ctx, W, H, d);        break
+    case 'permissions': stopFn = loaderPermissions(ctx, W, H);    break
+    case 'cursor':      stopFn = loaderCursor(ctx, W, H);         break
+    case 'mapzoom':     stopFn = loaderMapzoom(ctx, W, H, d);     break
+    default:            stopFn = loaderScanner(ctx, W, H, d)
   }
 }
 
 // ---- RADAR ----
-function loaderRadar(ctx: CanvasRenderingContext2D, W: number, H: number) {
+function loaderRadar(ctx: CanvasRenderingContext2D, W: number, H: number, data: Record<string, string>) {
   let raf = 0
   const t0 = performance.now()
   const cx = W / 2, cy = H / 2
@@ -95,8 +101,8 @@ function loaderRadar(ctx: CanvasRenderingContext2D, W: number, H: number) {
     ctx.strokeStyle = CYAN; ctx.lineWidth = 1
     ctx.beginPath(); ctx.arc(cx, cy, 14, 0, Math.PI * 2); ctx.stroke()
     ctx.fillStyle = FAINT; ctx.font = '11px "IBM Plex Mono", monospace'
-    ctx.fillText('92.184.117.43', cx + 18, cy - 4)
-    ctx.fillText('Paris · FR', cx + 18, cy + 12)
+    ctx.fillText(data.ip ?? '…', cx + 18, cy - 4)
+    ctx.fillText(data.cityCountry ?? '…', cx + 18, cy + 12)
     raf = requestAnimationFrame(draw)
   }
   raf = requestAnimationFrame(draw)
@@ -104,23 +110,23 @@ function loaderRadar(ctx: CanvasRenderingContext2D, W: number, H: number) {
 }
 
 // ---- TERMINAL ----
-function loaderTerminal(ctx: CanvasRenderingContext2D, W: number, H: number) {
+function loaderTerminal(ctx: CanvasRenderingContext2D, W: number, H: number, data: Record<string, string>) {
+  const tzShort = (data.tz ?? 'Europe/Paris').split(' · ')[0]
   const lines = [
     '> navigator.userAgent',
-    '"Mozilla/5.0 (Win64; x64) AppleWebKit/537.36 …',
-    ' …  Chrome/124.0.6367.91 Safari/537.36"',
-    '> navigator.platform        → "Win32"',
-    '> navigator.languages       → ["fr-FR","fr","en-US","en"]',
-    '> navigator.hardwareConcurrency → 12',
-    '> navigator.deviceMemory    → 8',
-    '> navigator.cookieEnabled   → true',
-    '> navigator.maxTouchPoints  → 0',
-    '> navigator.doNotTrack      → null',
-    '> screen.width × height     → 2560 × 1440',
-    '> screen.colorDepth         → 24',
-    '> Intl.DateTimeFormat … timeZone → "Europe/Paris"',
-    '> performance.memory.jsHeapSize → 4 194 304',
-    '> navigator.plugins.length  → 5',
+    `"${data.ua ?? 'Mozilla/5.0 …'}"`,
+    `> navigator.platform        → "${data.platform ?? 'Win32'}"`,
+    `> navigator.languages       → [${data.languages ?? '"fr-FR"'}]`,
+    `> navigator.hardwareConcurrency → ${data.concurrency ?? '8'}`,
+    `> navigator.deviceMemory    → ${data.deviceMemory ?? '8'}`,
+    `> navigator.cookieEnabled   → ${data.cookies ?? 'true'}`,
+    `> navigator.maxTouchPoints  → ${data.touch2 ?? '0'}`,
+    `> navigator.doNotTrack      → ${data.dnt ?? 'null'}`,
+    `> screen.width × height     → ${data.screenRes ?? '…'}`,
+    `> screen.colorDepth         → ${data.screenColor ?? '24'}`,
+    `> Intl.DateTimeFormat … timeZone → "${tzShort}"`,
+    `> performance.memory.jsHeapSize → disponible`,
+    `> navigator.plugins.length  → ${data.plugins ?? '0'}`,
     '✓ profil capturé.'
   ]
   let raf = 0
@@ -151,7 +157,7 @@ function loaderTerminal(ctx: CanvasRenderingContext2D, W: number, H: number) {
 }
 
 // ---- CLOCK ----
-function loaderClock(ctx: CanvasRenderingContext2D, W: number, H: number) {
+function loaderClock(ctx: CanvasRenderingContext2D, W: number, H: number, data: Record<string, string>) {
   let raf = 0
   const t0 = performance.now()
   function draw(now: number) {
@@ -189,7 +195,7 @@ function loaderClock(ctx: CanvasRenderingContext2D, W: number, H: number) {
     ctx.lineTo(ox + Math.cos(aM - Math.PI / 2) * 44, oy + Math.sin(aM - Math.PI / 2) * 44); ctx.stroke()
     ctx.lineCap = 'butt'
     ctx.fillStyle = FAINT; ctx.font = '11px "IBM Plex Mono", monospace'
-    ctx.fillText('Europe / Paris · UTC +02:00', cx - 110, cy + 110)
+    ctx.fillText(data.tz ?? 'Europe/Paris · UTC +02:00', cx - 110, cy + 110)
     raf = requestAnimationFrame(draw)
   }
   raf = requestAnimationFrame(draw)
@@ -197,17 +203,17 @@ function loaderClock(ctx: CanvasRenderingContext2D, W: number, H: number) {
 }
 
 // ---- SCANNER ----
-function loaderScanner(ctx: CanvasRenderingContext2D, W: number, H: number) {
+function loaderScanner(ctx: CanvasRenderingContext2D, W: number, H: number, data: Record<string, string>) {
   let raf = 0
   const t0 = performance.now()
   const labels: [string, string, number][] = [
-    ['ÉCRAN', '2560 × 1440', 0.10],
-    ['DPR', '1.25', 0.22],
-    ['COULEURS', '24 bits', 0.34],
-    ['TACTILE', 'non', 0.46],
-    ['CPU', '12 cœurs', 0.58],
-    ['RAM', '16 Go', 0.70],
-    ['GPU', 'RTX 4070', 0.82],
+    ['ÉCRAN',    data.screen     ?? '…',   0.10],
+    ['DPR',      data.dpr        ?? '…',   0.22],
+    ['COULEURS', data.colorDepth ?? '…',   0.34],
+    ['TACTILE',  data.touch      ?? 'non', 0.46],
+    ['CPU',      data.cores      ?? '…',   0.58],
+    ['RAM',      data.ram        ?? '…',   0.70],
+    ['GPU',      data.gpu        ?? '…',   0.82],
   ]
   function draw(now: number) {
     clr(ctx, W, H)
@@ -250,7 +256,7 @@ function loaderScanner(ctx: CanvasRenderingContext2D, W: number, H: number) {
 }
 
 // ---- WIREFRAME ----
-function loaderWireframe(ctx: CanvasRenderingContext2D, W: number, H: number) {
+function loaderWireframe(ctx: CanvasRenderingContext2D, W: number, H: number, data: Record<string, string>) {
   let raf = 0
   const t0 = performance.now()
   const V: [number, number, number][] = [
@@ -299,7 +305,7 @@ function loaderWireframe(ctx: CanvasRenderingContext2D, W: number, H: number) {
       ctx.beginPath(); ctx.arc(p[0], p[1], 2.5, 0, Math.PI * 2); ctx.fill()
     })
     ctx.font = '11px "IBM Plex Mono", monospace'; ctx.fillStyle = FAINT
-    ctx.fillText('WebGL 2.0  ·  ANGLE  ·  RTX 4070', 28, H - 24)
+    ctx.fillText(`${data.glVersion ?? 'WebGL 2.0'}  ·  ${data.glVendor ?? 'ANGLE'}  ·  ${data.glRenderer ?? '…'}`, 28, H - 24)
     raf = requestAnimationFrame(draw)
   }
   raf = requestAnimationFrame(draw)
@@ -388,7 +394,7 @@ function loaderDiskbar(ctx: CanvasRenderingContext2D, W: number, H: number) {
 }
 
 // ---- WIFI ----
-function loaderWifi(ctx: CanvasRenderingContext2D, W: number, H: number) {
+function loaderWifi(ctx: CanvasRenderingContext2D, W: number, H: number, data: Record<string, string>) {
   let raf = 0
   const t0 = performance.now()
   function draw(now: number) {
@@ -411,7 +417,7 @@ function loaderWifi(ctx: CanvasRenderingContext2D, W: number, H: number) {
       ctx.fillStyle = `rgba(0,229,255,${v * 0.9})`; ctx.fillRect(x, by - h * v, 14, h * v)
     }
     ctx.fillStyle = FAINT; ctx.font = '11px "IBM Plex Mono", monospace'
-    ctx.fillText('SIGNAL  ·  4G  ·  RTT 85 ms  ·  DOWN 12.4 Mbps', 30, H - 20)
+    ctx.fillText(`SIGNAL  ·  ${data.connType ?? '4G'}  ·  RTT ${data.rtt ?? '…'}  ·  DOWN ${data.downlink ?? '…'}`, 30, H - 20)
     raf = requestAnimationFrame(draw)
   }
   raf = requestAnimationFrame(draw)
@@ -496,14 +502,14 @@ function loaderCursor(ctx: CanvasRenderingContext2D, W: number, H: number) {
 }
 
 // ---- MAPZOOM ----
-function loaderMapzoom(ctx: CanvasRenderingContext2D, W: number, H: number) {
+function loaderMapzoom(ctx: CanvasRenderingContext2D, W: number, H: number, data: Record<string, string>) {
   let raf = 0
   const t0 = performance.now()
   const rings = [
-    { rMax: 260, label: 'PAYS · France' },
-    { rMax: 160, label: 'RÉGION · Île-de-France' },
-    { rMax: 80, label: 'VILLE · Paris' },
-    { rMax: 22, label: 'QUARTIER · 10e arr.' }
+    { rMax: 260, label: `PAYS · ${data.country ?? '…'}` },
+    { rMax: 160, label: `ISP · ${data.isp ?? '…'}` },
+    { rMax: 80,  label: `VILLE · ${data.city ?? '…'}` },
+    { rMax: 22,  label: 'POSITION · approx.' }
   ]
   function draw(now: number) {
     clr(ctx, W, H)
