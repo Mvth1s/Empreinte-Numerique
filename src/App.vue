@@ -5,7 +5,7 @@
     <!-- Welcome modal -->
     <div :class="['welcome', { hidden: !showWelcome }]" id="welcome">
       <div class="welcome-inner">
-        <img src="/logo.svg" alt="Empreinte Numérique" class="welcome-logo" />
+        <img src="/logo.png" alt="Empreinte Numérique" class="welcome-logo" />
         <h1>Vous pensez être <em>anonyme</em>.<br/>Ce site sait déjà beaucoup sur vous.</h1>
         <p>
           Sans cookie, sans login, sans la moindre autorisation, un site web peut reconstruire votre identité technique en moins de deux secondes. Cette démo vous montre <strong style="color:var(--fg)">tout ce qu'il découvre</strong>, en langage clair.
@@ -24,7 +24,7 @@
       <!-- Header -->
       <header class="top">
         <div class="brand">
-          <img src="/logo.svg" alt="logo" class="brand-logo" />
+          <img src="/logo.png" alt="logo" class="brand-logo" />
           <div>
             <h1>EMPREINTE NUMÉRIQUE</h1>
             <div class="tag">Ce que chaque site sait sur vous</div>
