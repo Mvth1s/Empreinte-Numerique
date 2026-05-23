@@ -125,7 +125,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, defineAsyncComponent } from 'vue'
+import { ref, computed, watch, onMounted, nextTick, defineAsyncComponent } from 'vue'
 import BackgroundCanvas from './components/BackgroundCanvas.vue'
 import LoadOverlay from './components/LoadOverlay.vue'
 
@@ -317,6 +317,11 @@ function copyShare() {
   copyLabel.value = '✓ Copié'
   setTimeout(() => { copyLabel.value = '📋 Copier' }, 1500)
 }
+
+/* ---- Scroll lock during loading ---- */
+watch(loading, (val) => {
+  document.body.style.overflow = val ? 'hidden' : ''
+})
 
 /* ---- Tooltip ---- */
 onMounted(() => {
