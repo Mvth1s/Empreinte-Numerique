@@ -6,7 +6,7 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 
 type BgKind = 'particles' | 'radar' | 'hexrain' | 'tron' | 'cursor' |
-              'terminal' | 'clock' | 'scan' | 'blocks' | 'wave' | 'rings' | 'map' | 'flow'
+              'terminal' | 'clock' | 'scan' | 'blocks' | 'wave' | 'rings' | 'map' | 'flow' | 'globe'
 
 const props = defineProps<{ kind: BgKind }>()
 
@@ -385,6 +385,87 @@ function drawMap(now: number) {
   ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill()
 }
 
+// ---- globe ----
+const globeCities = [
+  { lat: 48.8566, lon: 2.3522 },    // Paris
+  { lat: 40.7128, lon: -74.0060 },  // New York
+  { lat: 35.6762, lon: 139.6503 },  // Tokyo
+  { lat: -33.8688, lon: 151.2093 }, // Sydney
+  { lat: 51.5074, lon: -0.1278 },   // London
+  { lat: 55.7558, lon: 37.6173 },   // Moscow
+  { lat: -23.5505, lon: -46.6333 }, // São Paulo
+  { lat: 28.6139, lon: 77.2090 },   // Delhi
+]
+
+function drawGlobe(now: number) {
+  const ctx = getCtx(); if (!ctx) return
+  ctx.clearRect(0, 0, W, H)
+  const t = now / 1000
+  const cx = W / 2, cy = H / 2
+  const R = Math.min(W, H) * 0.26
+  const rot = t * 0.12
+
+  ctx.save()
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.clip()
+
+  const radGrad = ctx.createRadialGradient(cx - R * 0.3, cy - R * 0.3, 0, cx, cy, R)
+  radGrad.addColorStop(0, 'rgba(15,20,40,0.9)')
+  radGrad.addColorStop(1, 'rgba(5,8,20,0.97)')
+  ctx.fillStyle = radGrad; ctx.fillRect(cx - R, cy - R, R * 2, R * 2)
+
+  const nLat = 9, nMer = 12
+
+  for (let i = 0; i <= nLat; i++) {
+    const phi = -Math.PI / 2 + (i / nLat) * Math.PI
+    const sy = cy - R * Math.sin(phi)
+    const sr = R * Math.cos(phi)
+    const isEquator = i === Math.round(nLat / 2)
+    ctx.strokeStyle = isEquator ? 'rgba(0,229,255,0.16)' : 'rgba(0,229,255,0.06)'
+    ctx.lineWidth = isEquator ? 1.2 : 0.7
+    ctx.beginPath(); ctx.ellipse(cx, sy, sr, sr * 0.18, 0, 0, Math.PI * 2); ctx.stroke()
+  }
+
+  for (let i = 0; i < nMer; i++) {
+    const a = (i / nMer) * Math.PI + rot
+    const sx = R * Math.abs(Math.sin(a))
+    const isFront = Math.cos(a) > 0
+    ctx.strokeStyle = isFront ? 'rgba(0,229,255,0.10)' : 'rgba(0,229,255,0.03)'
+    ctx.lineWidth = 0.7
+    ctx.beginPath(); ctx.ellipse(cx, cy, sx, R, 0, 0, Math.PI * 2); ctx.stroke()
+  }
+
+  globeCities.forEach(city => {
+    const phi = city.lat * Math.PI / 180
+    const lam = city.lon * Math.PI / 180
+    const effLam = lam + rot
+    if (Math.cos(effLam) <= 0) return
+    const sx = cx + R * Math.cos(phi) * Math.sin(effLam)
+    const sy = cy - R * Math.sin(phi)
+    const alpha = Math.cos(effLam)
+    ctx.fillStyle = `rgba(0,229,255,${alpha * 0.75})`
+    ctx.beginPath(); ctx.arc(sx, sy, 2, 0, Math.PI * 2); ctx.fill()
+    const pingPhase = ((t * 1.4 + city.lon * 0.01) % 2) / 2
+    ctx.strokeStyle = `rgba(0,229,255,${(1 - pingPhase) * alpha * 0.3})`
+    ctx.lineWidth = 0.7
+    ctx.beginPath(); ctx.arc(sx, sy, pingPhase * 9, 0, Math.PI * 2); ctx.stroke()
+  })
+
+  const shine = ctx.createRadialGradient(cx - R * 0.38, cy - R * 0.38, 0, cx - R * 0.2, cy - R * 0.2, R * 0.7)
+  shine.addColorStop(0, 'rgba(0,229,255,0.07)')
+  shine.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = shine; ctx.fillRect(cx - R, cy - R, R * 2, R * 2)
+
+  ctx.restore()
+
+  ctx.strokeStyle = 'rgba(0,229,255,0.18)'; ctx.lineWidth = 1.2
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke()
+
+  for (let k = 1; k <= 3; k++) {
+    ctx.strokeStyle = `rgba(0,229,255,${0.05 / k})`; ctx.lineWidth = 1
+    ctx.beginPath(); ctx.arc(cx, cy, R + k * 6, 0, Math.PI * 2); ctx.stroke()
+  }
+}
+
 function tick(now: number) {
   if (current === 'particles')  drawParticles()
   else if (current === 'radar') { drawParticles(); drawRadar(now) }
@@ -399,6 +480,7 @@ function tick(now: number) {
   else if (current === 'rings')    drawRings(now)
   else if (current === 'map')      drawMap(now)
   else if (current === 'flow')     drawFlow(now)
+  else if (current === 'globe')    drawGlobe(now)
   raf = requestAnimationFrame(tick)
 }
 

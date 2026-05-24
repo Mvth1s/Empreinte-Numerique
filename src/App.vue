@@ -159,12 +159,12 @@ const TABS = [
   { id: 'connectivity', icon: '📡', label: 'Connectivité',        short: 'Connexion',     loader: { kind: 'wifi',        text: 'Test de votre connexion' },                bg: 'wave' as const },
   { id: 'permissions',  icon: '🔐', label: 'Permissions',         short: 'Permissions',   loader: { kind: 'permissions', text: 'Vérification de vos permissions' },        bg: 'rings' as const },
   { id: 'behavior',     icon: '🖱️', label: 'Comportement',        short: 'Comportement',  loader: { kind: 'cursor',      text: 'Observation de votre comportement' },      bg: 'cursor' as const },
-  { id: 'location',     icon: '📍', label: 'Localisation',        short: 'Localisation',  loader: { kind: 'mapzoom',     text: 'Triangulation de votre position' },        bg: 'map' as const },
+  { id: 'location',     icon: '📍', label: 'Localisation',        short: 'Localisation',  loader: { kind: 'mapzoom',     text: 'Triangulation de votre position' },        bg: 'globe' as const },
   { id: 'conclusion',   icon: '🛡️', label: 'Se protéger',         short: 'Protection',    loader: { kind: 'shield',      text: 'Analyse de vos protections' },             bg: 'particles' as const },
 ]
 
 type TabId = typeof TABS[number]['id']
-type BgKind = 'particles' | 'radar' | 'hexrain' | 'tron' | 'cursor' | 'terminal' | 'clock' | 'scan' | 'blocks' | 'wave' | 'rings' | 'map' | 'flow'
+type BgKind = 'particles' | 'radar' | 'hexrain' | 'tron' | 'cursor' | 'terminal' | 'clock' | 'scan' | 'blocks' | 'wave' | 'rings' | 'map' | 'flow' | 'globe'
 
 const sections: Record<TabId, ReturnType<typeof defineAsyncComponent>> = {
   network:      defineAsyncComponent(() => import('./components/sections/NetworkSection.vue')),
