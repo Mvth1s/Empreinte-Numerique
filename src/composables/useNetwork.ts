@@ -17,6 +17,28 @@ function fetchGeo(): Promise<GeoData | null> {
         if (geo.status === 'success') { geo.ip = ip; return geo }
       } catch { /* fall through */ }
     }
+    // ipwho.is: HTTPS, no key required, includes VPN/proxy/tor detection
+    try {
+      const res = await fetch('https://ipwho.is/')
+      const d = await res.json()
+      if (!d.success) throw new Error('ipwho.is failure')
+      return {
+        ip: d.ip,
+        country: d.country,
+        countryCode: d.country_code,
+        regionName: d.region,
+        city: d.city,
+        lat: d.latitude,
+        lon: d.longitude,
+        isp: d.connection?.isp ?? d.connection?.org ?? '',
+        org: d.connection?.org ?? '',
+        as: d.connection?.asn ? `AS${d.connection.asn} ${d.connection.org ?? ''}`.trim() : '',
+        proxy: d.security?.proxy ?? false,
+        hosting: (d.security?.vpn ?? false) || (d.security?.tor ?? false),
+        status: 'success',
+      }
+    } catch { /* fall through */ }
+    // Last resort: ipapi.co (no proxy/VPN detection available)
     try {
       const res = await fetch('https://ipapi.co/json/')
       const d = await res.json()
