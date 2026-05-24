@@ -21,12 +21,5 @@ export function useConnectivity() {
   const saveData = ref(conn?.saveData ?? null)
   const online = ref(navigator.onLine)
 
-  const localSubnet = ref<string | null>(null)
-
-  function guessSubnet(localIP: string) {
-    const isPrivate = /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(localIP)
-    if (isPrivate) localSubnet.value = localIP.split('.').slice(0, 3).join('.') + '.x'
-  }
-
-  return { connectionType, effectiveType, downlink, rtt, saveData, online, localSubnet, guessSubnet }
+  return { connectionType, effectiveType, downlink, rtt, saveData, online }
 }
