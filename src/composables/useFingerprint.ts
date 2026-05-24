@@ -1,6 +1,8 @@
 import { ref, onMounted } from 'vue'
 import { sha256, shortHash } from '../utils/hash'
 
+export const FONTS_COUNT = 97
+
 const FONTS = [
   'Arial','Arial Black','Arial Narrow','Bahnschrift','Calibri','Cambria','Cambria Math',
   'Candara','Comic Sans MS','Consolas','Constantia','Corbel','Courier New',

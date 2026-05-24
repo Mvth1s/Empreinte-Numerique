@@ -57,11 +57,11 @@
       <DataCardV2
         icon="🔤"
         title="Polices détectées"
-        :value="`${fp.detectedFonts.value.length} polices sur 80 testées`"
+        :value="`${fp.detectedFonts.value.length} polices sur ${FONTS_COUNT} testées`"
         mean="On vérifie discrètement quelles polices de caractères sont installées sur votre système, sans jamais les afficher. Chaque logiciel ou OS installe ses propres polices."
         deduce="La combinaison exacte de vos polices vous distingue de la quasi-totalité des autres visiteurs. Elle trahit quel système et quels logiciels vous utilisez."
         tech-key="canvas.measureText() + baseline fonts"
-        :tech-val="`${fp.detectedFonts.value.length}/80`"
+        :tech-val="`${fp.detectedFonts.value.length}/${FONTS_COUNT}`"
         severity="eleve"
         sev-label="élevé"
         :loading="fp.loading.value"
@@ -138,7 +138,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useFingerprint } from '../../composables/useFingerprint'
+import { useFingerprint, FONTS_COUNT } from '../../composables/useFingerprint'
 import DataCardV2 from '../DataCardV2.vue'
 
 const fp = useFingerprint()
