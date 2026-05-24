@@ -12,7 +12,7 @@
         </p>
         <ul>
           <li><b>12</b>catégories</li>
-          <li><b>~140</b>signaux</li>
+          <li><b>~85</b>signaux</li>
           <li><b>0</b>permission</li>
         </ul>
         <button class="welcome-btn" @click="dismissWelcome">▸ Lancer l'analyse</button>
@@ -226,8 +226,8 @@ const sessionDate = computed(() => {
   const months = ['JAN','FÉV','MAR','AVR','MAI','JUN','JUL','AOÛ','SEP','OCT','NOV','DÉC']
   const month = months[now.getMonth()]
   const year = now.getFullYear()
-  const h = String(now.getHours()).padStart(2, '0')
-  const m = String(now.getMinutes()).padStart(2, '0')
+  const h = String(now.getUTCHours()).padStart(2, '0')
+  const m = String(now.getUTCMinutes()).padStart(2, '0')
   return `${day} ${month} ${year} · ${h}:${m} UTC`
 })
 
