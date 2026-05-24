@@ -9,7 +9,7 @@
         </div>
       </div>
       <div>
-        <span class="th-count">11<small>signaux</small></span>
+        <span class="th-count">12<small>signaux</small></span>
       </div>
     </div>
 
@@ -132,6 +132,18 @@
         :tech-val="sc.heapUsed.value !== null ? `${sc.heapUsed.value}MB / ${sc.heapLimit.value}MB` : 'N/A'"
         severity="moyen"
         sev-label="moyen"
+        :span="6"
+      />
+      <DataCardV2
+        icon="🔋"
+        title="Batterie"
+        :value="sc.battery.value ? `${sc.battery.value.level}% — ${sc.battery.value.charging ? 'en charge' : 'sur batterie'}` : 'Non disponible (Firefox/Safari)'"
+        mean="L'API Battery Status expose le niveau de charge, l'état de charge et les temps estimés de charge/décharge."
+        deduce="Un niveau de batterie faible peut indiquer une utilisation mobile. Les variations de charge identifient les sessions au fil du temps et contribuent au fingerprinting comportemental."
+        tech-key="navigator.getBattery()"
+        :tech-val="sc.battery.value ? `${sc.battery.value.level}% charging=${sc.battery.value.charging}` : 'N/A'"
+        severity="faible"
+        sev-label="faible"
         :span="6"
       />
       <DataCardV2

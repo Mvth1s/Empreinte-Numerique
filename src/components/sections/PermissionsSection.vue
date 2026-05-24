@@ -231,6 +231,7 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, onUnmounted } from 'vue'
 import { usePermissions } from '../../composables/usePermissions'
+import { reverseGeocode } from '../../utils/geocode'
 import DataCardV2 from '../DataCardV2.vue'
 
 const pm = usePermissions()
@@ -330,20 +331,6 @@ const geoCity = ref<string | null>(null)
 const geoCityLoading = ref(false)
 const geoError = ref<string | null>(null)
 const geoLoading = ref(false)
-
-async function reverseGeocode(lat: number, lon: number): Promise<string | null> {
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=fr`,
-      { headers: { 'Accept-Language': 'fr' } }
-    )
-    const d = await res.json()
-    const a = d.address ?? {}
-    const city = a.city || a.town || a.village || a.suburb || a.municipality || null
-    const postcode = a.postcode ? ` (${a.postcode})` : ''
-    return city ? city + postcode : null
-  } catch { return null }
-}
 
 function requestGeo() {
   if (!navigator.geolocation) { geoError.value = 'Non supporté'; return }
