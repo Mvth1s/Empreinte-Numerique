@@ -362,7 +362,7 @@ async function requestNotifications() {
     if (result === 'granted') {
       new Notification('Empreinte Numérique', {
         body: 'Ce site peut vous envoyer des notifications, même quand cet onglet est fermé.',
-        icon: '/logo.png',
+        icon: '/icon-192.png',
       })
       notifSent.value = true
     } else {

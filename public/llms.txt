@@ -1,0 +1,31 @@
+# Empreinte Numérique
+
+> Outil éducatif de sensibilisation à la vie privée : il montre en temps réel, dans le navigateur, les données qu'un site web peut collecter passivement lors d'une visite, et ce qu'on peut en déduire. Gratuit, open-source, sans compte ni cookie.
+
+Tout le calcul se fait côté client (Vite + Vue 3 + TypeScript) : il n'y a ni backend, ni base de données, ni cookie. Certaines mesures font interroger directement par le navigateur du visiteur des services tiers : api.ipify.org, ipwho.is et ipapi.co (IP et géolocalisation), nominatim.openstreetmap.org (géocodage inverse), stun.l.google.com (WebRTC) et cloudflare-dns.com (résolveur DNS). Le test de timing de cache (jsDelivr, Google Fonts, cdnjs) n'est lancé que sur clic. Chaque donnée est présentée avec « ce que ça veut dire », « ce qu'on peut en déduire » et l'API technique utilisée.
+
+## Catégories de données analysées
+
+- Réseau & IP : IP publique, FAI, ASN, détection VPN/proxy/Tor, fuite d'IP locales via WebRTC
+- Navigateur & OS : user-agent, système, langues, Client Hints, Do Not Track, Global Privacy Control, cookies, lecteur PDF, détection headless
+- Fuseau horaire : fuseau, décalage UTC, heure d'été, locale, formats de date et de nombres
+- Écran & Matériel : résolution, densité de pixels, profondeur de couleur, HDR, cœurs CPU, mémoire, batterie, fréquence d'affichage, écran tactile, écrans multiples
+- GPU & Rendu : fabricant et modèle du GPU via WebGL, WebGL 2, WebGPU, formats de texture, hash de rendu
+- Fingerprinting : empreintes canvas et audio, polices installées, plugins, codecs, préférences CSS media, voix de synthèse vocale, nombre de périphériques média
+- Stockage : localStorage, sessionStorage, IndexedDB, Service Worker, Cache API, quota, timing de cache (test lancé à la demande)
+- Connectivité : statut en ligne, type de connexion, débit estimé, latence, mode économie de données
+- Permissions : géolocalisation, caméra, micro, notifications, presse-papiers, stockage persistant, MIDI, capteurs de mouvement, orientation (démos à la demande)
+- Comportement : profondeur de défilement, temps passé, changements d'onglet, trajectoire, vitesse et précision du pointeur, rythme de frappe
+- Localisation : pays, ville et coordonnées déduits de l'IP, cohérence fuseau horaire / IP, résolveur DNS et, avec autorisation, position GPS
+
+Un dernier onglet, « Se protéger », présente des contre-mesures (Brave, Firefox + arkenfox, VPN, uBlock Origin, DNS privé, Tor Browser).
+
+## Liens
+
+- [Site](https://empreinte-numerique.vercel.app/) : l'outil en ligne
+- [Code source](https://github.com/Mvth1s/Empreinte-Numerique) : dépôt GitHub (licence MIT)
+- [Politique de sécurité](https://github.com/Mvth1s/Empreinte-Numerique/blob/main/SECURITY.md)
+
+## Auteur
+
+- [Mathis Aguado](https://mathisaguado.vercel.app) — [GitHub](https://github.com/Mvth1s)

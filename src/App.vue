@@ -5,8 +5,8 @@
     <!-- Welcome modal -->
     <div :class="['welcome', { hidden: !showWelcome }]" id="welcome">
       <div class="welcome-inner">
-        <img src="/logo.png" alt="Empreinte Numérique" class="welcome-logo" />
-        <h1>Vous pensez être <em>anonyme</em>.<br/>Ce site sait déjà beaucoup sur vous.</h1>
+        <img src="/logo.webp" alt="Empreinte Numérique" class="welcome-logo" width="220" height="220" />
+        <h2>Vous pensez être <em>anonyme</em>.<br/>Ce site sait déjà beaucoup sur vous.</h2>
         <p>
           Sans cookie, sans login, sans la moindre autorisation, un site web peut reconstruire votre identité technique en moins de deux secondes. Cette démo vous montre <strong style="color:var(--fg)">tout ce qu'il découvre</strong>, en langage clair.
         </p>
@@ -24,7 +24,7 @@
       <!-- Header -->
       <header class="top">
         <div class="brand">
-          <img src="/logo.png" alt="logo" class="brand-logo" />
+          <img src="/logo.webp" alt="" class="brand-logo" width="40" height="40" />
           <div>
             <h1>EMPREINTE NUMÉRIQUE</h1>
             <div class="tag">Ce que chaque site sait sur vous</div>
@@ -111,6 +111,18 @@
           </div>
         </div>
       </main>
+
+      <FaqSection />
+
+      <footer class="site-foot">
+        <p>Empreinte Numérique — outil éducatif open-source, 100 % côté client.</p>
+        <nav aria-label="Liens du projet">
+          <a href="https://github.com/Mvth1s/Empreinte-Numerique" target="_blank" rel="noopener">Code source (GitHub)</a>
+          <a href="https://mathisaguado.vercel.app" target="_blank" rel="noopener">Portfolio de l'auteur</a>
+          <a href="https://github.com/Mvth1s" target="_blank" rel="noopener">GitHub de l'auteur</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+      </footer>
     </div>
 
     <!-- Share modal -->
@@ -134,7 +146,11 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, nextTick, defineAsyncComponent } from 'vue'
 import BackgroundCanvas from './components/BackgroundCanvas.vue'
-import LoadOverlay from './components/LoadOverlay.vue'
+import FaqSection from './components/FaqSection.vue'
+
+// Invisible avant le premier changement d'onglet : chargé à part, préchargé dès que le navigateur est inactif.
+const loadOverlayChunk = () => import('./components/LoadOverlay.vue')
+const LoadOverlay = defineAsyncComponent(loadOverlayChunk)
 
 import { useNetwork } from './composables/useNetwork'
 import { useFingerprint } from './composables/useFingerprint'
@@ -322,8 +338,6 @@ const shareText = computed(() => {
   const lines = [
     '🔍 EMPREINTE NUMÉRIQUE — résultat de mon analyse',
     '',
-    '8 personnes sur 10 peuvent être identifiées avec ce profil.',
-    '',
     `🌐 Navigateur   : ${navigator.userAgent.slice(0, 60)}`,
     `🕐 Fuseau       : ${Intl.DateTimeFormat().resolvedOptions().timeZone}`,
     `📱 Matériel     : ${screen.cores.value ?? '?'} cœurs · ${screen.memory.value ?? '?'} Go · ${screen.resolution.value}`,
@@ -333,7 +347,7 @@ const shareText = computed(() => {
     `🖐️ Empreinte    : ${fingerprint.combinedHash.value ?? '—'}`,
     '',
     'Toutes ces données ont été collectées sans aucune permission.',
-    '→ empreinte-numerique.fr'
+    '→ https://empreinte-numerique.vercel.app'
   ]
   return lines.join('\n')
 })
@@ -354,6 +368,9 @@ watch(loading, (val) => {
 /* ---- Tooltip ---- */
 onMounted(() => {
   window.addEventListener('resize', updateSlider)
+
+  if ('requestIdleCallback' in window) requestIdleCallback(() => { loadOverlayChunk() })
+  else setTimeout(() => { loadOverlayChunk() }, 1500)
 
   document.addEventListener('mouseover', (e) => {
     const el = (e.target as HTMLElement).closest('[data-tip]') as HTMLElement | null
