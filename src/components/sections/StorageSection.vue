@@ -89,15 +89,31 @@
       <DataCardV2
         icon="⏱️"
         title="Timing de cache CDN"
-        :value="st.cacheTimings.value.length ? `${st.cacheTimings.value.filter(t => t.cached).length}/${st.cacheTimings.value.length} en cache` : '…'"
-        mean="Des requêtes vers des CDN populaires (jQuery, Google Fonts) mesurent si ces ressources sont déjà en cache."
+        :value="st.cacheTimings.value.length ? `${st.cacheTimings.value.filter(t => t.cached).length}/${st.cacheTimings.value.length} en cache` : (st.cacheTesting.value ? '…' : 'Test non lancé')"
+        mean="Des requêtes vers des CDN populaires (jQuery, Google Fonts) mesurent si ces ressources sont déjà en cache. Depuis 2020-2021, Chrome, Firefox et Safari partitionnent leur cache par site, ce qui neutralise en grande partie cette technique."
         deduce="Révèle vos visites récentes de sites utilisant ces CDN. Historiquement utilisé pour reconstruire votre historique de navigation."
         tech-key="performance.now() › fetch(cdn, force-cache)"
-        :tech-val="st.cacheTimings.value.map(t => `${t.url}: ${t.ms}ms`).join(', ')"
+        :tech-val="st.cacheTimings.value.length ? st.cacheTimings.value.map(t => `${t.url}: ${t.ms}ms`).join(', ') : '—'"
         severity="eleve"
         sev-label="élevé"
         :span="6"
-      />
+      >
+        <template #demo>
+          <div class="c-inline-demo">
+            <div v-if="st.cacheTimings.value.length" class="pdc-data">
+              <div v-for="t in st.cacheTimings.value" :key="t.url" class="pdc-row">
+                <b>{{ t.url }}</b><span>{{ t.ms }} ms · {{ t.cached ? 'en cache' : 'non caché' }}</span>
+              </div>
+            </div>
+            <template v-else>
+              <p class="pdc-desc">Ce test contacte {{ hosts }}. Ces serveurs verront votre adresse IP.</p>
+              <button class="pdc-btn" @click="st.runCacheTest" :disabled="st.cacheTesting.value">
+                {{ st.cacheTesting.value ? 'Mesure en cours…' : '▸ Lancer le test' }}
+              </button>
+            </template>
+          </div>
+        </template>
+      </DataCardV2>
     </div>
 
     <div class="tab-foot">
@@ -108,7 +124,8 @@
 </template>
 
 <script setup lang="ts">
-import { useStorage } from '../../composables/useStorage'
+import { useStorage, CACHE_TEST_TARGETS } from '../../composables/useStorage'
 import DataCardV2 from '../DataCardV2.vue'
 const st = useStorage()
+const hosts = CACHE_TEST_TARGETS.map(t => t.host).join(', ')
 </script>

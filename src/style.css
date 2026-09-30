@@ -72,12 +72,12 @@ body::before {
   pointer-events: none;
 }
 .welcome-logo { display: block; margin: 0 auto 16px; width: 220px; height: auto; }
-.welcome h1 {
+.welcome h2 {
   font-family: var(--sans); font-weight: 500;
   font-size: 26px; line-height: 1.2; text-align: center;
   margin: 6px 0 12px; letter-spacing: -0.01em;
 }
-.welcome h1 em { font-style: normal; color: var(--cyan); }
+.welcome h2 em { font-style: normal; color: var(--cyan); }
 .welcome p {
   font-size: 14.5px; color: var(--mute-2); line-height: 1.55;
   text-align: center; margin: 0 0 22px;
@@ -823,4 +823,37 @@ body::before {
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ---- FAQ (toujours rendue, sous le contenu de l'onglet) ---- */
+.faq {
+  position: relative;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 12px 24px 40px;
+}
+.faq-card h3 {
+  font-family: var(--sans); font-weight: 500; font-size: 16px;
+  margin: 0; line-height: 1.35;
+}
+.faq-card .c-box { background: rgba(0, 229, 255, 0.05); border-left-color: rgba(0, 229, 255, 0.35); }
+
+/* ---- Pied de page ---- */
+.site-foot {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 22px 24px 36px;
+  border-top: 1px solid var(--line);
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
+  color: var(--mute);
+}
+.site-foot p { margin: 0; }
+.site-foot nav { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.site-foot a { color: var(--mute-2); text-decoration: none; border-bottom: 1px dotted var(--mute); }
+.site-foot a:hover, .site-foot a:focus-visible { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+@media (max-width: 720px) {
+  .faq { padding: 8px 16px 32px; }
+  .site-foot { padding: 20px 16px 28px; }
 }

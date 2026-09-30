@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://empreinte-numerique.vercel.app/sitemap.xml

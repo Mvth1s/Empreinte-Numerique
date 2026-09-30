@@ -100,7 +100,7 @@ Le slot nommé `#demo` permet d'injecter une démo interactive inline dans la ca
 | `useScreen.ts` | `resolution, availResolution, colorDepth, pixelRatio, cores, memory, battery, hdr, prefersColorScheme, refreshRate, touchPoints, heapUsed, heapLimit, isExtended` |
 | `useGPU.ts` | `vendor, renderer, webgl2, webgpu, renderHash, supportedTextureFormats` |
 | `useFingerprint.ts` | `canvasHash, audioHash, cssMedia, detectedFonts, plugins, codecs, ttsVoices, mediaDeviceCount, combinedHash, loading` + constante `FONTS_COUNT` exportée |
-| `useStorage.ts` | `localStorageAvail, sessionStorageAvail, indexedDBAvail, cookiesEnabled, serviceWorkerAvail, cacheAPIAvail, storageQuota, cacheTimings` |
+| `useStorage.ts` | `localStorageAvail, sessionStorageAvail, indexedDBAvail, cookiesEnabled, serviceWorkerAvail, cacheAPIAvail, storageQuota, cacheTimings, cacheTesting, runCacheTest` + constante `CACHE_TEST_TARGETS` (test CDN lancé uniquement sur clic) |
 | `useConnectivity.ts` | `connectionType, effectiveType, downlink, rtt, saveData, online` |
 | `usePermissions.ts` | `geolocation, camera, microphone, notifications, clipboard, persistentStorage, midi, touchPoints, hasGyroscope, orientation` |
 | `useBehavior.ts` | `scrollDepth, timeOnPage, tabSwitches, mousePositions, avgMouseSpeed, avgKeyInterval, handedness` |
@@ -131,4 +131,9 @@ Score total max : 100 (cap via `Math.min(s, 100)`).
 --mute: #6d6d80    --mute-2: #9a9aae  --fg: #f0f0f0
 ```
 
-Polices : **IBM Plex Mono** (mono, data, labels) · **DM Sans** (corps, titres)
+Polices : **IBM Plex Mono** (mono, data, labels) · **DM Sans** (corps, titres) — auto-hébergées en WOFF2 latin dans `public/fonts/` (`src/fonts.css`), aucune requête Google Fonts.
+
+### SEO
+
+- Le JSON-LD (WebSite, WebApplication, Person, FAQPage) est injecté au build par le plugin `jsonLd()` de `vite.config.ts`. La FAQPage est générée depuis `src/data/faq.ts`, la même source que `FaqSection.vue` : modifier la FAQ à cet endroit uniquement.
+- Favicons, icônes PWA, `logo.webp` et `og-cover.png` sont générés par `python3 scripts/generate-images.py` (Pillow) depuis `public/logo.png`.
