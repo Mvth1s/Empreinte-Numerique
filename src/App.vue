@@ -11,7 +11,7 @@
           Sans cookie, sans login, sans la moindre autorisation, un site web peut reconstruire votre identité technique en moins de deux secondes. Cette démo vous montre <strong style="color:var(--fg)">tout ce qu'il découvre</strong>, en langage clair.
         </p>
         <ul>
-          <li><b>12</b>catégories</li>
+          <li><b>{{ TABS.length }}</b>catégories</li>
           <li><b>~85</b>signaux</li>
           <li><b>0</b>permission</li>
         </ul>
@@ -53,7 +53,7 @@
         <div class="progress-track">
           <div class="progress-bar" id="global-progress" :style="{ width: progressPct + '%' }"></div>
         </div>
-        <span class="progress-stat" id="progress-label">{{ seenCount }} / 12 catégories explorées</span>
+        <span class="progress-stat" id="progress-label">{{ seenCount }} / {{ TABS.length }} catégories explorées</span>
       </div>
 
       <!-- Tab bar (desktop) -->
@@ -181,6 +181,7 @@ const TABS = [
   { id: 'permissions',  icon: '🔐', label: 'Permissions',         short: 'Permissions',   loader: { kind: 'permissions', text: 'Vérification de vos permissions' },        bg: 'rings' as const },
   { id: 'behavior',     icon: '🖱️', label: 'Comportement',        short: 'Comportement',  loader: { kind: 'cursor',      text: 'Observation de votre comportement' },      bg: 'cursor' as const },
   { id: 'location',     icon: '📍', label: 'Localisation',        short: 'Localisation',  loader: { kind: 'mapzoom',     text: 'Triangulation de votre position' },        bg: 'globe' as const },
+  { id: 'blockers',     icon: '🚫', label: 'Bloqueurs de pub',    short: 'Bloqueurs',     loader: { kind: 'shield',      text: 'Recherche de votre bloqueur de publicités' }, bg: 'rings' as const },
   { id: 'conclusion',   icon: '🛡️', label: 'Se protéger',         short: 'Protection',    loader: { kind: 'shield',      text: 'Analyse de vos protections' },             bg: 'particles' as const },
 ]
 
@@ -199,6 +200,7 @@ const sections: Record<TabId, ReturnType<typeof defineAsyncComponent>> = {
   permissions:  defineAsyncComponent(() => import('./components/sections/PermissionsSection.vue')),
   behavior:     defineAsyncComponent(() => import('./components/sections/BehaviorSection.vue')),
   location:     defineAsyncComponent(() => import('./components/sections/LocationSection.vue')),
+  blockers:     defineAsyncComponent(() => import('./components/sections/BlockerSection.vue')),
   conclusion:   defineAsyncComponent(() => import('./components/sections/ConclusionSection.vue')),
 }
 
@@ -275,7 +277,7 @@ const loaderData = computed((): Record<string, string> => {
     colorDepth: `${screen.colorDepth.value ?? '…'} bits`,
     touch: screen.touchPoints.value === 0 ? 'non' : String(screen.touchPoints.value),
     cores: screen.cores.value ? `${screen.cores.value} cœurs` : 'N/A',
-    ram: screen.memory.value ? `${screen.memory.value} Go` : 'N/A',
+    ram: screen.memoryLabel.value ?? 'N/A',
     gpu: gpu.renderer.value ?? 'N/A',
     glVersion: gpu.webgl2.value ? 'WebGL 2.0' : 'WebGL 1.0',
     glVendor: gpu.vendor.value ?? 'ANGLE',
@@ -346,7 +348,7 @@ const shareText = computed(() => {
     '',
     `🌐 Navigateur   : ${navigator.userAgent.slice(0, 60)}`,
     `🕐 Fuseau       : ${Intl.DateTimeFormat().resolvedOptions().timeZone}`,
-    `📱 Matériel     : ${screen.cores.value ?? '?'} cœurs · ${screen.memory.value ?? '?'} Go · ${screen.resolution.value}`,
+    `📱 Matériel     : ${screen.cores.value ?? '?'} threads · RAM ${screen.memoryLabel.value ?? '?'} · ${screen.resolution.value}`,
     `🎮 GPU          : ${gpu.renderer.value ?? '—'}`,
     `📡 IP publique  : ${network.publicIP.value ?? '—'}`,
     `📍 Localisation : ${network.city.value ?? '—'}, ${network.country.value ?? '—'}`,

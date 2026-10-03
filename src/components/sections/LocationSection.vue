@@ -103,11 +103,13 @@
       <DataCardV2
         icon="🕐"
         title="Fuseau IANA vs IP"
-        :value="`${tz.timezone.value} / ${net.country.value ?? '…'}`"
-        mean="Le croisement du fuseau horaire (via Intl) et du pays IP permet de vérifier la cohérence de votre localisation."
-        deduce="Une incohérence fuseau/pays révèle l'utilisation d'un VPN. Ex : fuseau Europe/Paris avec IP américaine = VPN probable."
-        tech-key="Intl.timeZone ∩ ip-api.country"
-        :tech-val="`${tz.timezone.value}`"
+        :value="`${tz.timezone.value} / IP : ${net.ipTimezone.value ?? '…'}`"
+        mean="Le fuseau horaire de votre système (via Intl) est comparé à celui associé à votre adresse IP par la base de géolocalisation."
+        :deduce="tzMismatch
+          ? 'Les deux fuseaux n\'ont pas le même décalage horaire : c\'est la signature classique d\'un VPN ou d\'un proxy.'
+          : 'Les deux fuseaux concordent : rien n\'indique que vous masquez votre position. Ex. : fuseau Europe/Paris avec IP américaine = VPN probable.'"
+        tech-key="Intl.timeZone ∩ ipwho.is › timezone.id"
+        :tech-val="tzMismatch ? 'incohérent' : 'cohérent'"
         severity="eleve"
         sev-label="élevé"
         :loading="net.loading.value"
@@ -116,14 +118,14 @@
       <DataCardV2
         icon="📡"
         title="Résolveur DNS"
-        :value="net.dnsResolver.value ?? 'Non détecté'"
-        mean="Via une requête DNS-over-HTTPS vers Cloudflare, le sous-réseau client source de la résolution DNS est identifiable."
-        deduce="Le résolveur DNS révèle votre opérateur ou votre VPN. Cloudflare (1.1.1.1), Google (8.8.8.8), Orange, SFR…"
-        tech-key="DoH › cloudflare-dns.com › edns-client-subnet"
+        :value="net.dnsResolverInfo.value ?? net.dnsResolver.value ?? 'Non détecté'"
+        mean="Votre navigateur résout un sous-domaine unique et aléatoire ; le serveur DNS de ce domaine note quel résolveur est venu le lui demander. On obtient ainsi l'IP réelle du serveur qui traduit toutes vos adresses web."
+        deduce="Le résolveur révèle votre opérateur, votre VPN ou votre DNS public (Cloudflare, Google, Quad9…). S'il appartient à un autre pays que votre IP, votre VPN laisse fuir vos requêtes DNS."
+        tech-key="*.edns.ip-api.com › résolveur DNS"
         :tech-val="net.dnsResolver.value ?? '—'"
         severity="moyen"
         sev-label="moyen"
-        :loading="net.loading.value"
+        :loading="!net.dnsDone.value"
         :span="6"
       />
     </div>
@@ -171,6 +173,12 @@ function requestGPS() {
     { enableHighAccuracy: true, timeout: 10000 }
   )
 }
+
+const tzMismatch = computed(() => {
+  if (!net.ipTimezone.value) return false
+  const off = (zone: string) => new Date(new Date().toLocaleString('en-US', { timeZone: zone })).getTime()
+  try { return Math.abs(off(net.ipTimezone.value) - off(tz.timezone.value)) > 60_000 } catch { return false }
+})
 
 const coordStr = computed(() => {
   if (net.lat.value && net.lon.value) return `${net.lat.value.toFixed(2)}, ${net.lon.value.toFixed(2)}`

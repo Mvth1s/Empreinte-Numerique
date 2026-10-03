@@ -9,7 +9,7 @@
         </div>
       </div>
       <div>
-        <span class="th-count">6<small>signaux</small></span>
+        <span class="th-count">7<small>signaux</small></span>
       </div>
     </div>
 
@@ -53,9 +53,9 @@
       <DataCardV2
         icon="⬇️"
         title="Débit descendant estimé"
-        :value="cn.downlink.value != null ? `${cn.downlink.value} Mb/s` : 'Non disponible'"
-        mean="downlink est une estimation de la bande passante descendante en mégabits par seconde, fournie par le système."
-        deduce="Permet aux sites d'adapter la qualité des médias servis et révèle votre type de connexion internet."
+        :value="cn.downlink.value != null ? (cn.downlink.value >= DOWNLINK_CAP ? `${cn.downlink.value} Mb/s ou plus` : `≈ ${cn.downlink.value} Mb/s`) : 'Non exposé (Firefox/Safari)'"
+        mean="downlink est une estimation du débit descendant fournie par Chrome. Elle est volontairement plafonnée à 10 Mb/s et arrondie : une fibre à 1 Gb/s s'affiche « 10 Mb/s ». Pour votre vrai débit, lancez la mesure ci-dessous."
+        deduce="Même plafonnée, cette valeur sépare les connexions lentes (mobile dégradé, satellite) des connexions rapides, et permet d'adapter la qualité des médias servis."
         tech-key="navigator.connection.downlink"
         :tech-val="cn.downlink.value != null ? `${cn.downlink.value} Mb/s` : 'N/A'"
         severity="faible"
@@ -65,10 +65,10 @@
       <DataCardV2
         icon="⏱️"
         title="Latence estimée (RTT)"
-        :value="cn.rtt.value != null ? `${cn.rtt.value} ms` : 'Non disponible'"
+        :value="cn.rtt.value != null ? `≈ ${cn.rtt.value} ms` : 'Non exposé (Firefox/Safari)'"
         mean="La latence est le temps qu'il faut pour qu'une information parte de votre appareil et revienne — comme un écho. Plus ce délai est court, plus votre connexion réagit vite."
         deduce="Une latence très élevée trahit souvent un VPN avec un serveur lointain, une connexion satellite, ou un réseau mobile dégradé."
-        tech-key="navigator.connection.rtt"
+        tech-key="navigator.connection.rtt (arrondi 25 ms)"
         :tech-val="cn.rtt.value != null ? `${cn.rtt.value} ms` : 'N/A'"
         severity="faible"
         sev-label="faible"
@@ -86,6 +86,36 @@
         sev-label="faible"
         :span="4"
       />
+      <DataCardV2
+        icon="🚀"
+        title="Débit et latence réels"
+        :value="cn.speed.value ? `${cn.speed.value.downMbps} Mb/s · ${cn.speed.value.pingMs} ms` : (cn.speedError.value ? 'Mesure impossible' : '…')"
+        mean="Contrairement aux estimations plafonnées du navigateur, le site peut mesurer précisément votre connexion : il chronomètre des téléchargements de taille connue et des allers-retours vers un serveur."
+        deduce="Le débit réel distingue fibre, ADSL, 4G ou 5G, et le serveur Cloudflare qui vous répond révèle la ville la plus proche de votre connexion. Une latence élevée trahit un VPN lointain ou un satellite."
+        tech-key="fetch(speed.cloudflare.com/__down) › performance.now()"
+        :tech-val="cn.speed.value ? `gigue ${cn.speed.value.jitterMs} ms${cn.speed.value.colo ? ` · PoP ${cn.speed.value.colo}` : ''}` : '—'"
+        severity="moyen"
+        sev-label="moyen"
+        :span="12"
+      >
+        <template #demo>
+          <div class="c-inline-demo">
+            <div v-if="cn.speed.value" class="pdc-data">
+              <div class="pdc-row"><b>Débit descendant</b><span>{{ cn.speed.value.downMbps }} Mb/s</span></div>
+              <div class="pdc-row"><b>Latence (médiane)</b><span>{{ cn.speed.value.pingMs }} ms</span></div>
+              <div class="pdc-row"><b>Gigue</b><span>{{ cn.speed.value.jitterMs }} ms</span></div>
+              <div v-if="cn.speed.value.colo" class="pdc-row"><b>Serveur Cloudflare</b><span>{{ cn.speed.value.colo }}{{ cn.speed.value.city ? ` (${cn.speed.value.city})` : '' }}</span></div>
+            </div>
+            <p v-else-if="cn.speedError.value" class="pdc-error">Mesure impossible (hors ligne ou requête bloquée).</p>
+            <p v-else class="pdc-desc">Mesure en cours auprès de {{ SPEED_TEST_HOST }}…</p>
+            <div class="pdc-actions">
+              <button class="pdc-btn" @click="cn.runSpeedTest(true)" :disabled="cn.speedTesting.value">
+                {{ cn.speedTesting.value ? 'Mesure en cours…' : '↻ Relancer la mesure' }}
+              </button>
+            </div>
+          </div>
+        </template>
+      </DataCardV2>
     </div>
 
     <div class="tab-foot">
@@ -96,7 +126,10 @@
 </template>
 
 <script setup lang="ts">
-import { useConnectivity } from '../../composables/useConnectivity'
+import { onMounted } from 'vue'
+import { useConnectivity, DOWNLINK_CAP, SPEED_TEST_HOST } from '../../composables/useConnectivity'
 import DataCardV2 from '../DataCardV2.vue'
 const cn = useConnectivity()
+// Lancée à l'ouverture de l'onglet (et non dans le composable, aussi appelé par App.vue au chargement).
+onMounted(() => { cn.runSpeedTest() })
 </script>

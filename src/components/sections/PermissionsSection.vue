@@ -195,10 +195,10 @@
       <DataCardV2
         icon="📱"
         title="Gyroscope / Accéléromètre"
-        :value="pm.hasGyroscope.value ? 'Détecté' : 'Absent'"
-        mean="La présence de capteurs de mouvement indique si votre appareil est un mobile ou une tablette."
+        :value="pm.hasGyroscope.value === null ? 'Inconnu (iOS : permission requise)' : pm.hasGyroscope.value ? 'Détecté — mesures reçues' : 'Absent'"
+        mean="La page écoute l'évènement devicemotion pendant une seconde : seul un appareil équipé de capteurs renvoie de vraies mesures d'accélération ou de rotation."
         deduce="Révèle un appareil mobile, peut être exploité pour du fingerprinting d'orientation et de posture d'utilisation."
-        tech-key="'DeviceMotionEvent' in window"
+        tech-key="devicemotion › rotationRate / acceleration"
         :tech-val="String(pm.hasGyroscope.value)"
         severity="faible"
         sev-label="faible"

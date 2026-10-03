@@ -31,9 +31,11 @@
       <DataCardV2
         icon="🖼️"
         title="Canvas Fingerprint"
-        :value="fp.canvasHash.value ?? '…'"
-        mean="Un texte et des formes sont rendus sur un canvas invisible. Chaque navigateur/OS produit un résultat de pixel légèrement différent."
-        deduce="Ce hash est stable entre sessions, résiste à la navigation privée, persiste après effacement des cookies."
+        :value="fp.canvasNoise.value ? `${fp.canvasHash.value} (randomisé)` : (fp.canvasHash.value ?? '…')"
+        mean="Un texte et des formes sont rendus sur un canvas invisible. Chaque navigateur/OS produit un résultat de pixel légèrement différent. Le rendu est fait deux fois pour vérifier si votre navigateur y ajoute du bruit."
+        :deduce="fp.canvasNoise.value
+          ? 'Votre navigateur injecte du bruit aléatoire dans le canvas : ce hash change à chaque lecture et ne permet pas de vous suivre. La protection elle-même reste toutefois détectable.'
+          : 'Ce hash est stable entre sessions, résiste à la navigation privée, persiste après effacement des cookies.'"
         tech-key="HTMLCanvasElement › toDataURL › SHA-256"
         :tech-val="fp.canvasHash.value ?? '…'"
         severity="critique"
@@ -44,9 +46,11 @@
       <DataCardV2
         icon="🎵"
         title="Audio Fingerprint"
-        :value="fp.audioHash.value ?? '…'"
+        :value="fp.audioNoise.value ? `${fp.audioHash.value} (randomisé)` : (fp.audioHash.value ?? '…')"
         mean="Votre navigateur joue une note inaudible en coulisses et mesure comment votre matériel audio la traite. Chaque processeur audio produit un résultat microscopiquement différent."
-        deduce="Même si vous supprimez tous vos cookies et passez en navigation privée, cette empreinte reste identique. Elle vous reconnaît sans que vous le sachiez."
+        :deduce="fp.audioNoise.value
+          ? 'Deux rendus audio identiques donnent des résultats différents : votre navigateur brouille cette empreinte (Brave, Firefox anti-fingerprinting, Safari).'
+          : 'Même si vous supprimez tous vos cookies et passez en navigation privée, cette empreinte reste identique. Elle vous reconnaît sans que vous le sachiez.'"
         tech-key="OfflineAudioContext › oscillateur › SHA-256"
         :tech-val="fp.audioHash.value ?? '…'"
         severity="critique"
@@ -58,10 +62,10 @@
         icon="🔤"
         title="Polices détectées"
         :value="`${fp.detectedFonts.value.length} polices sur ${FONTS_COUNT} testées`"
-        mean="On vérifie discrètement quelles polices de caractères sont installées sur votre système, sans jamais les afficher. Chaque logiciel ou OS installe ses propres polices."
+        mean="On vérifie discrètement quelles polices de caractères sont installées sur votre système, sans jamais les afficher. Les polices web chargées par ce site sont exclues du test pour ne compter que les vôtres."
         deduce="La combinaison exacte de vos polices vous distingue de la quasi-totalité des autres visiteurs. Elle trahit quel système et quels logiciels vous utilisez."
         tech-key="canvas.measureText() + baseline fonts"
-        :tech-val="`${fp.detectedFonts.value.length}/${FONTS_COUNT}`"
+        :tech-val="fp.detectedFonts.value.slice(0, 6).join(', ') + (fp.detectedFonts.value.length > 6 ? '…' : '')"
         severity="eleve"
         sev-label="élevé"
         :loading="fp.loading.value"
@@ -71,9 +75,9 @@
         icon="🎨"
         title="CSS Media bits"
         :value="fp.cssMedia.value ?? '…'"
-        mean="10 media queries CSS sont évaluées (mode sombre, mouvement réduit, HDR, pointeur, etc.) et encodées en bits binaires."
+        mean="12 media queries CSS sont évaluées (mode sombre, mouvement réduit, contraste, HDR, pointeur, etc.) et encodées en bits binaires."
         deduce="Cette chaîne binaire identifie vos préférences système et résume votre configuration d'accessibilité en un seul signal."
-        tech-key="window.matchMedia() × 10 queries"
+        tech-key="window.matchMedia() × 12 queries"
         :tech-val="fp.cssMedia.value ?? '…'"
         severity="moyen"
         sev-label="moyen"
@@ -95,10 +99,12 @@
         icon="🎬"
         title="Codecs supportés"
         :value="Object.entries(fp.codecs.value).filter(([,v]) => v !== 'non').map(([k]) => k).join(', ') || 'Aucun'"
-        mean="canPlayType() teste le support des formats vidéo (H.264, VP9, AV1) et audio (MP3, AAC, Opus, FLAC) par le navigateur."
-        deduce="La combinaison de codecs supportés dépend du navigateur, de l'OS et du matériel. Elle contribue au profil d'empreinte."
-        tech-key="video.canPlayType() + audio.canPlayType()"
-        :tech-val="Object.keys(fp.codecs.value).join(', ')"
+        mean="canPlayType() teste les formats lisibles ; mediaCapabilities indique en plus lesquels sont décodés par une puce dédiée (powerEfficient), donc par votre GPU."
+        :deduce="fp.hwDecoders.value.length
+          ? `Décodage matériel : ${fp.hwDecoders.value.join(', ')}. Le support AV1 ou HEVC matériel date votre carte graphique ou votre processeur à la génération près.`
+          : 'La combinaison de codecs supportés dépend du navigateur, de l\'OS et du matériel. Elle contribue au profil d\'empreinte.'"
+        tech-key="canPlayType() + mediaCapabilities.decodingInfo()"
+        :tech-val="`matériel : ${fp.hwDecoders.value.join(', ') || 'aucun'}`"
         severity="faible"
         sev-label="faible"
         :span="6"
@@ -118,11 +124,13 @@
       <DataCardV2
         icon="📷"
         title="Périphériques médias"
-        :value="fp.mediaDeviceCount.value !== null ? `${fp.mediaDeviceCount.value} périphérique(s) détecté(s)` : 'Non disponible'"
-        mean="Sans demander la moindre autorisation, le navigateur peut compter combien de caméras, microphones et haut-parleurs sont connectés à votre appareil."
+        :value="fp.mediaDevices.value ? `${fp.mediaDevices.value.videoinput} caméra · ${fp.mediaDevices.value.audioinput} micro · ${fp.mediaDevices.value.audiooutput} sortie audio` : 'Non disponible'"
+        :mean="fp.mediaDevices.value?.labelled
+          ? 'Vous avez déjà accordé l\'accès caméra/micro à ce site : la liste complète de vos périphériques, avec leurs noms, est lisible.'
+          : 'Sans autorisation, les navigateurs récents ne révèlent qu\'un périphérique par type (caméra, micro, sortie audio), sans nom. Leur simple présence ou absence reste un signal.'"
         deduce="Quelqu'un avec deux webcams ou un micro externe a un profil rare. Votre configuration matérielle devient un signal d'identification supplémentaire."
         tech-key="navigator.mediaDevices.enumerateDevices()"
-        :tech-val="String(fp.mediaDeviceCount.value)"
+        :tech-val="fp.mediaDevices.value ? `${fp.mediaDeviceCount.value} entrées · libellés ${fp.mediaDevices.value.labelled ? 'visibles' : 'masqués'}` : 'N/A'"
         severity="faible"
         sev-label="faible"
         :span="12"

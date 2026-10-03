@@ -17,11 +17,13 @@
       <DataCardV2
         icon="🖥️"
         title="Système d'exploitation"
-        :value="br.detectedOS.value"
-        mean="L'OS est détecté depuis le User-Agent envoyé automatiquement par votre navigateur à chaque requête HTTP."
+        :value="br.architecture.value ? `${br.detectedOS.value} · ${br.architecture.value}` : br.detectedOS.value"
+        :mean="br.osSource.value === 'ua-ch'
+          ? 'Le User-Agent est figé (Windows 11 s\'y déclare « Windows NT 10.0 », macOS « 10_15_7 »). Mais les Client Hints haute entropie donnent la vraie version de l\'OS, l\'architecture du processeur et même le modèle de téléphone — sans permission.'
+          : 'L\'OS est lu dans le User-Agent envoyé à chaque requête HTTP. Les navigateurs le figent désormais pour réduire le pistage : la version exacte peut y être masquée.'"
         deduce="Ciblage de malwares spécifiques, exploitation de failles OS, personnalisation de contenu, profilage matériel."
-        tech-key="navigator.userAgent › OS"
-        :tech-val="br.detectedOS.value"
+        :tech-key="br.osSource.value === 'ua-ch' ? 'userAgentData.getHighEntropyValues()' : 'navigator.userAgent › OS'"
+        :tech-val="br.deviceModel.value ? `${br.detectedOS.value} (${br.deviceModel.value})` : br.detectedOS.value"
         severity="moyen"
         sev-label="moyen"
         :span="6"
@@ -30,9 +32,11 @@
         icon="🌐"
         title="Navigateur"
         :value="br.detectedBrowser.value"
-        mean="Le nom et la version du navigateur sont extraits du User-Agent transmis dans chaque en-tête HTTP."
+        :mean="br.isBrave.value
+          ? 'Brave se fait passer pour Chrome dans son User-Agent, mais expose navigator.brave : il est reconnu immédiatement.'
+          : 'Le nom et la version complète du navigateur sont lus dans les Client Hints (fullVersionList) ou, à défaut, dans le User-Agent.'"
         deduce="Profilage d'utilisateur, ciblage de vulnérabilités, personnalisation de l'expérience, contournement de protections."
-        tech-key="navigator.userAgent › Browser"
+        :tech-key="br.osSource.value === 'ua-ch' ? 'userAgentData › fullVersionList' : 'navigator.userAgent › Browser'"
         :tech-val="br.detectedBrowser.value"
         severity="moyen"
         sev-label="moyen"
@@ -66,9 +70,9 @@
         icon="💻"
         title="Plateforme déclarée"
         :value="br.platform.value"
-        mean="navigator.platform retourne la plateforme matérielle déclarée par le navigateur."
+        mean="La plateforme déclarée par le navigateur (userAgentData.platform, ou navigator.platform, désormais obsolète)."
         deduce="Contribue au fingerprinting du matériel, permet de distinguer mobile/desktop/tablette indépendamment de l'UA."
-        tech-key="navigator.platform"
+        :tech-key="br.clientHintPlatform.value ? 'navigator.userAgentData.platform' : 'navigator.platform'"
         :tech-val="br.platform.value"
         severity="faible"
         sev-label="faible"

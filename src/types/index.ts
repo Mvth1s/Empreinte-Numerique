@@ -16,12 +16,16 @@ export interface GeoData {
   countryCode: string
   regionName: string
   city: string
+  postal: string
   lat?: number
   lon?: number
+  timezone: string
   isp: string
   org: string
   as: string
   proxy: boolean
   hosting: boolean
+  /** true si le fournisseur renvoie réellement des indicateurs proxy/VPN */
+  flagged: boolean
   status: string
 }
