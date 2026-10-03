@@ -16,7 +16,7 @@
           <li><b>0</b>permission</li>
         </ul>
         <button class="welcome-btn" @click="dismissWelcome">▸ Lancer l'analyse</button>
-        <div class="welcome-foot">Projet éducatif · open-source · aucune donnée n'est envoyée</div>
+        <div class="welcome-foot">Projet éducatif · open-source · aucune donnée collectée n'est envoyée</div>
       </div>
     </div>
 
@@ -121,6 +121,7 @@
           <a href="https://mathisaguado.vercel.app" target="_blank" rel="noopener">Portfolio de l'auteur</a>
           <a href="https://github.com/Mvth1s" target="_blank" rel="noopener">GitHub de l'auteur</a>
           <a href="#faq">FAQ</a>
+          <button type="button" class="foot-link" @click="cookieBannerOpen = true">Cookies</button>
         </nav>
       </footer>
     </div>
@@ -138,6 +139,8 @@
       </div>
     </div>
 
+    <CookieBanner :open="cookieBannerOpen" @close="cookieBannerOpen = false" />
+
     <!-- Tooltip -->
     <div class="tip" ref="tipEl"></div>
   </div>
@@ -147,6 +150,8 @@
 import { ref, computed, watch, onMounted, nextTick, defineAsyncComponent } from 'vue'
 import BackgroundCanvas from './components/BackgroundCanvas.vue'
 import FaqSection from './components/FaqSection.vue'
+import CookieBanner from './components/CookieBanner.vue'
+import { readConsent } from './utils/analytics'
 
 // Invisible avant le premier changement d'onglet : chargé à part, préchargé dès que le navigateur est inactif.
 const loadOverlayChunk = () => import('./components/LoadOverlay.vue')
@@ -203,6 +208,7 @@ const loading = ref(false)
 const loadKind = ref('radar')
 const loadText = ref('')
 const showWelcome = ref(true)
+const cookieBannerOpen = ref(readConsent() === null)
 const mobileNavOpen = ref(false)
 const shareOpen = ref(false)
 const seenTabs = ref(new Set<TabId>())

@@ -17,7 +17,7 @@ export const FAQ: FaqItem[] = [
   },
   {
     q: "Ce site stocke-t-il mes données ?",
-    a: "Non. Tout est calculé dans votre navigateur, sans cookie ni base de données. Certaines mesures interrogent des services tiers (géolocalisation d'IP, OpenStreetMap, serveur STUN de Google, DNS Cloudflare), qui voient donc votre IP.",
+    a: "Non. Tout est calculé dans votre navigateur, sans base de données. Des services tiers (géo d'IP, OpenStreetMap, STUN Google, DNS Cloudflare) voient votre IP. Google Analytics n'est chargé que si vous l'acceptez.",
   },
   {
     q: "Qu'est-ce qu'une fuite WebRTC ?",

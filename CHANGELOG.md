@@ -5,6 +5,14 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ---
 
+## [Non publié]
+
+### Ajouté
+- **Google Analytics 4** chargé uniquement après consentement (bandeau cookies RGPD, refus aussi simple que l'acceptation, choix modifiable via « Cookies » en pied de page)
+- Balise de vérification **Google Search Console**
+
+---
+
 ## [1.0.0] — 2026-05-24
 
 Première version stable publique. Le projet passe de prototype (0.1.0) à version stable après une refonte complète du design, l'ajout de données réelles et la correction de tous les bugs connus.

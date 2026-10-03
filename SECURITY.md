@@ -4,7 +4,7 @@
 
 **Empreinte Numérique** est un site éducatif 100 % client-side. Il n'y a :
 - aucun backend ni base de données
-- aucun cookie ni stockage de données utilisateur
+- aucun stockage de données utilisateur ; seuls les cookies Google Analytics (`_ga`) sont posés, et uniquement après consentement explicite
 - aucune authentification ni compte utilisateur
 - aucune donnée transmise à nos serveurs (toutes les données restent dans le navigateur)
 
