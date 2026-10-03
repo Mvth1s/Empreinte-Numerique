@@ -1,11 +1,44 @@
 import { ref, onMounted } from 'vue'
 
-async function estimateStorageQuota(): Promise<string> {
+function formatBytes(b: number): string {
+  if (b >= 1024 ** 4) return `${(b / 1024 ** 4).toFixed(1)} To`
+  if (b >= 1024 ** 3) return `${(b / 1024 ** 3).toFixed(1)} Go`
+  return `${Math.round(b / 1024 ** 2)} Mo`
+}
+
+// Les navigateurs Chromium accordent à une origine ~60 % de la taille totale du disque :
+// quota / 0,6 donne donc la capacité du disque. Firefox et Safari utilisent d'autres règles.
+const CHROMIUM_QUOTA_RATIO = 0.6
+
+interface QuotaInfo { quota: string; usage: string; disk: string | null; ephemeral: boolean }
+
+async function estimateStorageQuota(): Promise<QuotaInfo | null> {
   try {
     const est = await navigator.storage?.estimate()
-    if (est?.quota) return `${Math.round(est.quota / 1024 / 1024)} MB`
-  } catch { /* ignore */ }
-  return 'Inconnu'
+    if (!est?.quota) return null
+    const chromium = !!navigator.userAgentData?.brands.some(b => b.brand === 'Chromium')
+    // En navigation privée (profil en mémoire), Chromium accorde un quota fixe, multiple exact du Gio,
+    // sans rapport avec le disque. Un quota calculé sur le disque ne tombe jamais pile sur un Gio.
+    const ephemeral = chromium && est.quota % 1024 ** 3 === 0
+    return {
+      quota: formatBytes(est.quota),
+      usage: formatBytes(est.usage ?? 0),
+      disk: chromium && !ephemeral ? formatBytes(est.quota / CHROMIUM_QUOTA_RATIO) : null,
+      ephemeral,
+    }
+  } catch { return null }
+}
+
+// 'indexedDB' in window ne prouve rien : certains modes privés exposent l'objet mais refusent l'ouverture.
+function testIndexedDB(): Promise<boolean> {
+  return new Promise(resolve => {
+    try {
+      const req = indexedDB.open('__en_test')
+      req.onsuccess = () => { req.result.close(); indexedDB.deleteDatabase('__en_test'); resolve(true) }
+      req.onerror = () => resolve(false)
+      setTimeout(() => resolve(false), 2000)
+    } catch { resolve(false) }
+  })
 }
 
 export const CACHE_TEST_TARGETS = [
@@ -28,6 +61,10 @@ export function useStorage() {
   const serviceWorkerAvail = ref('serviceWorker' in navigator)
   const cacheAPIAvail = ref('caches' in window)
   const storageQuota = ref<string | null>(null)
+  const storageUsage = ref<string | null>(null)
+  const diskEstimate = ref<string | null>(null)
+  const persisted = ref<boolean | null>(null)
+  const ephemeralProfile = ref(false)
   const cacheTimings = ref<{ url: string; ms: number; cached: boolean }[]>([])
   const cacheTesting = ref(false)
 
@@ -41,15 +78,20 @@ export function useStorage() {
     catch { return false }
   }
 
-  function testIndexedDB(): boolean {
-    return 'indexedDB' in window
-  }
-
   onMounted(async () => {
     localStorageAvail.value = testLocalStorage()
     sessionStorageAvail.value = testSessionStorage()
-    indexedDBAvail.value = testIndexedDB()
-    storageQuota.value = await estimateStorageQuota()
+    const [idb, q, p] = await Promise.all([
+      testIndexedDB(),
+      estimateStorageQuota(),
+      navigator.storage?.persisted?.().catch(() => null) ?? null,
+    ])
+    indexedDBAvail.value = idb
+    storageQuota.value = q?.quota ?? 'Inconnu'
+    storageUsage.value = q?.usage ?? null
+    diskEstimate.value = q?.disk ?? null
+    ephemeralProfile.value = q?.ephemeral ?? false
+    persisted.value = p
   })
 
   // Lancé uniquement à la demande : contacte des CDN tiers, qui voient alors l'IP du visiteur.
@@ -64,5 +106,8 @@ export function useStorage() {
     cacheTesting.value = false
   }
 
-  return { localStorageAvail, sessionStorageAvail, indexedDBAvail, cookiesEnabled, serviceWorkerAvail, cacheAPIAvail, storageQuota, cacheTimings, cacheTesting, runCacheTest }
+  return {
+    localStorageAvail, sessionStorageAvail, indexedDBAvail, cookiesEnabled, serviceWorkerAvail, cacheAPIAvail,
+    storageQuota, storageUsage, diskEstimate, ephemeralProfile, persisted, cacheTimings, cacheTesting, runCacheTest,
+  }
 }

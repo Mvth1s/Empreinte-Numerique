@@ -9,6 +9,22 @@ async function queryPerm(name: PermissionName): Promise<PermState> {
   } catch { return 'indisponible' }
 }
 
+// 'DeviceMotionEvent' in window est vrai sur tous les PC : seul un évènement avec des mesures réelles prouve le capteur.
+function detectMotionSensor(): Promise<boolean | null> {
+  const DME = (window as unknown as { DeviceMotionEvent?: { requestPermission?: unknown } }).DeviceMotionEvent
+  if (!DME) return Promise.resolve(false)
+  if (typeof DME.requestPermission === 'function') return Promise.resolve(null)
+  return new Promise(resolve => {
+    const done = (v: boolean) => { window.removeEventListener('devicemotion', onMotion); resolve(v) }
+    const onMotion = (e: DeviceMotionEvent) => {
+      const r = e.rotationRate, a = e.accelerationIncludingGravity
+      if ((r && r.alpha !== null) || (a && a.x !== null)) done(true)
+    }
+    window.addEventListener('devicemotion', onMotion)
+    setTimeout(() => done(false), 1000)
+  })
+}
+
 export function usePermissions() {
   const geolocation = ref<PermState>('indisponible')
   const camera = ref<PermState>('indisponible')
@@ -18,10 +34,13 @@ export function usePermissions() {
   const persistentStorage = ref<PermState>('indisponible')
   const midi = ref<PermState>('indisponible')
   const touchPoints = ref(navigator.maxTouchPoints)
-  const hasGyroscope = ref(false)
+  // null = inconnu (iOS exige une permission avant tout évènement de mouvement)
+  const hasGyroscope = ref<boolean | null>(null)
   const orientation = ref<string | null>(null)
 
   onMounted(async () => {
+    orientation.value = screen.orientation?.type ?? null
+    detectMotionSensor().then(v => { hasGyroscope.value = v })
     if (!('permissions' in navigator)) return
 
     const results = await Promise.allSettled([
@@ -42,13 +61,6 @@ export function usePermissions() {
     clipboard.value = vals[4]
     persistentStorage.value = vals[5]
     midi.value = vals[6]
-
-    // Gyroscope detection
-    if ('DeviceMotionEvent' in window) {
-      hasGyroscope.value = true
-    }
-
-    orientation.value = screen.orientation?.type ?? null
   })
 
   return { geolocation, camera, microphone, notifications, clipboard, persistentStorage, midi, touchPoints, hasGyroscope, orientation }

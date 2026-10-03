@@ -36,7 +36,19 @@
         </div>
         <div class="ch-item">
           <span class="ch-label">Résolveur DNS</span>
-          <span class="ch-val">{{ net.dnsResolver.value ?? 'opérateur par défaut' }}</span>
+          <span class="ch-val">{{ net.dnsResolverInfo.value ?? net.dnsResolver.value ?? '…' }}</span>
+        </div>
+        <div class="ch-item">
+          <span class="ch-label">Bloqueur de pub</span>
+          <span class="ch-val">{{ bl.verdict.value }}</span>
+        </div>
+        <div class="ch-item">
+          <span class="ch-label">VPN / proxy</span>
+          <span class="ch-val">{{ net.isVPN.value === null ? '…' : net.isVPN.value ? 'Indices de VPN' : 'Aucun indice' }}</span>
+        </div>
+        <div class="ch-item">
+          <span class="ch-label">Fuite WebRTC</span>
+          <span class="ch-val">{{ !net.webrtcDone.value ? '…' : net.webrtcLeak.value ?? (net.localIPs.value.length ? net.localIPs.value[0] : 'Aucune') }}</span>
         </div>
       </div>
       <p>
@@ -115,7 +127,10 @@
         </div>
         <p>L'extension la plus efficace pour bloquer les scripts de fingerprinting et les traqueurs tiers.</p>
         <div class="pc-personal">
-          <template v-if="fp.detectedFonts.value.length > 0">
+          <template v-if="bl.cosmeticBlocked.value">
+            Un bloqueur est déjà actif sur ce navigateur : le faux encadré publicitaire de l'onglet « Bloqueurs » a été masqué.
+          </template>
+          <template v-else-if="fp.detectedFonts.value.length > 0">
             Vos {{ fp.detectedFonts.value.length }} polices détectées sont une composante de votre fingerprint — uBlock bloquerait les scripts qui les sondent.
           </template>
           <template v-else>
@@ -137,8 +152,8 @@
         </div>
         <p>Par défaut, chaque adresse visitée passe par le DNS de votre opérateur. Cloudflare (1.1.1.1) et Quad9 ne loguent pas vos requêtes.</p>
         <div class="pc-personal">
-          Résolveur détecté : <code>{{ net.dnsResolver.value ?? 'opérateur par défaut' }}</code>.
-          {{ net.dnsResolver.value ? 'Vos visites DNS sont déjà partiellement protégées.' : 'Vos visites sont actuellement loguées par votre FAI.' }}
+          Résolveur détecté : <code>{{ net.dnsResolverInfo.value ?? net.dnsResolver.value ?? 'inconnu' }}</code>.
+          {{ net.dnsIsPublic.value ? 'Vous utilisez déjà un résolveur public : votre FAI ne voit plus vos requêtes DNS.' : 'C\'est probablement le résolveur de votre FAI : il peut journaliser chaque site que vous visitez.' }}
         </div>
         <ul>
           <li>Masque vos visites à votre FAI</li>
@@ -184,10 +199,12 @@ import { computed } from 'vue'
 import { useNetwork } from '../../composables/useNetwork'
 import { useFingerprint } from '../../composables/useFingerprint'
 import { useGPU } from '../../composables/useGPU'
+import { useBlockers } from '../../composables/useBlockers'
 
 const net = useNetwork()
 const fp = useFingerprint()
 const gpu = useGPU()
+const bl = useBlockers()
 
 const shortFp = computed(() => fp.combinedHash.value ? fp.combinedHash.value.slice(0, 12).toUpperCase() : null)
 const shortCanvas = computed(() => fp.canvasHash.value ? fp.canvasHash.value.slice(0, 8).toUpperCase() : null)

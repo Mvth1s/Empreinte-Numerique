@@ -1,8 +1,6 @@
 import { ref, onMounted } from 'vue'
 import { sha256, shortHash } from '../utils/hash'
 
-export const FONTS_COUNT = 97
-
 const FONTS = [
   'Arial','Arial Black','Arial Narrow','Bahnschrift','Calibri','Cambria','Cambria Math',
   'Candara','Comic Sans MS','Consolas','Constantia','Corbel','Courier New',
@@ -23,6 +21,15 @@ const FONTS = [
   'Gill Sans MT','Bodoni MT','Trajan','Book Antiqua','Bookman Old Style',
 ]
 
+export const FONTS_COUNT = FONTS.length
+
+// Polices chargées par la page elle-même (@font-face) : elles mesurent toujours "présentes", on les exclut.
+function webFontFamilies(): Set<string> {
+  const set = new Set<string>()
+  document.fonts?.forEach(f => set.add(f.family.replace(/["']/g, '').toLowerCase()))
+  return set
+}
+
 function detectFonts(): string[] {
   const canvas = document.createElement('canvas')
   const ctx = canvas.getContext('2d')
@@ -35,14 +42,15 @@ function detectFonts(): string[] {
     return ctx.measureText(TEXT).width
   }
   const base = { mono: measure('monospace'), sans: measure('sans-serif'), serif: measure('serif') }
+  const webFonts = webFontFamilies()
 
-  return FONTS.filter(f => {
+  return FONTS.filter(f => !webFonts.has(f.toLowerCase())).filter(f => {
     const w = { mono: measure(`'${f}',monospace`), sans: measure(`'${f}',sans-serif`), serif: measure(`'${f}',serif`) }
     return w.mono !== base.mono || w.sans !== base.sans || w.serif !== base.serif
   })
 }
 
-async function canvasFingerprint(): Promise<string> {
+function drawCanvas(): string {
   const canvas = document.createElement('canvas')
   canvas.width = 240; canvas.height = 60
   const ctx = canvas.getContext('2d')
@@ -59,10 +67,18 @@ async function canvasFingerprint(): Promise<string> {
   ctx.strokeStyle = 'rgba(0,229,255,0.5)'
   ctx.arc(60, 30, 20, 0, Math.PI * 2)
   ctx.stroke()
-  return shortHash(await sha256(canvas.toDataURL()))
+  return canvas.toDataURL()
 }
 
-async function audioFingerprint(): Promise<string> {
+// Deux rendus identiques doivent donner les mêmes pixels. S'ils diffèrent, le navigateur injecte du bruit
+// (Brave, Firefox resistFingerprinting, Safari protection avancée) : l'empreinte change à chaque visite.
+async function canvasFingerprint(): Promise<{ hash: string; noisy: boolean }> {
+  const a = drawCanvas(), b = drawCanvas()
+  if (!a) return { hash: '', noisy: false }
+  return { hash: shortHash(await sha256(a)), noisy: a !== b }
+}
+
+function renderAudio(): Promise<string> {
   return new Promise(resolve => {
     try {
       const ctx = new OfflineAudioContext(1, 44100, 44100)
@@ -77,14 +93,21 @@ async function audioFingerprint(): Promise<string> {
       comp.release.setValueAtTime(0.25, ctx.currentTime)
       osc.connect(comp); comp.connect(ctx.destination)
       osc.start(0)
-      ctx.startRendering().then(async buf => {
+      ctx.startRendering().then(buf => {
         const data = buf.getChannelData(0)
         let sum = 0
         for (let i = 4500; i < 5000; i++) sum += Math.abs(data[i])
-        resolve(shortHash(await sha256(sum.toFixed(12))))
+        resolve(sum.toFixed(12))
       }).catch(() => resolve(''))
     } catch { resolve('') }
   })
+}
+
+async function audioFingerprint(): Promise<{ hash: string; noisy: boolean }> {
+  const a = await renderAudio()
+  if (!a) return { hash: '', noisy: false }
+  const b = await renderAudio()
+  return { hash: shortHash(await sha256(a)), noisy: a !== b }
 }
 
 function cssMediaFingerprint(): string {
@@ -92,13 +115,15 @@ function cssMediaFingerprint(): string {
     'prefers-color-scheme:dark': window.matchMedia('(prefers-color-scheme: dark)').matches ? '1' : '0',
     'prefers-color-scheme:light': window.matchMedia('(prefers-color-scheme: light)').matches ? '1' : '0',
     'prefers-reduced-motion': window.matchMedia('(prefers-reduced-motion: reduce)').matches ? '1' : '0',
-    'prefers-contrast:high': window.matchMedia('(prefers-contrast: high)').matches ? '1' : '0',
+    'prefers-contrast:more': window.matchMedia('(prefers-contrast: more)').matches ? '1' : '0',
     'forced-colors': window.matchMedia('(forced-colors: active)').matches ? '1' : '0',
     'pointer:fine': window.matchMedia('(pointer: fine)').matches ? '1' : '0',
     'pointer:coarse': window.matchMedia('(pointer: coarse)').matches ? '1' : '0',
     'hover': window.matchMedia('(hover: hover)').matches ? '1' : '0',
     'color-gamut:p3': window.matchMedia('(color-gamut: p3)').matches ? '1' : '0',
     'display-mode:standalone': window.matchMedia('(display-mode: standalone)').matches ? '1' : '0',
+    'dynamic-range:high': window.matchMedia('(dynamic-range: high)').matches ? '1' : '0',
+    'inverted-colors': window.matchMedia('(inverted-colors: inverted)').matches ? '1' : '0',
   }
   return Object.values(checks).join('')
 }
@@ -138,12 +163,38 @@ async function getTTSVoices(): Promise<string[]> {
   })
 }
 
-async function getMediaDeviceCount(): Promise<number | null> {
+export interface MediaDeviceSummary { audioinput: number; videoinput: number; audiooutput: number; labelled: boolean }
+
+// Sans permission, les navigateurs récents ne listent qu'un périphérique par type, sans libellé.
+async function getMediaDevices(): Promise<MediaDeviceSummary | null> {
   try {
     if (!navigator.mediaDevices?.enumerateDevices) return null
     const devices = await navigator.mediaDevices.enumerateDevices()
-    return devices.length
+    const count = (k: MediaDeviceKind) => devices.filter(d => d.kind === k).length
+    return { audioinput: count('audioinput'), videoinput: count('videoinput'), audiooutput: count('audiooutput'), labelled: devices.some(d => !!d.label) }
   } catch { return null }
+}
+
+// mediaCapabilities.powerEfficient = décodage matériel : trahit la génération du GPU / SoC.
+async function getHardwareDecoders(): Promise<string[]> {
+  if (!navigator.mediaCapabilities?.decodingInfo) return []
+  const tests: [string, string][] = [
+    ['H.264', 'video/mp4; codecs="avc1.640028"'],
+    ['HEVC', 'video/mp4; codecs="hvc1.1.6.L120.90"'],
+    ['VP9', 'video/webm; codecs="vp09.00.40.08"'],
+    ['AV1', 'video/mp4; codecs="av01.0.08M.08"'],
+  ]
+  const out: string[] = []
+  await Promise.all(tests.map(async ([name, contentType]) => {
+    try {
+      const r = await navigator.mediaCapabilities.decodingInfo({
+        type: 'media-source',
+        video: { contentType, width: 1920, height: 1080, bitrate: 8_000_000, framerate: 30 },
+      })
+      if (r.supported && r.powerEfficient) out.push(name)
+    } catch { /* codec inconnu */ }
+  }))
+  return tests.map(t => t[0]).filter(n => out.includes(n))
 }
 
 export function useFingerprint() {
@@ -157,26 +208,38 @@ export function useFingerprint() {
   const loading = ref(true)
   const ttsVoices = ref<string[]>([])
   const mediaDeviceCount = ref<number | null>(null)
+  const mediaDevices = ref<MediaDeviceSummary | null>(null)
+  const canvasNoise = ref(false)
+  const audioNoise = ref(false)
+  const hwDecoders = ref<string[]>([])
 
   onMounted(async () => {
     cssMedia.value = cssMediaFingerprint()
     plugins.value = getPlugins()
     codecs.value = getCodecs()
 
-    const [cvs, aud, devCount] = await Promise.all([
-      canvasFingerprint(), audioFingerprint(), getMediaDeviceCount()
+    const [cvs, aud, devices, hw] = await Promise.all([
+      canvasFingerprint(), audioFingerprint(), getMediaDevices(), getHardwareDecoders()
     ])
-    canvasHash.value = cvs || null
-    audioHash.value = aud || null
-    mediaDeviceCount.value = devCount
+    canvasHash.value = cvs.hash || null
+    canvasNoise.value = cvs.noisy
+    audioHash.value = aud.hash || null
+    audioNoise.value = aud.noisy
+    mediaDevices.value = devices
+    mediaDeviceCount.value = devices ? devices.audioinput + devices.videoinput + devices.audiooutput : null
+    hwDecoders.value = hw
 
+    await document.fonts?.ready
     detectedFonts.value = detectFonts()
     getTTSVoices().then(v => { ttsVoices.value = v })
 
-    const combined = [cvs, aud, cssMedia.value, detectedFonts.value.join(',')].join('|')
+    const combined = [cvs.hash, aud.hash, cssMedia.value, detectedFonts.value.join(',')].join('|')
     combinedHash.value = shortHash(await sha256(combined))
     loading.value = false
   })
 
-  return { canvasHash, audioHash, cssMedia, detectedFonts, plugins, codecs, combinedHash, loading, ttsVoices, mediaDeviceCount }
+  return {
+    canvasHash, canvasNoise, audioHash, audioNoise, cssMedia, detectedFonts, plugins, codecs, hwDecoders,
+    combinedHash, loading, ttsVoices, mediaDeviceCount, mediaDevices,
+  }
 }

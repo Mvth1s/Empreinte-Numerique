@@ -44,7 +44,7 @@
         :value="st.indexedDBAvail.value ? 'Disponible' : 'Bloqué'"
         mean="IndexedDB est une base de données NoSQL côté client, capable de stocker des gigaoctets de données structurées."
         deduce="Les trackers avancés utilisent IndexedDB pour stocker des empreintes, des historiques de session et des données de ciblage."
-        tech-key="'indexedDB' in window"
+        tech-key="indexedDB.open() › onsuccess"
         :tech-val="String(st.indexedDBAvail.value)"
         severity="eleve"
         sev-label="élevé"
@@ -77,11 +77,15 @@
       <DataCardV2
         icon="💽"
         title="Quota de stockage"
-        :value="st.storageQuota.value ?? '…'"
-        mean="navigator.storage.estimate() retourne l'espace alloué au site par le navigateur, qui varie selon la capacité du disque."
-        deduce="Le quota maximal dépend de votre espace disque disponible — il peut révéler la capacité approximative de votre stockage."
-        tech-key="navigator.storage.estimate().quota"
-        :tech-val="st.storageQuota.value ?? '…'"
+        :value="st.diskEstimate.value ? `Disque ≈ ${st.diskEstimate.value}` : st.ephemeralProfile.value ? `${st.storageQuota.value} — navigation privée probable` : (st.storageQuota.value ?? '…')"
+        :mean="st.ephemeralProfile.value
+          ? `Le quota accordé (${st.storageQuota.value}) est une valeur fixe et ronde : c'est la signature d'un profil temporaire, typiquement la navigation privée. Le site le sait sans rien vous demander.`
+          : st.diskEstimate.value
+          ? `Votre navigateur accorde à ce site un quota de ${st.storageQuota.value}. Chrome, Edge et Brave fixent ce quota à environ 60 % de la taille totale du disque : on en déduit la capacité de votre disque.`
+          : 'navigator.storage.estimate() retourne l\'espace alloué au site par le navigateur, qui dépend de la taille du disque.'"
+        deduce="La taille du disque distingue un ordinateur d'entrée de gamme (256 Go) d'une station de travail (2 To). Un quota anormalement faible trahit la navigation privée."
+        tech-key="navigator.storage.estimate().quota ÷ 0,6"
+        :tech-val="`quota=${st.storageQuota.value ?? '…'} · utilisé=${st.storageUsage.value ?? '…'}`"
         severity="faible"
         sev-label="faible"
         :span="6"
