@@ -852,8 +852,44 @@ body::before {
 .site-foot nav { display: flex; flex-wrap: wrap; gap: 8px 20px; }
 .site-foot a { color: var(--mute-2); text-decoration: none; border-bottom: 1px dotted var(--mute); }
 .site-foot a:hover, .site-foot a:focus-visible { color: var(--cyan); border-bottom-color: var(--cyan); }
+.site-foot .foot-link {
+  background: none; border: 0; border-bottom: 1px dotted var(--mute); padding: 0;
+  font: inherit; letter-spacing: inherit; color: var(--mute-2); cursor: pointer;
+}
+.site-foot .foot-link:hover, .site-foot .foot-link:focus-visible { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+/* ---- Bandeau cookies (au-dessus du welcome, non bloquant) ---- */
+.cookie-banner {
+  position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
+  z-index: 1050;
+  width: min(760px, calc(100% - 32px));
+  display: flex; align-items: center; gap: 20px;
+  padding: 18px 20px;
+  background: linear-gradient(180deg, var(--card), #0a0a12);
+  border: 1px solid var(--line-2);
+  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.15), 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+.cookie-text h2 {
+  margin: 0 0 6px; font-family: var(--mono); font-size: 12px; font-weight: 500;
+  letter-spacing: .15em; text-transform: uppercase; color: var(--cyan);
+}
+.cookie-text p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--mute-2); }
+.cookie-text b { color: var(--fg); font-weight: 500; }
+.cookie-text code { font-family: var(--mono); font-size: 12px; color: var(--fg); }
+.cookie-actions { display: flex; gap: 10px; flex-shrink: 0; }
+/* Les deux choix ont le même poids visuel (CNIL : refuser aussi simple qu'accepter). */
+.cookie-actions button {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .15em;
+  text-transform: uppercase; padding: 10px 16px; min-width: 110px;
+  border: 1px solid var(--cyan); background: transparent; color: var(--fg);
+  cursor: pointer;
+}
+.cookie-actions .primary { background: var(--cyan); color: #000; }
+.cookie-actions button:hover, .cookie-actions button:focus-visible { box-shadow: 0 0 16px rgba(0, 229, 255, 0.4); }
 
 @media (max-width: 720px) {
   .faq { padding: 8px 16px 32px; }
   .site-foot { padding: 20px 16px 28px; }
+  .cookie-banner { flex-direction: column; align-items: stretch; bottom: 16px; padding: 16px; gap: 14px; }
+  .cookie-actions button { flex: 1; }
 }

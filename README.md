@@ -25,7 +25,7 @@ Le site collecte et affiche 12 catégories de données (~85 signaux au total) :
 
 - **Vite 5 + Vue 3 + TypeScript** — Composition API `<script setup>`, `vue-tsc` vérifie les types avant le build
 - **CSS vanilla** avec variables custom (`--cyan`, `--card`, `--line`…) — pas de framework CSS
-- **100% client-side** — aucun backend, aucune donnée transmise, aucun cookie
+- **100% client-side** — aucun backend, aucune donnée collectée transmise ; seul Google Analytics (mesure d'audience) pose des cookies, et uniquement après consentement via le bandeau
 - APIs externes (par ordre de priorité) :
   - `api.ipify.org` — IP publique (HTTPS)
   - `ip-api.com` — géo complète + détection proxy/VPN (HTTP seulement, utilisé en dev)

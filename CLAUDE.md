@@ -18,7 +18,8 @@ npm run preview  # Prévisualisation du build dist/
 
 - **Vite 5 + Vue 3 + TypeScript** (Composition API `<script setup>`) — `vue-tsc` vérifie les types avant `vite build`
 - **CSS vanilla** avec variables CSS dans `src/style.css` — `tailwindcss` est dans les devDeps mais n'est pas utilisé pour la mise en page principale
-- **100% client-side** — aucun backend, aucun cookie, aucun test automatisé
+- **100% client-side** — aucun backend, aucun test automatisé. Seul cookie : Google Analytics 4 (`G-X83M1WF7KK`), chargé par `src/utils/analytics.ts` **uniquement après consentement** via `CookieBanner.vue` (choix stocké dans `localStorage['en-consent']`, réouvrable via « Cookies » dans le footer). Ne jamais mettre le snippet gtag en dur dans `index.html`.
+- Vérification Google Search Console : balise `google-site-verification` dans `index.html` — ne pas la supprimer.
 - APIs externes (par ordre de priorité HTTPS) :
   - `api.ipify.org` — IP publique (HTTPS)
   - `ip-api.com` — géo complète avec détection proxy/VPN (HTTP seulement, free tier ; utilisé en dev HTTP)
