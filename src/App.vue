@@ -113,6 +113,7 @@
       </main>
 
       <FaqSection />
+      <LegalSection />
 
       <footer class="site-foot">
         <p>Empreinte Numérique — outil éducatif open-source, 100 % côté client.</p>
@@ -121,7 +122,9 @@
           <a href="https://mathisaguado.vercel.app" target="_blank" rel="noopener">Portfolio de l'auteur</a>
           <a href="https://github.com/Mvth1s" target="_blank" rel="noopener">GitHub de l'auteur</a>
           <a href="#faq">FAQ</a>
-          <button type="button" class="foot-link" @click="cookieBannerOpen = true">Cookies</button>
+          <a href="#mentions-legales">Mentions légales</a>
+          <a href="#confidentialite">Politique de confidentialité</a>
+          <button type="button" class="foot-link" @click="cookieBannerOpen = true">Gérer les cookies</button>
         </nav>
       </footer>
     </div>
@@ -150,6 +153,7 @@
 import { ref, computed, watch, onMounted, nextTick, defineAsyncComponent } from 'vue'
 import BackgroundCanvas from './components/BackgroundCanvas.vue'
 import FaqSection from './components/FaqSection.vue'
+import LegalSection from './components/LegalSection.vue'
 import CookieBanner from './components/CookieBanner.vue'
 import { readConsent } from './utils/analytics'
 
