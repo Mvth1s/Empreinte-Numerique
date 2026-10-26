@@ -5,7 +5,7 @@
       <p>
         Ironie assumée : ce site aimerait compter ses visiteurs avec <b>Google Analytics</b>, qui dépose des cookies
         (<code>_ga</code>, 13 mois max). Rien n'est chargé sans votre accord, et la démo fonctionne à l'identique si vous refusez.
-        Vous pouvez changer d'avis à tout moment via « Cookies » en bas de page.
+        Vous pouvez changer d'avis à tout moment via « Gérer les cookies » en bas de page.
       </p>
     </div>
     <div class="cookie-actions">
