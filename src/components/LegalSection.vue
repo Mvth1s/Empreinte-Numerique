@@ -16,7 +16,7 @@
         <div class="c-box">
           <p>
             Mathis Aguado, particulier. Site gratuit, sans publicité ni activité commerciale.
-            Contact : TODO : adresse e-mail de contact à renseigner.
+            Contact : <a href="mailto:mag.d3v+empreinte-numerique@pm.me">mag.d3v+empreinte-numerique@pm.me</a>.
           </p>
         </div>
       </article>
@@ -24,8 +24,9 @@
         <h3>Hébergeur</h3>
         <div class="c-box">
           <p>
-            Vercel Inc. — TODO : adresse postale et téléphone de l'hébergeur à reporter depuis
-            <a href="https://vercel.com/legal" target="_blank" rel="noopener">vercel.com/legal</a>.
+            Vercel Inc., 440 N Barranca Avenue #4133, Covina, CA 91723, États-Unis. Contact :
+            <a href="mailto:privacy@vercel.com">privacy@vercel.com</a> (téléphone non communiqué par
+            l'hébergeur). Vercel est certifié EU-U.S. Data Privacy Framework.
           </p>
         </div>
       </article>
@@ -77,8 +78,9 @@
             Vous disposez des droits d'accès, de rectification, d'effacement, d'opposition et de limitation.
             Comme le site ne conserve aucune donnée vous concernant, il n'y a en pratique rien à effacer de
             notre côté ; pour les données traitées par les services tiers, adressez-vous à eux. Contact pour
-            toute question liée à vos données : TODO : adresse e-mail dédiée aux données personnelles à
-            renseigner. Vous pouvez aussi saisir la
+            toute question liée à vos données :
+            <a href="mailto:mag.d3v+empreinte-numerique@pm.me">mag.d3v+empreinte-numerique@pm.me</a>.
+            Vous pouvez aussi saisir la
             <a href="https://www.cnil.fr/fr/plaintes" target="_blank" rel="noopener">CNIL</a>.
           </p>
         </div>
@@ -111,7 +113,7 @@ const PRIVACY = [
   },
   {
     q: 'Durée de conservation',
-    a: "Ce site ne conserve aucune donnée : il n'a pas de base de données. Les journaux techniques éventuellement tenus par l'hébergeur et les données des services tiers relèvent de leurs propres politiques. Données Google Analytics : TODO : durée de conservation configurée dans la propriété Google Analytics à renseigner.",
+    a: "Ce site ne conserve aucune donnée : il n'a pas de base de données. Les journaux techniques éventuellement tenus par l'hébergeur et les données des services tiers relèvent de leurs propres politiques. Données Google Analytics : conservées 2 mois.",
   },
 ]
 </script>
