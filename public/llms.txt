@@ -28,4 +28,4 @@ Un dernier onglet, « Se protéger », présente des contre-mesures (Brave, Fire
 
 ## Auteur
 
-- [Mathis Aguado](https://mathisaguado.vercel.app) — [GitHub](https://github.com/Mvth1s)
+- Mvth1s — [GitHub](https://github.com/Mvth1s)

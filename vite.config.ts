@@ -35,8 +35,7 @@ function jsonLd(): Plugin {
       {
         '@type': 'Person',
         '@id': `${SITE_URL}#author`,
-        name: 'Mathis Aguado',
-        url: 'https://mathisaguado.vercel.app',
+        name: 'Mvth1s',
         sameAs: ['https://github.com/Mvth1s'],
       },
       {

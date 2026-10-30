@@ -15,8 +15,11 @@
         <h3>Éditeur</h3>
         <div class="c-box">
           <p>
-            Mathis Aguado, particulier. Site gratuit, sans publicité ni activité commerciale.
-            Contact : <a href="mailto:mag.d3v+empreinte-numerique@pm.me">mag.d3v+empreinte-numerique@pm.me</a>.
+            Ce site est édité par Mvth1s, à titre personnel et non professionnel. Conformément à
+            l'article 1-1, II de la loi n° 2004-575 du 21 juin 2004 (LCEN), l'éditeur a choisi de conserver
+            l'anonymat. Ses éléments d'identification ont été communiqués à l'hébergeur.
+            Site gratuit, sans publicité ni activité commerciale.
+            Contact : <a href="mailto:mag.d3v+empreintenumerique@pm.me">mag.d3v+empreintenumerique@pm.me</a>.
           </p>
         </div>
       </article>
@@ -79,7 +82,7 @@
             Comme le site ne conserve aucune donnée vous concernant, il n'y a en pratique rien à effacer de
             notre côté ; pour les données traitées par les services tiers, adressez-vous à eux. Contact pour
             toute question liée à vos données :
-            <a href="mailto:mag.d3v+empreinte-numerique@pm.me">mag.d3v+empreinte-numerique@pm.me</a>.
+            <a href="mailto:mag.d3v+empreintenumerique@pm.me">mag.d3v+empreintenumerique@pm.me</a>.
             Vous pouvez aussi saisir la
             <a href="https://www.cnil.fr/fr/plaintes" target="_blank" rel="noopener">CNIL</a>.
           </p>
