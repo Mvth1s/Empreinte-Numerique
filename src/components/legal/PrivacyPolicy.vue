@@ -55,7 +55,7 @@ const PRIVACY = [
   },
   {
     q: 'Stockage local',
-    a: "Le site enregistre uniquement votre choix de consentement dans le localStorage (clé en-consent), jusqu'à ce que vous le modifiiez ou effaciez les données du site. Les tests de stockage écrivent puis suppriment immédiatement une valeur témoin.",
+    a: "Le site enregistre uniquement votre choix de consentement (clé en-consent) et, si vous changez de thème, votre préférence clair/sombre (clé en-theme) dans le localStorage, jusqu'à ce que vous les modifiiez ou effaciez les données du site. Ces valeurs ne quittent jamais votre navigateur. Les tests de stockage écrivent puis suppriment immédiatement une valeur témoin.",
   },
   {
     q: 'Durée de conservation',

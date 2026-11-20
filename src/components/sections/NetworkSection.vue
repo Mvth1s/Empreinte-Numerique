@@ -15,7 +15,7 @@
 
     <div v-if="net.networkError.value" class="net-error">
       <span>⚠️</span>
-      <span>Impossible de contacter les APIs de géolocalisation (ipify, ipwho.is, freeipapi.com). Les données réseau ne sont pas disponibles — vérifiez votre connexion ou désactivez un bloqueur de requêtes.</span>
+      <span>Impossible de joindre les services qui donnent votre adresse IP et sa position (ipify, ipwho.is, freeipapi.com). Vérifiez votre connexion, ou un bloqueur qui couperait ces requêtes.</span>
     </div>
 
     <div class="cards">
@@ -23,8 +23,8 @@
         icon="🌍"
         title="Adresse IP publique"
         :value="ipLabel"
-        mean="C'est l'adresse qu'un serveur voit quand vous vous connectez. Si votre box fournit IPv6, le navigateur a souvent deux adresses publiques : une IPv4 partagée et une IPv6, souvent propre à votre logement."
-        deduce="Localisation géographique approximative, identification du FAI, corrélation entre visites, blocage géographique de contenu. Une IPv6 change rarement : elle suit votre foyer pendant des semaines."
+        mean="C'est l'« adresse postale » de votre connexion sur Internet : chaque site que vous visitez la reçoit automatiquement. Beaucoup de box en donnent deux : une ancienne (IPv4), souvent partagée, et une récente (IPv6), propre à votre logement."
+        deduce="Votre ville approximative, votre opérateur, et la possibilité de vous reconnaître d'une visite à l'autre. L'adresse IPv6 change rarement : elle peut désigner votre foyer pendant des semaines."
         tech-key="api4.ipify.org + api6.ipify.org"
         :tech-val="`v4=${net.publicIPv4.value ?? '—'} · v6=${net.publicIPv6.value ?? '—'}`"
         severity="critique"
@@ -36,8 +36,8 @@
         icon="🏢"
         title="Fournisseur d'accès (FAI)"
         :value="net.isp.value ?? '…'"
-        mean="Le FAI est l'entreprise qui fournit votre connexion internet. Il est directement lié à votre IP."
-        deduce="Type de connexion (résidentiel, entreprise, VPN), pays d'origine, profil socio-économique approximatif."
+        mean="C'est l'entreprise qui vous fournit Internet (Orange, Free, SFR, Bouygues…). Son nom se déduit directement de votre adresse IP."
+        deduce="Si vous êtes chez vous, au travail ou derrière un VPN, et dans quel pays. Les publicitaires s'en servent aussi pour deviner un profil (fibre ou mobile, particulier ou entreprise)."
         tech-key="ipwho.is › connection.isp"
         :tech-val="net.isp.value ?? '—'"
         severity="moyen"
@@ -47,10 +47,10 @@
       />
       <DataCardV2
         icon="🔢"
-        title="ASN (Système autonome)"
+        title="Réseau d'appartenance (ASN)"
         :value="net.asn.value ?? '…'"
-        mean="L'ASN identifie le réseau autonome propriétaire de votre bloc d'adresses IP."
-        deduce="Permet de savoir si vous utilisez un VPN commercial, un proxy, un réseau d'entreprise ou résidentiel."
+        mean="Internet est un assemblage de grands réseaux, chacun avec un numéro (ASN). Celui-ci dit à quel réseau appartient votre adresse IP."
+        deduce="Un réseau de particuliers, d'entreprise ou d'hébergeur ne se ressemble pas : c'est l'un des moyens les plus simples de repérer un VPN."
         tech-key="ipwho.is › connection.asn"
         :tech-val="net.asn.value ?? '—'"
         severity="moyen"
@@ -62,8 +62,8 @@
         icon="⚠️"
         title="Proxy / VPN détecté"
         :value="net.isVPN.value ? `Probable — ${net.vpnSignals.value.length} indice(s)` : 'Aucun indice'"
-        mean="Plusieurs indices sont croisés : nom du réseau (hébergeur ou VPN connu), fuseau horaire de l'IP différent de celui de votre système, IP différente révélée par WebRTC."
-        :deduce="net.vpnSignals.value.length ? net.vpnSignals.value.join(' · ') : 'Rien n\'indique un VPN : votre IP semble résidentielle et cohérente avec votre fuseau horaire.'"
+        mean="Un VPN fait passer votre connexion par un autre ordinateur pour cacher votre adresse. Le site croise plusieurs indices : nom du réseau, heure de votre ordinateur différente de celle du pays de l'IP, autre adresse trahie par le navigateur."
+        :deduce="net.vpnSignals.value.length ? net.vpnSignals.value.join(' · ') : 'Rien n\'indique un VPN : votre adresse ressemble à celle d\'un particulier et correspond à l\'heure de votre ordinateur.'"
         tech-key="ASN + fuseau IP ∩ Intl + WebRTC"
         :tech-val="`${net.ipTimezone.value ?? '?'} / ${net.browserTimezone}`"
         :severity="net.isVPN.value ? 'moyen' : 'faible'"
@@ -73,15 +73,16 @@
       />
       <DataCardV2
         icon="🔓"
-        title="Fuite WebRTC"
+        title="Fuite d'adresse (WebRTC)"
         :value="webrtcLabel"
-        mean="WebRTC (appels vidéo dans le navigateur) interroge un serveur STUN qui renvoie votre IP publique, et peut exposer vos IPs locales. Les navigateurs récents masquent les IPs locales derrière un nom aléatoire en .local (mDNS)."
-        deduce="Si l'IP renvoyée par STUN diffère de celle vue par le site, votre VPN fuit : votre vraie adresse est révélée. Une IP locale exposée révèle votre réseau domestique ou d'entreprise."
+        mean="WebRTC sert aux appels vidéo dans le navigateur. Pour établir l'appel, il peut révéler votre vraie adresse IP et celle de votre appareil sur votre réseau Wi-Fi, même derrière un VPN."
+        deduce="Si l'adresse révélée ici diffère de celle vue par le site, votre VPN fuit : votre vraie adresse est exposée. Une adresse locale (192.168…) décrit en plus votre réseau à la maison ou au bureau."
         tech-key="RTCPeerConnection › ICE candidates (host / srflx)"
         :tech-val="webrtcTech"
         :severity="net.webrtcLeak.value || net.localIPs.value.length ? 'critique' : 'moyen'"
         :sev-label="net.webrtcLeak.value || net.localIPs.value.length ? 'critique' : 'moyen'"
         :loading="!net.webrtcDone.value"
+        :masked="webrtcMasked"
         :span="12"
       />
     </div>
@@ -109,8 +110,16 @@ const webrtcLabel = computed(() => {
   if (net.webrtcLeak.value) return `Fuite : ${net.webrtcLeak.value}`
   if (net.localIPs.value.length) return `IP locale exposée : ${net.localIPs.value.join(', ')}`
   if (net.webrtcPublicIPs.value.length) return `IP publique via STUN : ${net.webrtcPublicIPs.value.join(', ')}`
-  if (net.mdnsMasked.value) return 'IPs locales masquées (mDNS)'
-  return 'WebRTC bloqué ou désactivé'
+  if (net.mdnsMasked.value) return 'Adresses locales cachées'
+  return 'WebRTC bloqué'
+})
+
+// Aucune adresse obtenue : le navigateur cache les adresses locales (nom aléatoire en .local) ou bloque WebRTC.
+const webrtcMasked = computed(() => {
+  if (!net.webrtcDone.value || net.webrtcLeak.value || net.localIPs.value.length || net.webrtcPublicIPs.value.length) return null
+  return net.mdnsMasked.value
+    ? 'Il remplace l\'adresse de votre appareil par un nom aléatoire (mDNS) : rien ne fuit.'
+    : 'Il bloque WebRTC ou passe par un relais : aucune adresse n\'a pu être obtenue.'
 })
 
 const webrtcTech = computed(() => [

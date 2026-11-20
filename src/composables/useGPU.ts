@@ -1,4 +1,4 @@
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { shortHash } from '../utils/hash'
 
 interface GPUAdapterInfoLike { vendor?: string; architecture?: string; device?: string; description?: string }
@@ -13,6 +13,10 @@ declare global {
     gpu?: { requestAdapter(opts?: { powerPreference?: string }): Promise<GPUAdapterLike | null> }
   }
 }
+
+// Valeurs génériques renvoyées à la place du vrai GPU par les protections anti-empreinte :
+// Brave (Shields) répond « Brave », Firefox resistFingerprinting / Tor Browser « Mozilla », Safari parfois « WebKit ».
+const MASKED_GPU_NAMES = new Set(['brave', 'mozilla', 'webkit', 'webkit webgl'])
 
 export function useGPU() {
   const vendor = ref<string | null>(null)
@@ -126,13 +130,15 @@ export function useGPU() {
     } catch { /* adapter refusé */ }
   }
 
+  const masked = computed(() => !!renderer.value && MASKED_GPU_NAMES.has(renderer.value.trim().toLowerCase()))
+
   onMounted(async () => {
     getWebGLInfo()
     await Promise.all([computeRenderHash(), getWebGPUInfo()])
   })
 
   return {
-    vendor, renderer, rendererSource, webgl2, webgpu, webgpuInfo, webgpuFeatures,
+    vendor, renderer, rendererSource, masked, webgl2, webgpu, webgpuInfo, webgpuFeatures,
     renderHash, supportedTextureFormats, glExtensions, maxTextureSize,
   }
 }

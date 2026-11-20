@@ -207,6 +207,7 @@ export function useFingerprint() {
   const combinedHash = ref<string | null>(null)
   const loading = ref(true)
   const ttsVoices = ref<string[]>([])
+  const ttsDone = ref(false)
   const mediaDeviceCount = ref<number | null>(null)
   const mediaDevices = ref<MediaDeviceSummary | null>(null)
   const canvasNoise = ref(false)
@@ -231,7 +232,7 @@ export function useFingerprint() {
 
     await document.fonts?.ready
     detectedFonts.value = detectFonts()
-    getTTSVoices().then(v => { ttsVoices.value = v })
+    getTTSVoices().then(v => { ttsVoices.value = v; ttsDone.value = true })
 
     const combined = [cvs.hash, aud.hash, cssMedia.value, detectedFonts.value.join(',')].join('|')
     combinedHash.value = shortHash(await sha256(combined))
@@ -240,6 +241,6 @@ export function useFingerprint() {
 
   return {
     canvasHash, canvasNoise, audioHash, audioNoise, cssMedia, detectedFonts, plugins, codecs, hwDecoders,
-    combinedHash, loading, ttsVoices, mediaDeviceCount, mediaDevices,
+    combinedHash, loading, ttsVoices, ttsDone, mediaDeviceCount, mediaDevices,
   }
 }

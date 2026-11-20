@@ -20,6 +20,7 @@ npm run preview  # Prévisualisation du build dist/
 - **CSS vanilla** avec variables CSS dans `src/style.css` — `tailwindcss` est dans les devDeps mais n'est pas utilisé pour la mise en page principale
 - **100% client-side** — aucun backend, aucun test automatisé. Seul cookie : Google Analytics 4 (`G-X83M1WF7KK`), chargé par `src/utils/analytics.ts` **uniquement après consentement** via `CookieBanner.vue` (choix stocké dans `localStorage['en-consent']`, réouvrable via « Gérer les cookies » dans le footer partagé `SiteFooter.vue`). Pages d'information séparées (Vite multi-page, entrées déclarées dans `rollupOptions.input` de `vite.config.ts`) : `/faq/`, `/mentions-legales/`, `/confidentialite/`, `/cookies/` — chaque `<dossier>/index.html` charge `src/legal.ts` → `LegalPage.vue` avec `data-page` sur `<body>`, contenus dans `FaqSection.vue` et `src/components/legal/` (`LegalNotice`, `PrivacyPolicy`, `CookiePolicy`). Ajouter une page = nouveau HTML + entrée `input` + `LegalPageId` + `LEGAL_PAGES` (`src/entry-server.ts`) + `sitemap.xml`. Ces pages sont **pré-rendues au build** (`src/entry-server.ts` → `.ssr/` temporaire → `scripts/prerender.mjs` injecte le HTML dans `dist/`) puis hydratées (`createSSRApp`) : tout état lié au navigateur (`localStorage`, consentement) doit être lu dans `onMounted`, sinon décalage d'hydratation. L'accueil n'affiche plus la FAQ ; son `<noscript>` (dans `index.html`) renvoie vers ces pages. Ne jamais mettre le snippet gtag en dur dans `index.html`.
 - **En-têtes de sécurité** (CSP, HSTS, Permissions-Policy…) dans la règle `/(.*)` de `vercel.json`, réappliqués à `npm run preview` par `vite.config.ts`. **Tout nouveau domaine contacté doit être ajouté à `connect-src`** : sinon il est bloqué en production, et pour les tests de bloqueur (`fetch` no-cors) un refus CSP serait pris pour un bloqueur de pub.
+- **Date de vérification du contenu** : `CONTENT_REVIEWED` dans `src/data/meta.ts`, affichée dans le pied de page et l'onglet « Se protéger ». À mettre à jour après chaque relecture des recommandations (état des navigateurs et extensions : ex. uBlock Origin complet retiré de Chrome en 2026, protections anti-empreinte de Firefox 145 en mode Strict).
 - Accessibilité : barre d'onglets ARIA (`role=tab`, tabindex itinérant, flèches/Début/Fin puis Entrée) ; fenêtres (accueil, menu mobile, partage) via `useDialog` (focus piégé, Échap, focus restitué).
 - Vérification Google Search Console : balise `google-site-verification` dans `index.html` — ne pas la supprimer.
 - APIs externes (par ordre de priorité HTTPS) :
@@ -53,7 +54,7 @@ Le **fetch réseau** est mis en cache au niveau module via `_geoPromise` dans `u
 
 ### Grille de mise en page
 
-La grille est en CSS pur dans `src/style.css` — 12 colonnes, gap 20px. Chaque section utilise `.cards` comme conteneur et les cartes portent leur propre classe de span via `DataCardV2` (`:span` prop → `.col-N`). Classes disponibles : `.col-3`, `.col-4`, `.col-6`, `.col-8`, `.col-12`. Responsive : ≤1100px → 6 colonnes max, ≤720px → pleine largeur.
+La grille est en CSS pur dans `src/style.css` — 12 colonnes, gap 1.25rem. Chaque section utilise `.cards` comme conteneur et les cartes portent leur propre classe de span via `DataCardV2` (`:span` prop → `.col-N`). Classes disponibles : `.col-3`, `.col-4`, `.col-6`, `.col-8`, `.col-12`. Responsive (points de rupture en `em`) : ≤68.75em (1100px) → 6 colonnes max, ≤45em (720px) → pleine largeur.
 
 ### Composant DataCardV2
 
@@ -69,6 +70,11 @@ Toute donnée s'affiche via `DataCardV2.vue` (`src/components/DataCardV2.vue`) a
 - `sev-label: string` — libellé du badge (affiché tel quel)
 - `loading?: boolean` — état squelette
 - `span?: number` — colonnes grille (défaut 4)
+- `masked?: string | null` — explication si le navigateur a **masqué ou falsifié** la valeur : bandeau « 🛡️ Masqué ou faussé par votre navigateur », valeur barrée, badge « protégé » et sévérité ramenée à `faible`
+
+**Règle : ne jamais présenter une valeur falsifiée comme réelle.** Toute donnée qu'un navigateur peut cacher ou fausser passe un `masked`. La détection est centralisée dans `src/composables/useProtection.ts` : tests à réponse connue (carré de couleur unie relu via `getImageData`, signal audio constant, fond WebGL uni — comparer deux rendus ne suffit pas, Brave et Safari génèrent le même bruit toute la session), `braveFarbling` (Brave + brouillage constaté : cœurs, plugins inventés, polices), `firefoxResist`, `isScreenSpoofed()` (écran = fenêtre), `isTimezoneSpoofed()` (UTC forcé alors que l'IP dit autre chose), `STANDARD_PLUGINS`, et `NOT_GIVEN` pour une API que le navigateur ne fournit pas. Le score de traçabilité ne compte pas les signaux brouillés.
+
+**Rédaction des cartes** : `mean` (« Ce que ça veut dire », encadré bleu `--info`, identique pour toutes) explique la donnée en mots courants ; `deduce` (« Ce qu'on peut en déduire », couleur de la sévérité) donne la conséquence concrète, avec un exemple. Une à deux phrases chacun, aucun nom d'API ni sigle non expliqué : le vocabulaire technique va uniquement dans `tech-key` / `tech-val`. Aucun chiffre inventé (citer la source en commentaire, comme les études d'unicité dans `FingerprintSection`).
 
 Le slot nommé `#demo` permet d'injecter une démo interactive inline dans la carte (ex : caméra live, VU-mètre micro, presse-papiers dans `PermissionsSection`).
 
@@ -106,7 +112,7 @@ Le slot nommé `#demo` permet d'injecter une démo interactive inline dans la ca
 | `useBrowser.ts` | `userAgent, detectedOS, detectedBrowser, osSource, uaFrozen, architecture, deviceModel, isBrave, language, languages, platform, doNotTrack, cookiesEnabled, headless, clientHintBrands, clientHintMobile, chromeSizeW, chromeSizeH, pdfViewerEnabled, globalPrivacyControl` — OS réel via `userAgentData.getHighEntropyValues()` (l'UA est gelé : Windows 11 s'y déclare « NT 10.0 ») |
 | `useTimezone.ts` | `timezone, locale, utcOffset, isDST, localTime, dateFormat, numberFormat` |
 | `useScreen.ts` | `resolution, physicalResolution, availResolution, colorDepth, pixelRatio, cores, memory, memoryCapped, memoryLabel, battery, hdr (dynamic-range), colorGamut, prefersColorScheme, refreshRate, touchPoints, heapUsed, heapLimit, isExtended` |
-| `useGPU.ts` | `vendor, renderer, rendererSource, webgl2, webgpu, webgpuInfo, webgpuFeatures, renderHash, supportedTextureFormats, glExtensions, maxTextureSize` |
+| `useGPU.ts` | `vendor, renderer, rendererSource, masked, webgl2, webgpu, webgpuInfo, webgpuFeatures, renderHash, supportedTextureFormats, glExtensions, maxTextureSize` |
 | `useFingerprint.ts` | `canvasHash, canvasNoise, audioHash, audioNoise, cssMedia, detectedFonts, plugins, codecs, hwDecoders, ttsVoices, mediaDeviceCount, mediaDevices, combinedHash, loading` + constante `FONTS_COUNT` exportée. Les polices `@font-face` du site sont exclues de la détection |
 | `useStorage.ts` | `localStorageAvail, sessionStorageAvail, indexedDBAvail, cookiesEnabled, serviceWorkerAvail, cacheAPIAvail, storageQuota, storageUsage, diskEstimate, ephemeralProfile, persisted, cacheTimings, cacheTesting, runCacheTest` + constante `CACHE_TEST_TARGETS` (test CDN lancé uniquement sur clic). `diskEstimate` = quota ÷ 0,6 (Chromium) ; quota multiple exact d'un Gio = navigation privée |
 | `useConnectivity.ts` | `connectionType, effectiveType, downlink, rtt, saveData, online, speed, speedTesting, speedError, runSpeedTest` + `DOWNLINK_CAP`, `SPEED_TEST_HOST` |
@@ -126,21 +132,28 @@ Le score (0–100) est calculé dans `App.vue`. Les composables `useNetwork`, `u
 | IPs locales via WebRTC | +15 |
 | Canvas fingerprint | +15 |
 | Audio fingerprint | +10 |
-| GPU exact | +8 |
+| GPU exact (pas si `masked` : Brave/Firefox RFP/Tor renvoient « Brave »/« Mozilla ») | +8 |
 | Polices détectées (>5) | +7 |
 
 Score total max : 100 (cap via `Math.min(s, 100)`).
 
-### Palette de couleurs (variables CSS)
+### Thèmes et palette (variables CSS)
+
+Deux thèmes, mêmes noms de variables : sombre par défaut (`:root`), clair via `prefers-color-scheme: light` ou `data-theme="light"` sur `<html>` (bloc dupliqué dans `style.css`, à garder synchronisé). Choix explicite posé par `ThemeToggle.vue` → `src/utils/theme.ts`, mémorisé dans `localStorage['en-theme']`, appliqué avant rendu par `public/theme-init.js` (script externe bloquant, la CSP interdit l'inline). **Ne jamais écrire de couleur en dur** : utiliser les variables (`color-mix()` pour les teintes) ; les canvas lisent la palette `P` de `theme.ts` (`rgba(${P.accent}, a)`), alimentée par les variables `--*-rgb`. Tout couple texte/fond doit rester ≥ 4.5:1 (WCAG AA) dans les deux thèmes.
 
 ```
---bg: #0a0a0f      --card: #0f0f17    --line: #1f1f2b
---bg-2: #111118    --card-2: #14141d  --line-2: #2a2a38
---cyan: #00e5ff    --red: #ff3b30     --yellow: #ffd60a
---mute: #6d6d80    --mute-2: #9a9aae  --fg: #f0f0f0
+              sombre     clair
+--bg          #0b0b10    #f5f6f8      --card / --card-2 : surfaces des cartes
+--fg          #ededf2    #16171d      --line / --line-2 : bordures
+--mute        #9393a8    #5a5f6e      texte tertiaire (≥ 5.8:1)
+--mute-2      #b9b9c8    #3e4250      texte secondaire
+--cyan        #00d8f0    #076a82      accent ; texte posé dessus : --on-cyan
+--red         #ff6159    #c0281e      --yellow #ffd60a / #8a5a00 · --green #6cd99a / #18764a
 ```
 
-Polices : **IBM Plex Mono** (mono, data, labels) · **DM Sans** (corps, titres) — auto-hébergées en WOFF2 latin dans `public/fonts/` (`src/fonts.css`), aucune requête Google Fonts.
+Unités : `rem` pour les tailles de texte (échelle `--fs-xs` 12px → `--fs-xl` 22px, rien sous `--fs-xs`) et les espacements, `em` pour l'interlettrage et les media queries, `px` pour bordures et ombres, interlignes sans unité. Rayons : `--radius-sm` / `--radius` / `--radius-lg` / `--radius-pill`. Cibles tactiles ≥ 2.75rem (44px).
+
+Polices : **DM Sans** (corps, titres, libellés) · **IBM Plex Mono** (réservée aux données techniques : hashes, IP, pied technique des cartes) — auto-hébergées en WOFF2 latin dans `public/fonts/` (`src/fonts.css`), aucune requête Google Fonts.
 
 ### SEO
 

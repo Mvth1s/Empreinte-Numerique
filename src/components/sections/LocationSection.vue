@@ -5,7 +5,7 @@
         <span class="th-ico">📍</span>
         <div>
           <h2>Localisation</h2>
-          <p class="th-sub">Sans GPS, sans permission, juste avec l'IP : votre quartier suffit.</p>
+          <p class="th-sub">Sans GPS ni permission : votre adresse IP suffit à situer votre ville.</p>
         </div>
       </div>
       <div>
@@ -23,7 +23,7 @@
         <span class="pin">📍</span>
       </div>
       <div class="loc-info">
-        <div class="hb-label">SANS PERMISSION GPS</div>
+        <div class="hb-label">Sans permission GPS</div>
         <div class="loc-line"><b>Pays</b><span>{{ net.country.value ?? '…' }}</span></div>
         <div class="loc-line"><b>Région</b><span>{{ net.regionName.value ?? '—' }}</span></div>
         <div class="loc-line"><b>Ville</b><span>{{ net.city.value ?? '…' }}</span></div>
@@ -36,22 +36,22 @@
             </button>
           </template>
           <template v-else-if="gpsError">
-            <span style="color:var(--red)">⚠️ {{ gpsError }}</span>
+            <span class="loc-status-err">⚠️ {{ gpsError }}</span>
           </template>
           <template v-else-if="gpsCoords">
-            <span style="color:var(--cyan)">✓ GPS autorisé — précision : ±{{ gpsCoords.accuracy }} m</span>
+            <span class="loc-status-ok">✓ GPS autorisé — précision : ±{{ gpsCoords.accuracy }} m</span>
           </template>
         </div>
       </div>
     </div>
 
-    <div v-if="gpsCoords" class="cards" style="margin-bottom:18px">
+    <div v-if="gpsCoords" class="cards cards-gap">
       <DataCardV2
         icon="📍"
         title="Position GPS réelle"
         :value="gpsCityLoading ? '🔍 Ville en cours…' : (gpsCity ?? `${gpsCoords.lat.toFixed(5)}, ${gpsCoords.lon.toFixed(5)}`)"
-        mean="Ces coordonnées proviennent directement du GPS ou de la triangulation Wi-Fi de votre appareil — avec votre autorisation explicite."
-        :deduce="`Précision : ±${gpsCoords.accuracy} m · ${gpsCoords.lat.toFixed(6)}, ${gpsCoords.lon.toFixed(6)}. C'est votre position à quelques mètres près — suffisant pour localiser votre domicile, votre bureau, ou la pièce où vous vous trouvez.`"
+        mean="Ces coordonnées viennent du GPS de votre appareil ou des réseaux Wi-Fi autour de vous, parce que vous l'avez autorisé."
+        :deduce="`Précision : ±${gpsCoords.accuracy} m. C'est votre position à quelques mètres près : de quoi retrouver votre domicile ou votre bureau. Un seul clic sur « Autoriser » suffit à la donner.`"
         tech-key="getCurrentPosition() + Nominatim reverse"
         :tech-val="`${gpsCoords.lat.toFixed(6)}, ${gpsCoords.lon.toFixed(6)} ±${gpsCoords.accuracy}m`"
         severity="critique"
@@ -63,10 +63,10 @@
     <div class="cards">
       <DataCardV2
         icon="🌍"
-        title="Pays d'origine"
+        title="Pays"
         :value="net.country.value ?? '…'"
-        mean="Le pays est déduit depuis la base de données GeoIP associée à votre adresse IP publique."
-        deduce="Permet les restrictions géographiques de contenu (géo-blocage), le ciblage publicitaire par pays, le respect des lois locales."
+        mean="Le pays est retrouvé à partir de votre adresse IP, grâce à des annuaires qui associent les adresses à des lieux."
+        deduce="Sert à bloquer des vidéos selon le pays, à choisir les publicités, ou à afficher des prix différents."
         tech-key="ip-api.com › country + countryCode"
         :tech-val="net.country.value ?? '—'"
         severity="eleve"
@@ -78,8 +78,8 @@
         icon="🏙️"
         title="Ville approximative"
         :value="net.city.value ?? '…'"
-        mean="La ville est déterminée par la base GeoIP avec une précision variable selon le FAI et la région."
-        deduce="Localisation à 50-200 km de précision. Permet des publicités géolocalisées et des prix dynamiques par région."
+        mean="La ville est devinée de la même façon. Elle est souvent juste, parfois fausse de plusieurs dizaines de kilomètres."
+        deduce="Suffit pour des publicités locales et des prix qui changent selon la région."
         tech-key="ip-api.com › city / regionName"
         :tech-val="[net.city.value, net.regionName.value].filter(Boolean).join(', ') || '—'"
         severity="eleve"
@@ -89,10 +89,10 @@
       />
       <DataCardV2
         icon="🗺️"
-        title="Coordonnées GPS approximatives"
+        title="Coordonnées approximatives"
         :value="net.lat.value && net.lon.value ? `${net.lat.value}, ${net.lon.value}` : '…'"
-        mean="Les coordonnées latitude/longitude sont les coordonnées du centre de la zone GeoIP, pas votre position exacte."
-        deduce="Ces coordonnées correspondent souvent au centre de votre ville ou FAI. La précision réelle est de 10-50 km."
+        mean="Un point sur la carte associé à votre adresse IP. Ce n'est pas votre position exacte, mais le centre de la zone devinée."
+        deduce="Ce point tombe en général au centre de votre ville ou de votre région, à quelques dizaines de kilomètres près."
         tech-key="ip-api.com › lat + lon"
         :tech-val="net.lat.value && net.lon.value ? `${net.lat.value}, ${net.lon.value}` : '—'"
         severity="moyen"
@@ -102,12 +102,12 @@
       />
       <DataCardV2
         icon="🕐"
-        title="Fuseau IANA vs IP"
+        title="Heure de l'ordinateur et pays de l'IP"
         :value="`${tz.timezone.value} / IP : ${net.ipTimezone.value ?? '…'}`"
-        mean="Le fuseau horaire de votre système (via Intl) est comparé à celui associé à votre adresse IP par la base de géolocalisation."
+        mean="Le site compare le fuseau horaire de votre appareil à celui du pays de votre adresse IP."
         :deduce="tzMismatch
-          ? 'Les deux fuseaux n\'ont pas le même décalage horaire : c\'est la signature classique d\'un VPN ou d\'un proxy.'
-          : 'Les deux fuseaux concordent : rien n\'indique que vous masquez votre position. Ex. : fuseau Europe/Paris avec IP américaine = VPN probable.'"
+          ? 'Les deux heures ne correspondent pas : c\'est la marque classique d\'un VPN, qui déplace votre adresse IP mais pas l\'horloge de votre appareil.'
+          : 'Les deux concordent : rien n\'indique que vous cachez votre position. Un appareil à l\'heure de Paris avec une adresse IP américaine trahirait un VPN.'"
         tech-key="Intl.timeZone ∩ ipwho.is › timezone.id"
         :tech-val="tzMismatch ? 'incohérent' : 'cohérent'"
         severity="eleve"
@@ -117,10 +117,10 @@
       />
       <DataCardV2
         icon="📡"
-        title="Résolveur DNS"
+        title="Annuaire Internet utilisé (DNS)"
         :value="net.dnsResolverInfo.value ?? net.dnsResolver.value ?? 'Non détecté'"
-        mean="Votre navigateur résout un sous-domaine unique et aléatoire ; le serveur DNS de ce domaine note quel résolveur est venu le lui demander. On obtient ainsi l'IP réelle du serveur qui traduit toutes vos adresses web."
-        deduce="Le résolveur révèle votre opérateur, votre VPN ou votre DNS public (Cloudflare, Google, Quad9…). S'il appartient à un autre pays que votre IP, votre VPN laisse fuir vos requêtes DNS."
+        mean="Pour trouver un site, votre appareil demande son adresse à un « annuaire » (DNS). En lui faisant chercher un nom inventé, le site découvre quel annuaire vous utilisez."
+        deduce="Cet annuaire révèle votre opérateur, votre VPN ou un service public (Cloudflare, Google…). S'il est dans un autre pays que votre adresse IP, votre VPN laisse fuir la liste des sites que vous visitez."
         tech-key="*.edns.ip-api.com › résolveur DNS"
         :tech-val="net.dnsResolver.value ?? '—'"
         severity="moyen"

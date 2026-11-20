@@ -5,7 +5,7 @@
         <span class="th-ico">📡</span>
         <div>
           <h2>Connectivité</h2>
-          <p class="th-sub">Type de connexion, débit, latence : tout est mesuré en silence.</p>
+          <p class="th-sub">Type de connexion, vitesse, temps de réponse : tout est mesuré en silence.</p>
         </div>
       </div>
       <div>
@@ -18,8 +18,8 @@
         icon="🌐"
         title="Statut en ligne"
         :value="cn.online.value ? 'En ligne' : 'Hors ligne'"
-        mean="navigator.onLine retourne true si le navigateur a accès au réseau, false en mode hors ligne."
-        deduce="Permet d'adapter le contenu servi et de détecter les utilisateurs en mode avion ou avec une connexion intermittente."
+        mean="Indique simplement si votre appareil est connecté à Internet en ce moment."
+        deduce="Un site peut noter quand vous perdez la connexion (métro, mode avion) et en déduire un peu de vos déplacements."
         tech-key="navigator.onLine"
         :tech-val="String(cn.online.value)"
         severity="faible"
@@ -29,9 +29,10 @@
       <DataCardV2
         icon="📶"
         title="Type de connexion"
-        :value="cn.connectionType.value ?? 'Non disponible'"
-        mean="navigator.connection.type retourne le type de réseau : wifi, cellular, ethernet, bluetooth, none…"
-        deduce="Distingue Wi-Fi, données mobiles, ethernet. Révèle le contexte de connexion (domicile, bureau, mobile)."
+        :value="cn.connectionType.value ?? 'Non fourni'"
+        mean="Le type de connexion utilisé : Wi-Fi, réseau mobile ou câble. Surtout donné sur Android."
+        deduce="Wi-Fi ou 4G : le site devine si vous êtes chez vous, au bureau ou en déplacement."
+        :masked="cn.connectionType.value ? null : NOT_GIVEN"
         tech-key="navigator.connection.type"
         :tech-val="cn.connectionType.value ?? 'N/A'"
         severity="moyen"
@@ -40,10 +41,11 @@
       />
       <DataCardV2
         icon="📊"
-        title="Type effectif (4G/3G…)"
-        :value="cn.effectiveType.value ?? 'Non disponible'"
-        mean="Même si votre forfait est théoriquement 5G ou fibre, le navigateur estime la qualité réelle de votre connexion en observant concrètement comment les données circulent."
-        deduce="On peut savoir si vous êtes dans une zone de mauvaise couverture, si votre réseau est saturé, ou si vous êtes connecté via un partage de connexion téléphonique."
+        title="Qualité de connexion (4G/3G…)"
+        :value="cn.effectiveType.value ?? 'Non fourni'"
+        mean="Le navigateur classe la qualité réelle de votre connexion dans une catégorie simple (4G, 3G, 2G), quel que soit votre forfait."
+        deduce="Une connexion lente trahit une zone mal couverte, un réseau saturé ou un partage de connexion depuis un téléphone."
+        :masked="cn.effectiveType.value ? null : NOT_GIVEN"
         tech-key="navigator.connection.effectiveType"
         :tech-val="cn.effectiveType.value ?? 'N/A'"
         severity="moyen"
@@ -52,10 +54,11 @@
       />
       <DataCardV2
         icon="⬇️"
-        title="Débit descendant estimé"
-        :value="cn.downlink.value != null ? (cn.downlink.value >= DOWNLINK_CAP ? `${cn.downlink.value} Mb/s ou plus` : `≈ ${cn.downlink.value} Mb/s`) : 'Non exposé (Firefox/Safari)'"
-        mean="downlink est une estimation du débit descendant fournie par Chrome. Elle est volontairement plafonnée à 10 Mb/s et arrondie : une fibre à 1 Gb/s s'affiche « 10 Mb/s ». Pour votre vrai débit, lancez la mesure ci-dessous."
-        deduce="Même plafonnée, cette valeur sépare les connexions lentes (mobile dégradé, satellite) des connexions rapides, et permet d'adapter la qualité des médias servis."
+        title="Vitesse estimée par le navigateur"
+        :value="cn.downlink.value != null ? (cn.downlink.value >= DOWNLINK_CAP ? `${cn.downlink.value} Mb/s ou plus` : `≈ ${cn.downlink.value} Mb/s`) : 'Non fourni'"
+        mean="Une estimation grossière de votre vitesse de téléchargement. Elle est volontairement arrondie et plafonnée à 10 Mb/s : une fibre à 1 Gb/s s'affiche « 10 Mb/s ». La vraie mesure est plus bas."
+        deduce="Même approximative, elle sépare les connexions lentes (mobile, satellite) des rapides."
+        :masked="cn.downlink.value != null ? null : NOT_GIVEN"
         tech-key="navigator.connection.downlink"
         :tech-val="cn.downlink.value != null ? `${cn.downlink.value} Mb/s` : 'N/A'"
         severity="faible"
@@ -64,10 +67,11 @@
       />
       <DataCardV2
         icon="⏱️"
-        title="Latence estimée (RTT)"
-        :value="cn.rtt.value != null ? `≈ ${cn.rtt.value} ms` : 'Non exposé (Firefox/Safari)'"
-        mean="La latence est le temps qu'il faut pour qu'une information parte de votre appareil et revienne — comme un écho. Plus ce délai est court, plus votre connexion réagit vite."
-        deduce="Une latence très élevée trahit souvent un VPN avec un serveur lointain, une connexion satellite, ou un réseau mobile dégradé."
+        title="Temps de réponse estimé"
+        :value="cn.rtt.value != null ? `≈ ${cn.rtt.value} ms` : 'Non fourni'"
+        mean="Le temps d'un aller-retour entre votre appareil et Internet, comme un écho, en millièmes de seconde (ms). Plus il est court, plus la connexion réagit vite."
+        deduce="Un écho très lent trahit souvent un VPN dont le serveur est loin, une connexion par satellite ou un réseau mobile faible."
+        :masked="cn.rtt.value != null ? null : NOT_GIVEN"
         tech-key="navigator.connection.rtt (arrondi 25 ms)"
         :tech-val="cn.rtt.value != null ? `${cn.rtt.value} ms` : 'N/A'"
         severity="faible"
@@ -77,9 +81,10 @@
       <DataCardV2
         icon="💡"
         title="Mode économie de données"
-        :value="cn.saveData.value ? 'Activé' : 'Désactivé'"
-        mean="saveData indique si l'utilisateur a activé le mode économie de données sur son appareil ou opérateur."
-        deduce="Révèle une connexion data limitée ou coûteuse, souvent associée aux forfaits mobiles prépayés ou à la couverture réduite."
+        :value="cn.downlink.value == null ? 'Non fourni' : cn.saveData.value ? 'Activé' : 'Désactivé'"
+        mean="Indique si vous avez activé l'économiseur de données de votre téléphone ou de votre navigateur."
+        deduce="Signale un forfait limité ou cher : une information que des publicitaires utilisent pour deviner votre budget."
+        :masked="cn.downlink.value != null ? null : NOT_GIVEN"
         tech-key="navigator.connection.saveData"
         :tech-val="String(cn.saveData.value)"
         severity="faible"
@@ -88,10 +93,10 @@
       />
       <DataCardV2
         icon="🚀"
-        title="Débit et latence réels"
+        title="Vitesse réelle mesurée"
         :value="cn.speed.value ? `${cn.speed.value.downMbps} Mb/s · ${cn.speed.value.pingMs} ms` : (cn.speedError.value ? 'Mesure impossible' : '…')"
-        mean="Contrairement aux estimations plafonnées du navigateur, le site peut mesurer précisément votre connexion : il chronomètre des téléchargements de taille connue et des allers-retours vers un serveur."
-        deduce="Le débit réel distingue fibre, ADSL, 4G ou 5G, et le serveur Cloudflare qui vous répond révèle la ville la plus proche de votre connexion. Une latence élevée trahit un VPN lointain ou un satellite."
+        mean="Le site mesure lui-même votre connexion en chronométrant le téléchargement d'un fichier, sans rien vous demander. Contrairement aux estimations ci-dessus, c'est le vrai chiffre."
+        deduce="La vitesse distingue fibre, ADSL, 4G ou 5G. Et le serveur qui répond est celui le plus proche de chez vous : il révèle une grande ville voisine."
         tech-key="fetch(speed.cloudflare.com/__down) › performance.now()"
         :tech-val="cn.speed.value ? `gigue ${cn.speed.value.jitterMs} ms${cn.speed.value.colo ? ` · PoP ${cn.speed.value.colo}` : ''}` : '—'"
         severity="moyen"
@@ -128,6 +133,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useConnectivity, DOWNLINK_CAP, SPEED_TEST_HOST } from '../../composables/useConnectivity'
+import { NOT_GIVEN } from '../../composables/useProtection'
 import DataCardV2 from '../DataCardV2.vue'
 const cn = useConnectivity()
 // Lancée à l'ouverture de l'onglet (et non dans le composable, aussi appelé par App.vue au chargement).

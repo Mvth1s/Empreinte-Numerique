@@ -16,10 +16,11 @@
     <div class="cards">
       <DataCardV2
         icon="📦"
-        title="localStorage"
+        title="Stockage permanent (localStorage)"
         :value="st.localStorageAvail.value ? 'Disponible' : 'Bloqué'"
-        mean="localStorage permet de stocker des données persistantes côté client, sans expiration. Idéal pour les trackers à long terme."
-        deduce="Si disponible, permet de stocker un identifiant unique persistant qui survit à la fermeture du navigateur."
+        mean="Un petit espace dans votre navigateur où un site peut ranger des informations qui restent indéfiniment, même après avoir éteint l'ordinateur."
+        deduce="Un site peut y glisser un numéro qui vous est propre et le relire à chaque visite : une sorte de cookie, mais que l'on pense moins souvent à effacer."
+        :masked="st.localStorageAvail.value ? null : 'Votre navigateur bloque ce stockage pour ce site : rien ne peut y être enregistré.'"
         tech-key="localStorage.setItem/getItem"
         :tech-val="String(st.localStorageAvail.value)"
         severity="eleve"
@@ -28,10 +29,11 @@
       />
       <DataCardV2
         icon="📋"
-        title="sessionStorage"
+        title="Stockage de l'onglet (sessionStorage)"
         :value="st.sessionStorageAvail.value ? 'Disponible' : 'Bloqué'"
-        mean="sessionStorage stocke des données pour la durée de l'onglet uniquement. Effacé à la fermeture."
-        deduce="Permet le suivi de session sans cookie, partage les données entre iframes de même origine."
+        mean="Le même principe, mais tout est effacé quand vous fermez l'onglet."
+        deduce="Suffit pour suivre tout votre parcours sur le site pendant la visite, sans aucun cookie."
+        :masked="st.sessionStorageAvail.value ? null : 'Votre navigateur bloque ce stockage pour ce site : rien ne peut y être enregistré.'"
         tech-key="sessionStorage.setItem/getItem"
         :tech-val="String(st.sessionStorageAvail.value)"
         severity="moyen"
@@ -40,10 +42,11 @@
       />
       <DataCardV2
         icon="🗄️"
-        title="IndexedDB"
+        title="Base de données (IndexedDB)"
         :value="st.indexedDBAvail.value ? 'Disponible' : 'Bloqué'"
-        mean="IndexedDB est une base de données NoSQL côté client, capable de stocker des gigaoctets de données structurées."
-        deduce="Les trackers avancés utilisent IndexedDB pour stocker des empreintes, des historiques de session et des données de ciblage."
+        mean="Une vraie base de données rangée dans votre navigateur, capable de contenir de grandes quantités d'informations."
+        deduce="Les outils de pistage s'en servent pour garder votre identifiant et votre historique sur le site, à un endroit qu'on vide rarement."
+        :masked="st.indexedDBAvail.value ? null : 'Votre navigateur bloque ce stockage pour ce site : rien ne peut y être enregistré.'"
         tech-key="indexedDB.open() › onsuccess"
         :tech-val="String(st.indexedDBAvail.value)"
         severity="eleve"
@@ -52,10 +55,10 @@
       />
       <DataCardV2
         icon="⚙️"
-        title="Service Worker"
+        title="Programme en arrière-plan (Service Worker)"
         :value="st.serviceWorkerAvail.value ? 'Disponible' : 'Non disponible'"
-        mean="Les Service Workers sont des scripts qui s'exécutent en arrière-plan, interceptent les requêtes réseau et peuvent cacher du contenu."
-        deduce="Peuvent être utilisés pour du tracking persistant difficile à effacer, même après vidage du cache."
+        mean="Un petit programme qu'un site peut installer dans votre navigateur. Il continue de tourner en arrière-plan et sert surtout à faire marcher le site sans connexion."
+        deduce="Mal utilisé, il peut garder une trace de vous même après un nettoyage partiel du navigateur."
         tech-key="'serviceWorker' in navigator"
         :tech-val="String(st.serviceWorkerAvail.value)"
         severity="moyen"
@@ -64,10 +67,10 @@
       />
       <DataCardV2
         icon="📡"
-        title="Cache API"
+        title="Réserve de fichiers (Cache API)"
         :value="st.cacheAPIAvail.value ? 'Disponible' : 'Non disponible'"
-        mean="L'API Cache permet aux pages et Service Workers de stocker des ressources réseau pour une utilisation hors ligne."
-        deduce="Peut être exploitée pour un stockage persistant supplémentaire. Les timings de cache révèlent vos habitudes de navigation."
+        mean="Un espace où un site garde des copies de ses fichiers (images, scripts) pour se charger plus vite ou fonctionner hors ligne."
+        deduce="Encore un endroit où un site peut cacher un identifiant, en plus des cookies."
         tech-key="'caches' in window"
         :tech-val="String(st.cacheAPIAvail.value)"
         severity="moyen"
@@ -76,14 +79,14 @@
       />
       <DataCardV2
         icon="💽"
-        title="Quota de stockage"
+        title="Espace accordé (et taille du disque)"
         :value="st.diskEstimate.value ? `Disque ≈ ${st.diskEstimate.value}` : st.ephemeralProfile.value ? `${st.storageQuota.value} — navigation privée probable` : (st.storageQuota.value ?? '…')"
         :mean="st.ephemeralProfile.value
-          ? `Le quota accordé (${st.storageQuota.value}) est une valeur fixe et ronde : c'est la signature d'un profil temporaire, typiquement la navigation privée. Le site le sait sans rien vous demander.`
+          ? `L'espace accordé à ce site (${st.storageQuota.value}) est un nombre rond et fixe : c'est la marque de la navigation privée. Le site le sait sans rien vous demander.`
           : st.diskEstimate.value
-          ? `Votre navigateur accorde à ce site un quota de ${st.storageQuota.value}. Chrome, Edge et Brave fixent ce quota à environ 60 % de la taille totale du disque : on en déduit la capacité de votre disque.`
-          : 'navigator.storage.estimate() retourne l\'espace alloué au site par le navigateur, qui dépend de la taille du disque.'"
-        deduce="La taille du disque distingue un ordinateur d'entrée de gamme (256 Go) d'une station de travail (2 To). Un quota anormalement faible trahit la navigation privée."
+          ? `Votre navigateur accorde à ce site ${st.storageQuota.value}. Chrome, Edge et Brave accordent environ 60 % de la taille du disque : on en déduit la taille de votre disque.`
+          : 'L\'espace de stockage que votre navigateur accorde à ce site. Il dépend en général de la taille de votre disque.'"
+        deduce="256 Go ou 2 To : la taille du disque situe la gamme de votre ordinateur. Et la navigation privée, censée vous rendre discret, se repère ici facilement."
         tech-key="navigator.storage.estimate().quota ÷ 0,6"
         :tech-val="`quota=${st.storageQuota.value ?? '…'} · utilisé=${st.storageUsage.value ?? '…'}`"
         severity="faible"
@@ -92,10 +95,10 @@
       />
       <DataCardV2
         icon="⏱️"
-        title="Timing de cache CDN"
+        title="Sites déjà visités ? (test du cache)"
         :value="st.cacheTimings.value.length ? `${st.cacheTimings.value.filter(t => t.cached).length}/${st.cacheTimings.value.length} en cache` : (st.cacheTesting.value ? '…' : 'Test non lancé')"
-        mean="Des requêtes vers des CDN populaires (jQuery, Google Fonts) mesurent si ces ressources sont déjà en cache. Depuis 2020-2021, Chrome, Firefox et Safari partitionnent leur cache par site, ce qui neutralise en grande partie cette technique."
-        deduce="Révèle vos visites récentes de sites utilisant ces CDN. Historiquement utilisé pour reconstruire votre historique de navigation."
+        mean="Le site chronomètre le chargement de fichiers très répandus sur le web. S'ils arrivent instantanément, c'est qu'ils étaient déjà dans votre navigateur."
+        deduce="Cette astuce servait à deviner les sites visités. Depuis 2020-2021, les navigateurs gardent une réserve séparée par site : le test ne révèle plus que vos visites sur ce site-ci."
         tech-key="performance.now() › fetch(cdn, force-cache)"
         :tech-val="st.cacheTimings.value.length ? st.cacheTimings.value.map(t => `${t.url}: ${t.ms}ms`).join(', ') : '—'"
         severity="eleve"

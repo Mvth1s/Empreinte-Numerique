@@ -18,17 +18,11 @@ export function useDialog(el: Ref<HTMLElement | null>, open: Ref<boolean>, close
     const zones = [el.value, ...(alsoReachable ? document.querySelectorAll<HTMLElement>(alsoReachable) : [])]
     const items = zones.flatMap(z => [...z.querySelectorAll<HTMLElement>(FOCUSABLE)]).filter(n => n.offsetParent !== null)
     if (!items.length) return
-    const first = items[0]
-    const last = items[items.length - 1]
-    const active = document.activeElement
-    const inside = zones.some(z => z.contains(active))
-    if (e.shiftKey && (active === first || !inside)) {
-      e.preventDefault()
-      last.focus()
-    } else if (!e.shiftKey && (active === last || !inside)) {
-      e.preventDefault()
-      first.focus()
-    }
+    // Tab entièrement géré : les zones peuvent être éloignées dans le DOM (bandeau cookies hors de la modale).
+    e.preventDefault()
+    const i = items.indexOf(document.activeElement as HTMLElement)
+    const next = i < 0 ? (e.shiftKey ? items.length - 1 : 0) : (i + (e.shiftKey ? -1 : 1) + items.length) % items.length
+    items[next].focus()
   }
 
   watch(open, async (isOpen) => {

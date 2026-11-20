@@ -33,6 +33,6 @@ export const FAQ: FaqItem[] = [
   },
   {
     q: "Comment réduire sa traçabilité ?",
-    a: "Utilisez un navigateur qui résiste au fingerprinting (Tor Browser, Brave, Firefox durci), un bloqueur comme uBlock Origin, un DNS chiffré et, si besoin, un VPN de confiance. L'onglet « Se protéger » détaille chaque option.",
+    a: "Utilisez un navigateur qui brouille votre empreinte (Brave, Firefox en protection « Stricte », Tor Browser), un bloqueur comme uBlock Origin (version complète sur Firefox et Brave, seulement « Lite » sur Chrome), un DNS chiffré et, si besoin, un VPN de confiance. L'onglet « Se protéger » détaille chaque option.",
   },
 ]

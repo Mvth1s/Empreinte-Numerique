@@ -1,21 +1,25 @@
 <template>
   <div class="app legal-page">
+    <a class="skip-link" href="#main">Aller au contenu</a>
     <header class="top">
       <a href="/" class="brand">
         <img src="/logo.webp" alt="" class="brand-logo" width="40" height="40" />
         <div>
-          <div class="brand-name">EMPREINTE NUMÉRIQUE</div>
+          <div class="brand-name">Empreinte Numérique</div>
           <div class="tag">Ce que chaque site sait sur vous</div>
         </div>
       </a>
-      <a href="/" class="back-link">← Retour à l'analyse</a>
+      <div class="top-right">
+        <a href="/" class="back-link">← Retour à l'analyse</a>
+        <ThemeToggle />
+      </div>
     </header>
 
     <nav class="legal-nav" aria-label="Pages d'information">
       <a v-for="p in PAGES" :key="p.id" :href="`/${p.id}/`" :aria-current="p.id === page ? 'page' : undefined">{{ p.label }}</a>
     </nav>
 
-    <main>
+    <main id="main" tabindex="-1">
       <component :is="current.component" />
     </main>
 
@@ -28,6 +32,7 @@
 import { ref, computed, onMounted } from 'vue'
 import SiteFooter from './components/SiteFooter.vue'
 import CookieBanner from './components/CookieBanner.vue'
+import ThemeToggle from './components/ThemeToggle.vue'
 import FaqSection from './components/FaqSection.vue'
 import LegalNotice from './components/legal/LegalNotice.vue'
 import PrivacyPolicy from './components/legal/PrivacyPolicy.vue'

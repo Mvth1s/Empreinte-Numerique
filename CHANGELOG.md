@@ -15,8 +15,18 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - **Pré-rendu au build** de la FAQ et des pages légales (HTML lisible sans JavaScript, hydraté ensuite) ; liens vers ces pages dans le `<noscript>` de l'accueil
 - **Accessibilité** : onglets ARIA navigables au clavier, menu mobile en boutons, fenêtres modales avec focus piégé, fermeture par Échap et focus restitué
 - **Pages légales séparées** : `/mentions-legales/`, `/confidentialite/` et `/cookies/` (nouvelle politique cookies avec choix modifiable sur la page), liées depuis le pied de page de toutes les pages et ajoutées au sitemap
+- **Thème clair** (suit le réglage du système, bouton pour forcer clair/sombre, sans flash au chargement) ; fonds animés et écrans de chargement adaptés au thème
+- **Lisibilité** : tailles en `rem` (respectent la taille de police du navigateur), aucun texte sous 12 px, contrastes WCAG AA vérifiés dans les deux thèmes, lien « Aller au contenu », cibles tactiles de 44 px
+- **Design** plus sobre : coins arrondis, moins de majuscules espacées et d'effets néon, police mono réservée aux données techniques
+- Animation de chargement limitée à la première visite de chaque onglet (1,6 s au lieu de 2,8 s à chaque changement)
+- **Valeurs masquées par le navigateur signalées** : bandeau « Masqué ou faussé par votre navigateur » sur chaque carte concernée (GPU, empreintes dessin/son/3D, écran, fuseau, cœurs, polices, plugins, langues, système, données non fournies), détection par tests à réponse connue ; le score ne compte plus les signaux brouillés
+- **Explications réécrites en langage courant** sur les 91 cartes ; encadrés « Ce que ça veut dire » (bleu) et « Ce qu'on peut en déduire » (couleur du risque) visuellement distincts
+- **Onglet « Se protéger » mis à jour** (uBlock Origin complet retiré de Chrome, mode Strict de Firefox 145, Brave) et **date de vérification** affichée dans le pied de page
 
 ### Corrigé
+- Le bruit d'empreinte de Brave et Safari (identique pendant toute une session) n'était pas détecté : l'empreinte était présentée comme « stable »
+- Chiffre inventé retiré (« 1 sur 287 000 ») au profit des études publiées ; affirmation « votre quartier suffit » corrigée (l'IP situe la ville)
+- Erreurs JavaScript des animations de chargement (rayon négatif, anneau introuvable)
 - `llms.txt` aligné sur la réalité : cookie Google Analytics avec consentement, liste à jour des services tiers, onglet Bloqueurs, liens vers les pages légales
 
 ---

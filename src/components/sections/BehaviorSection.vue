@@ -17,7 +17,7 @@
     <div class="hero-block beh-block">
       <canvas id="heat-canvas" ref="heatCanvas" aria-hidden="true"></canvas>
       <div class="beh-info">
-        <div class="hb-label">HEATMAP DE VOTRE SOURIS · LIVE</div>
+        <div class="hb-label">Carte de chaleur de votre souris, en direct</div>
         <div class="loc-line"><b>Échantillons</b><span id="heat-count">{{ heatCount }}</span></div>
         <div class="loc-line"><b>Temps</b><span id="heat-time">{{ heatTime }}</span></div>
         <div class="loc-line"><b>Pointeur</b><span>{{ pointerType }}</span></div>
@@ -31,8 +31,8 @@
         icon="🖱️"
         title="Trajectoire de votre souris"
         value="Enregistrée en direct"
-        mean="Chaque petit mouvement entre deux clics est suivi et peut être analysé."
-        deduce="La forme de vos déplacements distingue un humain d'un bot, et vous distingue d'autres humains."
+        mean="Chaque mouvement de votre souris est enregistré, même quand vous ne cliquez pas : la carte de chaleur ci-dessus le montre en direct."
+        deduce="Votre façon de bouger (hésitations, courbes, vitesse) distingue un humain d'un robot, et même une personne d'une autre."
         tech-key="addEventListener('mousemove', …)"
         :tech-val="`~ ${beh.mousePositions.value.length} points`"
         severity="eleve"
@@ -43,8 +43,8 @@
         icon="⌨️"
         title="Rythme de frappe"
         :value="beh.avgKeyInterval.value ? beh.avgKeyInterval.value + ' ms/touche' : 'Tapez au clavier…'"
-        mean="Le délai moyen entre vos touches au clavier forme une cadence biométrique qui vous est propre."
-        deduce="Utilisé par certaines banques comme deuxième facteur invisible d'authentification. Impossible à reproduire exactement par un bot."
+        mean="Le temps entre deux touches quand vous tapez au clavier. Votre rythme de frappe est presque aussi personnel qu'une signature."
+        deduce="Certaines banques s'en servent pour vérifier discrètement que c'est bien vous qui tapez. Un robot a du mal à l'imiter."
         tech-key="keydown timestamps → Δt moyen"
         :tech-val="beh.avgKeyInterval.value ? beh.avgKeyInterval.value + ' ms' : '…'"
         severity="eleve"
@@ -55,8 +55,8 @@
         icon="📐"
         title="Précision du pointeur"
         :value="pointerType"
-        mean="Le navigateur sait si vous pointez avec précision (souris) ou approximation (doigt)."
-        deduce="Confirme la classe d'appareil et la posture (assis devant un PC vs mobile dans la main)."
+        mean="Le navigateur dit si vous visez avec précision (souris, pavé tactile) ou avec le doigt."
+        deduce="Confirme le type d'appareil : assis devant un ordinateur, ou téléphone en main."
         tech-key="matchMedia('(pointer:fine)')"
         :tech-val="isFinePonter ? 'true' : 'false'"
         severity="moyen"
@@ -68,7 +68,7 @@
         title="Profondeur de défilement"
         :value="beh.scrollDepth.value + ' %'"
         mean="Le site sait jusqu'où vous avez fait défiler la page — si vous avez lu l'introduction, le milieu ou tout le contenu."
-        deduce="Mesure votre intérêt réel pour le contenu. Utilisé pour adapter les publicités et évaluer l'engagement."
+        deduce="Mesure votre intérêt réel pour le contenu, ce qui sert à choisir les publicités et les articles à vous montrer."
         tech-key="scrollY / (scrollHeight – innerHeight)"
         :tech-val="beh.scrollDepth.value + '%'"
         severity="faible"
@@ -79,8 +79,8 @@
         icon="⏱️"
         title="Temps sur la page"
         :value="formatTime(beh.timeOnPage.value)"
-        mean="La durée exacte depuis que vous avez ouvert cette page est connue à la seconde près."
-        deduce="Distingue un visiteur rapide d'un lecteur attentif. Sert à mesurer l'intérêt et à personnaliser le contenu."
+        mean="Le temps passé sur cette page depuis votre arrivée, à la seconde près."
+        deduce="Distingue un visiteur pressé d'un lecteur attentif : un indice sur ce qui vous intéresse vraiment."
         tech-key="Date.now() – startTime"
         :tech-val="beh.timeOnPage.value + ' s'"
         severity="faible"
@@ -92,7 +92,7 @@
         title="Changements d'onglet"
         :value="beh.tabSwitches.value === 0 ? 'Aucun' : beh.tabSwitches.value + ' fois'"
         mean="Chaque fois que vous passez à un autre onglet ou minimisez la fenêtre, le site le détecte automatiquement."
-        deduce="Révèle si vous comparez des prix, si vous êtes distrait, ou si vous partagez votre écran avec quelqu'un."
+        deduce="Révèle si vous comparez des prix dans un autre onglet, si vous êtes distrait, ou si vous faites autre chose en même temps."
         tech-key="visibilitychange → document.hidden"
         :tech-val="String(beh.tabSwitches.value)"
         severity="moyen"
@@ -103,8 +103,8 @@
         icon="⚡"
         title="Vitesse de déplacement"
         :value="beh.avgMouseSpeed.value ? beh.avgMouseSpeed.value + ' px/s' : 'En attente…'"
-        mean="La vitesse moyenne de vos mouvements de souris est mesurée en permanence. Les humains ont chacun leur rythme naturel."
-        deduce="Sert à prouver que vous êtes humain (pas un robot), et peut contribuer à créer une empreinte comportementale unique."
+        mean="La vitesse moyenne de vos mouvements de souris, mesurée en continu. Chacun a son rythme naturel."
+        deduce="Sert à vérifier que vous êtes humain, et peut aider à vous reconnaître à votre manière de bouger."
         tech-key="distance / temps entre mousemove"
         :tech-val="beh.avgMouseSpeed.value ? beh.avgMouseSpeed.value + ' px/s' : '…'"
         severity="moyen"
@@ -121,6 +121,7 @@
 </template>
 
 <script setup lang="ts">
+import { P } from '../../utils/theme'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useBehavior } from '../../composables/useBehavior'
 import DataCardV2 from '../DataCardV2.vue'
@@ -157,9 +158,9 @@ function dot(e: MouseEvent) {
     y = (e.clientY / window.innerHeight) * c.height
   }
   const g = ctx.createRadialGradient(x, y, 0, x, y, 22)
-  g.addColorStop(0, 'rgba(255,255,255,0.8)')
-  g.addColorStop(0.35, 'rgba(0,229,255,0.55)')
-  g.addColorStop(1, 'rgba(0,229,255,0)')
+  g.addColorStop(0, `rgba(${P.ink}, 0.8)`)
+  g.addColorStop(0.35, `rgba(${P.accent}, 0.55)`)
+  g.addColorStop(1, `rgba(${P.accent}, 0)`)
   ctx.fillStyle = g
   ctx.fillRect(x - 22, y - 22, 44, 44)
 
@@ -172,7 +173,7 @@ function dot(e: MouseEvent) {
 function fade() {
   const c = heatCanvas.value
   if (!c || !ctx) return
-  ctx.fillStyle = 'rgba(8,8,13,0.04)'
+  ctx.fillStyle = `rgba(${P.panel}, 0.04)`
   ctx.fillRect(0, 0, c.width, c.height)
 }
 
@@ -186,9 +187,9 @@ onMounted(() => {
   if (!ctx) return
 
   // Background + grid
-  ctx.fillStyle = '#08080d'
+  ctx.fillStyle = `rgb(${P.panel})`
   ctx.fillRect(0, 0, c.width, c.height)
-  ctx.strokeStyle = 'rgba(255,255,255,0.04)'
+  ctx.strokeStyle = `rgba(${P.ink}, 0.04)`
   ctx.lineWidth = 1
   for (let x = 0; x < c.width; x += 24) {
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, c.height); ctx.stroke()
