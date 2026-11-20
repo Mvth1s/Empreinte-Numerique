@@ -10,7 +10,14 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 ### Ajouté
 - **Google Analytics 4** chargé uniquement après consentement (bandeau cookies RGPD, refus aussi simple que l'acceptation, choix modifiable via « Cookies » en pied de page)
 - Balise de vérification **Google Search Console**
+- **En-têtes de sécurité** (Content-Security-Policy, HSTS, Permissions-Policy, Referrer-Policy, X-Content-Type-Options, X-Frame-Options, COOP)
+- **Page FAQ dédiée** `/faq/` (avec ses données structurées FAQPage), retirée du bas de l'accueil
+- **Pré-rendu au build** de la FAQ et des pages légales (HTML lisible sans JavaScript, hydraté ensuite) ; liens vers ces pages dans le `<noscript>` de l'accueil
+- **Accessibilité** : onglets ARIA navigables au clavier, menu mobile en boutons, fenêtres modales avec focus piégé, fermeture par Échap et focus restitué
 - **Pages légales séparées** : `/mentions-legales/`, `/confidentialite/` et `/cookies/` (nouvelle politique cookies avec choix modifiable sur la page), liées depuis le pied de page de toutes les pages et ajoutées au sitemap
+
+### Corrigé
+- `llms.txt` aligné sur la réalité : cookie Google Analytics avec consentement, liste à jour des services tiers, onglet Bloqueurs, liens vers les pages légales
 
 ---
 

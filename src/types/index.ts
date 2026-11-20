@@ -30,4 +30,4 @@ export interface GeoData {
   status: string
 }
 
-export type LegalPageId = 'mentions-legales' | 'confidentialite' | 'cookies'
+export type LegalPageId = 'faq' | 'mentions-legales' | 'confidentialite' | 'cookies'

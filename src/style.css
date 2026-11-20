@@ -56,9 +56,9 @@ body::before {
   backdrop-filter: blur(8px);
   display: flex; align-items: center; justify-content: center;
   padding: 24px;
-  transition: opacity .5s;
+  transition: opacity .5s, visibility .5s;
 }
-.welcome.hidden { opacity: 0; pointer-events: none; }
+.welcome.hidden { opacity: 0; pointer-events: none; visibility: hidden; }
 .welcome-inner {
   max-width: 560px; width: 100%;
   border: 1px solid var(--line-2);
@@ -249,6 +249,8 @@ body::before {
 }
 .tab .tab-ico { font-size: 16px; line-height: 1; }
 .tab:hover { color: var(--fg); background: rgba(255, 255, 255, 0.04); }
+.tab:focus-visible, .tab-cell:focus-visible { outline: 2px solid var(--cyan); outline-offset: -2px; }
+.tab.active:focus-visible { outline-color: #000; }
 .tab.active { color: #000; }
 .tab-slider {
   position: absolute; bottom: 0; left: 0; top: 0;
@@ -272,9 +274,9 @@ body::before {
   background: rgba(5, 5, 7, 0.96); backdrop-filter: blur(10px);
   padding: 24px;
   display: flex; flex-direction: column;
-  opacity: 0; pointer-events: none; transition: opacity .25s;
+  opacity: 0; pointer-events: none; visibility: hidden; transition: opacity .25s, visibility .25s;
 }
-.mobile-nav.open { opacity: 1; pointer-events: auto; }
+.mobile-nav.open { opacity: 1; pointer-events: auto; visibility: visible; }
 .mobile-nav-head {
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 24px;
@@ -293,6 +295,7 @@ body::before {
   margin-top: 8px;
 }
 .tab-cell {
+  font: inherit; color: var(--fg);
   padding: 18px 8px;
   background: var(--card-2); border: 1px solid var(--line);
   display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -619,9 +622,9 @@ body::before {
   background: rgba(5, 5, 7, 0.86); backdrop-filter: blur(8px);
   display: flex; align-items: center; justify-content: center;
   padding: 24px;
-  opacity: 0; pointer-events: none; transition: opacity .25s;
+  opacity: 0; pointer-events: none; visibility: hidden; transition: opacity .25s, visibility .25s;
 }
-.share-modal.visible { opacity: 1; pointer-events: auto; }
+.share-modal.visible { opacity: 1; pointer-events: auto; visibility: visible; }
 .share-inner {
   max-width: 540px; width: 100%;
   background: var(--card); border: 1px solid var(--line-2);

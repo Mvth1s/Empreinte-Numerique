@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { defineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -5,7 +6,7 @@ import { FAQ } from './src/data/faq'
 
 const SITE_URL = 'https://empreinte-numerique.vercel.app/'
 
-// Données structurées injectées statiquement dans index.html (lisibles sans exécuter le JS).
+// Données structurées injectées statiquement au build (lisibles sans exécuter le JS) : accueil et /faq/.
 // La FAQPage est générée depuis src/data/faq.ts, la même source que la section affichée.
 function jsonLd(): Plugin {
   const graph = {
@@ -39,38 +40,54 @@ function jsonLd(): Plugin {
         name: 'Mvth1s',
         sameAs: ['https://github.com/Mvth1s'],
       },
-      {
-        '@type': 'FAQPage',
-        '@id': `${SITE_URL}#faq`,
-        inLanguage: 'fr',
-        mainEntity: FAQ.map(({ q, a }) => ({
-          '@type': 'Question',
-          name: q,
-          acceptedAnswer: { '@type': 'Answer', text: a },
-        })),
-      },
     ],
   }
 
+  // La FAQPage accompagne la page /faq/ : Google exige que le contenu balisé soit visible sur la page.
+  const faqPage = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    '@id': `${SITE_URL}faq/#faq`,
+    url: `${SITE_URL}faq/`,
+    inLanguage: 'fr',
+    isPartOf: { '@id': `${SITE_URL}#website` },
+    mainEntity: FAQ.map(({ q, a }) => ({
+      '@type': 'Question',
+      name: q,
+      acceptedAnswer: { '@type': 'Answer', text: a },
+    })),
+  }
+
   // Échappe "<" pour qu'aucune chaîne ne puisse fermer la balise <script>.
-  const json = JSON.stringify(graph).replace(/</g, '\\u003c')
+  const serialize = (data: object) => JSON.stringify(data).replace(/</g, '\\u003c')
+  const byPage: Record<string, string> = {
+    '/index.html': serialize(graph),
+    '/faq/index.html': serialize(faqPage),
+  }
 
   return {
     name: 'json-ld',
-    // Page d'accueil uniquement : la FAQPage n'a pas de sens sur les pages légales.
-    transformIndexHtml: (_html, ctx) => ctx.path === '/index.html'
-      ? [{ tag: 'script', attrs: { type: 'application/ld+json' }, children: json, injectTo: 'head' }]
+    transformIndexHtml: (_html, ctx) => byPage[ctx.path]
+      ? [{ tag: 'script', attrs: { type: 'application/ld+json' }, children: byPage[ctx.path], injectTo: 'head' }]
       : [],
   }
 }
 
+// En-têtes de sécurité de vercel.json (règle globale) réappliqués à `vite preview` pour tester la CSP en local.
+const vercel = JSON.parse(readFileSync(resolve(__dirname, 'vercel.json'), 'utf8'))
+const securityHeaders: Record<string, string> = Object.fromEntries(
+  vercel.headers.find((h: { source: string }) => h.source === '/(.*)').headers.map((h: { key: string; value: string }) => [h.key, h.value]),
+)
+
 export default defineConfig({
   plugins: [vue(), jsonLd()],
+  preview: { headers: securityHeaders },
   build: {
     rollupOptions: {
-      // Pages légales servies en HTML séparé : /mentions-legales/, /confidentialite/, /cookies/
+      // Pages d'information servies en HTML séparé : /faq/, /mentions-legales/, /confidentialite/, /cookies/
       input: {
         main: resolve(__dirname, 'index.html'),
+        faq: resolve(__dirname, 'faq/index.html'),
         'mentions-legales': resolve(__dirname, 'mentions-legales/index.html'),
         confidentialite: resolve(__dirname, 'confidentialite/index.html'),
         cookies: resolve(__dirname, 'cookies/index.html'),
