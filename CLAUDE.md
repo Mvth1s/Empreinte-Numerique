@@ -106,7 +106,7 @@ Le slot nommé `#demo` permet d'injecter une démo interactive inline dans la ca
 | `useBrowser.ts` | `userAgent, detectedOS, detectedBrowser, osSource, uaFrozen, architecture, deviceModel, isBrave, language, languages, platform, doNotTrack, cookiesEnabled, headless, clientHintBrands, clientHintMobile, chromeSizeW, chromeSizeH, pdfViewerEnabled, globalPrivacyControl` — OS réel via `userAgentData.getHighEntropyValues()` (l'UA est gelé : Windows 11 s'y déclare « NT 10.0 ») |
 | `useTimezone.ts` | `timezone, locale, utcOffset, isDST, localTime, dateFormat, numberFormat` |
 | `useScreen.ts` | `resolution, physicalResolution, availResolution, colorDepth, pixelRatio, cores, memory, memoryCapped, memoryLabel, battery, hdr (dynamic-range), colorGamut, prefersColorScheme, refreshRate, touchPoints, heapUsed, heapLimit, isExtended` |
-| `useGPU.ts` | `vendor, renderer, rendererSource, webgl2, webgpu, webgpuInfo, webgpuFeatures, renderHash, supportedTextureFormats, glExtensions, maxTextureSize` |
+| `useGPU.ts` | `vendor, renderer, rendererSource, masked, webgl2, webgpu, webgpuInfo, webgpuFeatures, renderHash, supportedTextureFormats, glExtensions, maxTextureSize` |
 | `useFingerprint.ts` | `canvasHash, canvasNoise, audioHash, audioNoise, cssMedia, detectedFonts, plugins, codecs, hwDecoders, ttsVoices, mediaDeviceCount, mediaDevices, combinedHash, loading` + constante `FONTS_COUNT` exportée. Les polices `@font-face` du site sont exclues de la détection |
 | `useStorage.ts` | `localStorageAvail, sessionStorageAvail, indexedDBAvail, cookiesEnabled, serviceWorkerAvail, cacheAPIAvail, storageQuota, storageUsage, diskEstimate, ephemeralProfile, persisted, cacheTimings, cacheTesting, runCacheTest` + constante `CACHE_TEST_TARGETS` (test CDN lancé uniquement sur clic). `diskEstimate` = quota ÷ 0,6 (Chromium) ; quota multiple exact d'un Gio = navigation privée |
 | `useConnectivity.ts` | `connectionType, effectiveType, downlink, rtt, saveData, online, speed, speedTesting, speedError, runSpeedTest` + `DOWNLINK_CAP`, `SPEED_TEST_HOST` |
@@ -126,7 +126,7 @@ Le score (0–100) est calculé dans `App.vue`. Les composables `useNetwork`, `u
 | IPs locales via WebRTC | +15 |
 | Canvas fingerprint | +15 |
 | Audio fingerprint | +10 |
-| GPU exact | +8 |
+| GPU exact (pas si `masked` : Brave/Firefox RFP/Tor renvoient « Brave »/« Mozilla ») | +8 |
 | Polices détectées (>5) | +7 |
 
 Score total max : 100 (cap via `Math.min(s, 100)`).

@@ -213,6 +213,7 @@ const shortAudio = computed(() => fp.audioHash.value ? fp.audioHash.value.slice(
 const shortGpu = computed(() => {
   const r = gpu.renderer.value ?? ''
   if (!r) return '…'
+  if (gpu.masked.value) return 'Masqué par votre navigateur'
   return r.length > 30 ? r.slice(0, 27) + '…' : r
 })
 

@@ -237,7 +237,7 @@ const traceScore = computed(() => {
   if (network.localIPs.value.length > 0) s += 15
   if (fingerprint.canvasHash.value) s += 15
   if (fingerprint.audioHash.value) s += 10
-  if (gpu.renderer.value) s += 8
+  if (gpu.renderer.value && !gpu.masked.value) s += 8 // pas de point si le navigateur masque le GPU
   if (fingerprint.detectedFonts.value.length > 5) s += 7
   return Math.min(s, 100)
 })
@@ -370,7 +370,7 @@ const shareText = computed(() => {
     `🌐 Navigateur   : ${navigator.userAgent.slice(0, 60)}`,
     `🕐 Fuseau       : ${Intl.DateTimeFormat().resolvedOptions().timeZone}`,
     `📱 Matériel     : ${screen.cores.value ?? '?'} threads · RAM ${screen.memoryLabel.value ?? '?'} · ${screen.resolution.value}`,
-    `🎮 GPU          : ${gpu.renderer.value ?? '—'}`,
+    `🎮 GPU          : ${gpu.masked.value ? 'masqué par le navigateur' : gpu.renderer.value ?? '—'}`,
     `📡 IP publique  : ${network.publicIP.value ?? '—'}`,
     `📍 Localisation : ${network.city.value ?? '—'}, ${network.country.value ?? '—'}`,
     `🖐️ Empreinte    : ${fingerprint.combinedHash.value ?? '—'}`,

@@ -17,27 +17,35 @@
       <DataCardV2
         icon="🏷️"
         title="Fabricant GPU"
-        :value="gpu.vendor.value ?? 'Non disponible'"
-        mean="Le navigateur peut interroger votre carte graphique et obtenir le nom exact de son fabricant — sans aucune permission."
-        deduce="Que vous ayez NVIDIA, AMD, Intel ou une puce Apple — votre fabricant indique la gamme de votre appareil et réduit significativement l'espace d'anonymat."
+        :value="gpu.masked.value ? 'Masqué par votre navigateur' : gpu.vendor.value ?? 'Non disponible'"
+        :mean="gpu.masked.value
+          ? `Votre navigateur a répondu « ${gpu.vendor.value} » au lieu du vrai fabricant : sa protection anti-empreinte (Brave Shields, Firefox resistFingerprinting, Tor Browser…) remplace la réponse par une valeur générique.`
+          : 'Le navigateur peut interroger votre carte graphique et obtenir le nom exact de son fabricant — sans aucune permission.'"
+        :deduce="gpu.masked.value
+          ? 'Bonne nouvelle : le site ne connaît pas votre fabricant. Il apprend en revanche que vous utilisez une protection, ce qui est lui-même un signal (moins courant que la moyenne).'
+          : 'Que vous ayez NVIDIA, AMD, Intel ou une puce Apple — votre fabricant indique la gamme de votre appareil et réduit significativement l\'espace d\'anonymat.'"
         :tech-key="gpu.rendererSource.value === 'standard' ? 'gl.getParameter(gl.VENDOR)' : 'WEBGL_debug_renderer_info › UNMASKED_VENDOR'"
         :tech-val="gpu.vendor.value ?? 'N/A'"
-        severity="eleve"
-        sev-label="élevé"
+        :severity="gpu.masked.value ? 'faible' : 'eleve'"
+        :sev-label="gpu.masked.value ? 'protégé' : 'élevé'"
         :span="6"
       />
       <DataCardV2
         icon="🖼️"
         title="Modèle GPU exact"
-        :value="gpu.renderer.value ?? 'Non disponible'"
-        :mean="gpu.rendererSource.value === 'standard'
+        :value="gpu.masked.value ? 'Masqué par votre navigateur' : gpu.renderer.value ?? 'Non disponible'"
+        :mean="gpu.masked.value
+          ? `Le nom réel du GPU a été remplacé par « ${gpu.renderer.value} ». Sans protection, cette carte afficherait le modèle exact et son pilote (ex. « ANGLE (NVIDIA, GeForce RTX 3060…) »).`
+          : gpu.rendererSource.value === 'standard'
           ? 'Votre navigateur (Firefox ?) a retiré l\'extension de débogage et renvoie un nom de GPU simplifié — mais toujours assez précis pour situer la gamme de votre machine.'
           : 'Le modèle exact du GPU et de son pilote est retourné par l\'extension WebGL de débogage. C\'est l\'une des données les plus identifiantes du navigateur.'"
-        deduce="Identifie précisément votre machine : RTX 4090 vs GTX 1650 vs M3 Pro. Fréquence d'occurrence extrêmement faible."
+        :deduce="gpu.masked.value
+          ? 'Le modèle est caché, mais le hash de rendu ci-dessous reste calculable : la façon dont votre GPU dessine trahit souvent ce que son nom ne dit plus (Brave y ajoute du bruit pour le rendre instable).'
+          : 'Identifie précisément votre machine : RTX 4090 vs GTX 1650 vs M3 Pro. Fréquence d\'occurrence extrêmement faible.'"
         :tech-key="gpu.rendererSource.value === 'standard' ? 'gl.getParameter(gl.RENDERER)' : 'WEBGL_debug_renderer_info › UNMASKED_RENDERER'"
         :tech-val="gpu.renderer.value ?? 'N/A'"
-        severity="critique"
-        sev-label="critique"
+        :severity="gpu.masked.value ? 'faible' : 'critique'"
+        :sev-label="gpu.masked.value ? 'protégé' : 'critique'"
         :span="6"
       />
       <DataCardV2

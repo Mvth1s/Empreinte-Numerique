@@ -399,7 +399,7 @@ body::before {
   padding: 2rem 1.5rem 4rem;
 }
 #content { transition: opacity .3s; }
-#content:focus { outline: none; }
+#content:focus, #main:focus, .legal-page main:focus { outline: none; } /* cibles du lien d'évitement, pas des contrôles */
 .empty-state {
   text-align: center; padding: 5rem 1.25rem;
   color: var(--mute); font-size: var(--fs-base);
