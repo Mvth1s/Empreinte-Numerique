@@ -4,7 +4,7 @@
     <nav aria-label="Liens du projet">
       <a href="https://github.com/Mvth1s/Empreinte-Numerique" target="_blank" rel="noopener">Code source (GitHub)</a>
       <a href="https://github.com/Mvth1s" target="_blank" rel="noopener">GitHub de l'auteur</a>
-      <a href="/#faq">FAQ</a>
+      <a href="/faq/">FAQ</a>
       <a href="/mentions-legales/">Mentions légales</a>
       <a href="/confidentialite/">Politique de confidentialité</a>
       <a href="/cookies/">Politique cookies</a>

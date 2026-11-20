@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { readConsent, setConsent, type Consent } from '../../utils/analytics'
 
 const STATE_LABEL: Record<Consent | 'none', string> = {
@@ -45,7 +45,9 @@ const STATE_LABEL: Record<Consent | 'none', string> = {
   none: 'aucun choix enregistré (donc désactivée)',
 }
 
-const consent = ref(readConsent())
+// Lu au montage : le HTML pré-rendu au build ne connaît pas le choix du visiteur.
+const consent = ref<Consent | null>(null)
+onMounted(() => { consent.value = readConsent() })
 
 function choose(c: Consent) {
   setConsent(c)

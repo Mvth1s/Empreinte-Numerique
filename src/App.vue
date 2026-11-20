@@ -3,10 +3,10 @@
     <BackgroundCanvas :kind="bgKind" />
 
     <!-- Welcome modal -->
-    <div :class="['welcome', { hidden: !showWelcome }]" id="welcome">
+    <div :class="['welcome', { hidden: !showWelcome }]" id="welcome" ref="welcomeEl" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
       <div class="welcome-inner">
         <img src="/logo.webp" alt="Empreinte Numérique" class="welcome-logo" width="220" height="220" />
-        <h2>Vous pensez être <em>anonyme</em>.<br/>Ce site sait déjà beaucoup sur vous.</h2>
+        <h2 id="welcome-title">Vous pensez être <em>anonyme</em>.<br/>Ce site sait déjà beaucoup sur vous.</h2>
         <p>
           Sans cookie, sans login, sans la moindre autorisation, un site web peut reconstruire votre identité technique en moins de deux secondes. Cette démo vous montre <strong style="color:var(--fg)">tout ce qu'il découvre</strong>, en langage clair.
         </p>
@@ -31,7 +31,7 @@
           </div>
         </div>
         <div class="top-right">
-          <button class="mobile-btn" @click="mobileNavOpen = true" aria-label="Ouvrir le menu">☰ Catégories</button>
+          <button class="mobile-btn" @click="mobileNavOpen = true" aria-label="Ouvrir le menu des catégories" aria-haspopup="dialog" :aria-expanded="mobileNavOpen">☰ Catégories</button>
           <div class="trace-score">
             <div class="ts-bar"><div class="ts-fill" :style="{ width: traceScore + '%', background: scoreColor }"></div></div>
             <div class="ts-meta">
@@ -39,7 +39,7 @@
               <span class="ts-lbl">Traçabilité</span>
             </div>
           </div>
-          <button class="share-btn" @click="openShare">📤 Partager</button>
+          <button class="share-btn" aria-haspopup="dialog" @click="openShare">📤 Partager</button>
           <div class="session">
             <div><span class="dot"></span>SESSION ACTIVE</div>
             <div style="opacity:.6">{{ sessionDate }}</div>
@@ -57,38 +57,45 @@
       </div>
 
       <!-- Tab bar (desktop) -->
-      <div class="tab-bar-wrap" role="tablist">
-        <div class="tab-bar" id="tab-bar" ref="tabBarEl">
+      <div class="tab-bar-wrap">
+        <div class="tab-bar" id="tab-bar" ref="tabBarEl" role="tablist" aria-label="Catégories de données" @keydown="onTabKeydown">
           <div class="tab-slider" id="tab-slider" ref="sliderEl" aria-hidden="true"></div>
           <button
             v-for="tab in TABS"
             :key="tab.id"
+            :id="`tab-${tab.id}`"
+            role="tab"
+            :aria-selected="activeTab === tab.id"
+            aria-controls="content"
+            :tabindex="focusTab === tab.id ? 0 : -1"
             :class="['tab', { active: activeTab === tab.id }]"
             :ref="el => { if (el) tabRefs[tab.id] = el as HTMLElement }"
             @click="switchTab(tab.id)"
           >
-            <span class="tab-ico">{{ tab.icon }}</span>
+            <span class="tab-ico" aria-hidden="true">{{ tab.icon }}</span>
             <span class="tab-label">{{ tab.short }}</span>
           </button>
         </div>
       </div>
 
       <!-- Mobile nav -->
-      <div :class="['mobile-nav', { open: mobileNavOpen }]" id="mobile-nav">
+      <div :class="['mobile-nav', { open: mobileNavOpen }]" id="mobile-nav" ref="mobileNavEl" role="dialog" aria-modal="true" aria-label="Choisir une catégorie">
         <div class="mobile-nav-head">
           <span class="lbl">// Choisir une catégorie</span>
           <button class="mobile-nav-close" id="mobile-close" @click="mobileNavOpen = false" aria-label="Fermer">×</button>
         </div>
         <div class="tab-grid" id="tab-grid">
-          <div
+          <button
             v-for="tab in TABS"
             :key="tab.id"
+            type="button"
             :class="['tab-cell', { active: activeTab === tab.id }]"
+            :aria-current="activeTab === tab.id ? 'true' : undefined"
             @click="switchTab(tab.id); mobileNavOpen = false"
           >
-            <span class="ico">{{ tab.icon }}</span>
+            <span class="ico" aria-hidden="true">{{ tab.icon }}</span>
             <span class="lbl">{{ tab.short }}</span>
-          </div>
+          </button>
         </div>
       </div>
 
@@ -102,7 +109,7 @@
           @skip="skipLoad"
         />
 
-        <div id="content" :style="{ opacity: loading ? 0 : 1 }">
+        <div id="content" role="tabpanel" :aria-labelledby="`tab-${activeTab}`" :aria-busy="loading" :style="{ opacity: loading ? 0 : 1 }">
           <component :is="activeComponent" v-if="!showWelcome" />
           <div v-else class="empty-state" style="text-align:center; padding: 80px 20px; color: var(--mute);">
             <div style="font-family: var(--mono); font-size: 12px; letter-spacing: .25em; text-transform: uppercase;">
@@ -112,16 +119,15 @@
         </div>
       </main>
 
-      <FaqSection />
       <SiteFooter @manage-cookies="cookieBannerOpen = true" />
     </div>
 
     <!-- Share modal -->
-    <div :class="['share-modal', { visible: shareOpen }]" id="share-modal" role="dialog" aria-modal="true" @click.self="shareOpen = false">
+    <div :class="['share-modal', { visible: shareOpen }]" id="share-modal" ref="shareEl" role="dialog" aria-modal="true" aria-labelledby="share-title" @click.self="shareOpen = false">
       <div class="share-inner">
-        <h2>Partager mon résultat</h2>
+        <h2 id="share-title">Partager mon résultat</h2>
         <p>Un résumé textuel non sensible — copiez-le où vous voulez (Mastodon, mail, conversation…).</p>
-        <textarea id="share-text" readonly :value="shareText"></textarea>
+        <textarea id="share-text" readonly :value="shareText" aria-label="Résumé à partager"></textarea>
         <div class="share-actions">
           <button id="share-close" @click="shareOpen = false">Fermer</button>
           <button id="share-copy" class="primary" @click="copyShare">{{ copyLabel }}</button>
@@ -139,10 +145,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, nextTick, defineAsyncComponent } from 'vue'
 import BackgroundCanvas from './components/BackgroundCanvas.vue'
-import FaqSection from './components/FaqSection.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import CookieBanner from './components/CookieBanner.vue'
 import { readConsent } from './utils/analytics'
+import { useDialog } from './composables/useDialog'
 
 // Invisible avant le premier changement d'onglet : chargé à part, préchargé dès que le navigateur est inactif.
 const loadOverlayChunk = () => import('./components/LoadOverlay.vue')
@@ -196,6 +202,7 @@ const sections: Record<TabId, ReturnType<typeof defineAsyncComponent>> = {
 }
 
 const activeTab = ref<TabId>('network')
+const focusTab = ref<TabId>('network') // tabindex itinérant de la barre d'onglets
 const bgKind = ref<BgKind>('particles')
 const loading = ref(false)
 const loadKind = ref('radar')
@@ -211,6 +218,13 @@ const tabBarEl = ref<HTMLElement | null>(null)
 const sliderEl = ref<HTMLElement | null>(null)
 const tabRefs: Record<string, HTMLElement | null> = {}
 const tipEl = ref<HTMLElement | null>(null)
+const welcomeEl = ref<HTMLElement | null>(null)
+const mobileNavEl = ref<HTMLElement | null>(null)
+const shareEl = ref<HTMLElement | null>(null)
+
+useDialog(welcomeEl, showWelcome, () => dismissWelcome(), '.cookie-banner')
+useDialog(mobileNavEl, mobileNavOpen, () => { mobileNavOpen.value = false })
+useDialog(shareEl, shareOpen, () => { shareOpen.value = false })
 
 const seenCount = computed(() => seenTabs.value.size)
 const progressPct = computed(() => (seenTabs.value.size / TABS.length) * 100)
@@ -293,6 +307,20 @@ const loaderData = computed((): Record<string, string> => {
 function dismissWelcome() {
   showWelcome.value = false
   switchTab('network', true)
+  nextTick(() => tabRefs.network?.focus({ preventScroll: true }))
+}
+
+// Onglets ARIA à activation manuelle : les flèches déplacent le focus, Entrée/Espace ouvre l'onglet
+// (une activation à chaque flèche relancerait l'animation de chargement).
+function onTabKeydown(e: KeyboardEvent) {
+  const i = TABS.findIndex(t => tabRefs[t.id] === document.activeElement)
+  if (i < 0) return
+  const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: TABS.length - 1 }[e.key]
+  if (next === undefined) return
+  e.preventDefault()
+  const tab = TABS[(next + TABS.length) % TABS.length]
+  focusTab.value = tab.id
+  tabRefs[tab.id]?.focus()
 }
 
 async function switchTab(id: TabId, force = false) {
@@ -300,6 +328,7 @@ async function switchTab(id: TabId, force = false) {
   const tab = TABS.find(t => t.id === id)!
 
   activeTab.value = id
+  focusTab.value = id
   bgKind.value = tab.bg as BgKind
   loadKind.value = tab.loader.kind
   loadText.value = tab.loader.text

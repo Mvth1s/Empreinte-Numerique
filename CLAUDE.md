@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm run dev      # Serveur de développement (http://localhost:5173)
-npm run build    # Build de production (vue-tsc + vite build)
+npm run build    # Build de production (vue-tsc + vite build + build SSR + scripts/prerender.mjs)
 npm run preview  # Prévisualisation du build dist/
 ```
 
@@ -18,7 +18,9 @@ npm run preview  # Prévisualisation du build dist/
 
 - **Vite 5 + Vue 3 + TypeScript** (Composition API `<script setup>`) — `vue-tsc` vérifie les types avant `vite build`
 - **CSS vanilla** avec variables CSS dans `src/style.css` — `tailwindcss` est dans les devDeps mais n'est pas utilisé pour la mise en page principale
-- **100% client-side** — aucun backend, aucun test automatisé. Seul cookie : Google Analytics 4 (`G-X83M1WF7KK`), chargé par `src/utils/analytics.ts` **uniquement après consentement** via `CookieBanner.vue` (choix stocké dans `localStorage['en-consent']`, réouvrable via « Gérer les cookies » dans le footer partagé `SiteFooter.vue`). Pages légales séparées (Vite multi-page, entrées déclarées dans `rollupOptions.input` de `vite.config.ts`) : `/mentions-legales/`, `/confidentialite/`, `/cookies/` — chaque `<dossier>/index.html` charge `src/legal.ts` → `LegalPage.vue` avec `data-page` sur `<body>`, contenus dans `src/components/legal/` (`LegalNotice`, `PrivacyPolicy`, `CookiePolicy`). Ajouter une page = nouveau HTML + entrée `input` + `LegalPageId` + `sitemap.xml`. Ne jamais mettre le snippet gtag en dur dans `index.html`.
+- **100% client-side** — aucun backend, aucun test automatisé. Seul cookie : Google Analytics 4 (`G-X83M1WF7KK`), chargé par `src/utils/analytics.ts` **uniquement après consentement** via `CookieBanner.vue` (choix stocké dans `localStorage['en-consent']`, réouvrable via « Gérer les cookies » dans le footer partagé `SiteFooter.vue`). Pages d'information séparées (Vite multi-page, entrées déclarées dans `rollupOptions.input` de `vite.config.ts`) : `/faq/`, `/mentions-legales/`, `/confidentialite/`, `/cookies/` — chaque `<dossier>/index.html` charge `src/legal.ts` → `LegalPage.vue` avec `data-page` sur `<body>`, contenus dans `FaqSection.vue` et `src/components/legal/` (`LegalNotice`, `PrivacyPolicy`, `CookiePolicy`). Ajouter une page = nouveau HTML + entrée `input` + `LegalPageId` + `LEGAL_PAGES` (`src/entry-server.ts`) + `sitemap.xml`. Ces pages sont **pré-rendues au build** (`src/entry-server.ts` → `.ssr/` temporaire → `scripts/prerender.mjs` injecte le HTML dans `dist/`) puis hydratées (`createSSRApp`) : tout état lié au navigateur (`localStorage`, consentement) doit être lu dans `onMounted`, sinon décalage d'hydratation. L'accueil n'affiche plus la FAQ ; son `<noscript>` (dans `index.html`) renvoie vers ces pages. Ne jamais mettre le snippet gtag en dur dans `index.html`.
+- **En-têtes de sécurité** (CSP, HSTS, Permissions-Policy…) dans la règle `/(.*)` de `vercel.json`, réappliqués à `npm run preview` par `vite.config.ts`. **Tout nouveau domaine contacté doit être ajouté à `connect-src`** : sinon il est bloqué en production, et pour les tests de bloqueur (`fetch` no-cors) un refus CSP serait pris pour un bloqueur de pub.
+- Accessibilité : barre d'onglets ARIA (`role=tab`, tabindex itinérant, flèches/Début/Fin puis Entrée) ; fenêtres (accueil, menu mobile, partage) via `useDialog` (focus piégé, Échap, focus restitué).
 - Vérification Google Search Console : balise `google-site-verification` dans `index.html` — ne pas la supprimer.
 - APIs externes (par ordre de priorité HTTPS) :
   - `api4.ipify.org` / `api6.ipify.org` — IPv4 et IPv6 publiques, interrogées séparément (HTTPS)
@@ -142,5 +144,5 @@ Polices : **IBM Plex Mono** (mono, data, labels) · **DM Sans** (corps, titres) 
 
 ### SEO
 
-- Le JSON-LD (WebSite, WebApplication, Person, FAQPage) est injecté au build par le plugin `jsonLd()` de `vite.config.ts`, sur la page d'accueil uniquement. La FAQPage est générée depuis `src/data/faq.ts`, la même source que `FaqSection.vue` : modifier la FAQ à cet endroit uniquement.
+- Le JSON-LD (WebSite, WebApplication, Person, FAQPage) est injecté au build par le plugin `jsonLd()` de `vite.config.ts` : WebSite/WebApplication/Person sur l'accueil, FAQPage sur `/faq/` (contenu balisé visible sur la même page). La FAQPage est générée depuis `src/data/faq.ts`, la même source que `FaqSection.vue` : modifier la FAQ à cet endroit uniquement.
 - Favicons, icônes PWA, `logo.webp` et `og-cover.png` sont générés par `python3 scripts/generate-images.py` (Pillow) depuis `public/logo.png`.
