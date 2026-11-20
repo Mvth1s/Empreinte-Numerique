@@ -68,7 +68,7 @@ function loaderRadar(ctx: CanvasRenderingContext2D, W: number, H: number, data: 
   const t0 = performance.now()
   const cx = W / 2, cy = H / 2
   function draw(now: number) {
-    const t = (now - t0) / 1000
+    const t = Math.max(0, now - t0) / 1000 // l'horodatage du 1er rAF peut précéder t0
     clr(ctx, W, H)
     ctx.strokeStyle = `rgba(${P.ink}, 0.05)`; ctx.lineWidth = 1
     for (let r = 30; r < 400; r += 40) {
@@ -132,7 +132,7 @@ function loaderTerminal(ctx: CanvasRenderingContext2D, W: number, H: number, dat
   let shown = 0, lastAdd = 0
   function draw(now: number) {
     clr(ctx, W, H)
-    const t = (now - t0) / 1000
+    const t = Math.max(0, now - t0) / 1000
     if (now - lastAdd > 230 && shown < lines.length) { shown++; lastAdd = now }
     ctx.font = '13px "IBM Plex Mono", monospace'; ctx.textBaseline = 'top'
     const pad = 28, lh = 18
@@ -160,7 +160,7 @@ function loaderClock(ctx: CanvasRenderingContext2D, W: number, H: number, data: 
   const t0 = performance.now()
   function draw(now: number) {
     clr(ctx, W, H)
-    const t = (now - t0) / 1000
+    const t = Math.max(0, now - t0) / 1000
     const cx = W / 2, cy = H / 2
     ctx.strokeStyle = P.dim; ctx.lineWidth = 1
     for (let i = 0; i < 8; i++) {
@@ -215,7 +215,7 @@ function loaderScanner(ctx: CanvasRenderingContext2D, W: number, H: number, data
   ]
   function draw(now: number) {
     clr(ctx, W, H)
-    const t = (now - t0) / 1000
+    const t = Math.max(0, now - t0) / 1000
     const period = 2.4
     const p = (t % period) / period
     const y = p * H
@@ -274,7 +274,7 @@ function loaderWireframe(ctx: CanvasRenderingContext2D, W: number, H: number, da
   }
   function draw(now: number) {
     clr(ctx, W, H)
-    const t = (now - t0) / 1000
+    const t = Math.max(0, now - t0) / 1000
     const cx = W / 2, cy = H / 2
     ctx.strokeStyle = `rgba(${P.accent}, 0.08)`; ctx.lineWidth = 1
     for (let i = -5; i <= 5; i++) {
@@ -322,7 +322,7 @@ function loaderHexrain(ctx: CanvasRenderingContext2D, W: number, H: number) {
   function draw(now: number) {
     const dt = (now - last) / 1000; last = now
     ctx.fillStyle = `rgba(${P.panel}, 0.18)`; ctx.fillRect(0, 0, W, H)
-    const t = (now - t0) / 1000
+    const t = Math.max(0, now - t0) / 1000
     ctx.font = '13px "IBM Plex Mono", monospace'
     drops.forEach((d, i) => {
       d.y += d.v * dt
@@ -359,7 +359,7 @@ function loaderDiskbar(ctx: CanvasRenderingContext2D, W: number, H: number) {
   const lit = new Array(cols * rows).fill(0)
   function draw(now: number) {
     clr(ctx, W, H)
-    const t = (now - t0) / 1000
+    const t = Math.max(0, now - t0) / 1000
     const total = cols * rows
     const target = Math.min(total, Math.floor(t * total / 3))
     ctx.font = '11px "IBM Plex Mono", monospace'; ctx.fillStyle = P.faint
@@ -397,7 +397,7 @@ function loaderWifi(ctx: CanvasRenderingContext2D, W: number, H: number, data: R
   const t0 = performance.now()
   function draw(now: number) {
     clr(ctx, W, H)
-    const t = (now - t0) / 1000
+    const t = Math.max(0, now - t0) / 1000
     const cx = W / 2 - 60, cy = H / 2 + 20
     for (let i = 0; i < 4; i++) {
       ctx.lineWidth = 8 - i * 1.4
@@ -436,7 +436,7 @@ function loaderPermissions(ctx: CanvasRenderingContext2D, W: number, H: number) 
   ]
   function draw(now: number) {
     clr(ctx, W, H)
-    const t = (now - t0) / 1000
+    const t = Math.max(0, now - t0) / 1000
     const gap = W / (items.length + 1)
     const y = H / 2
     items.forEach((it, i) => {
@@ -475,7 +475,7 @@ function loaderCursor(ctx: CanvasRenderingContext2D, W: number, H: number) {
   const trail: { x: number; y: number }[] = []
   function draw(now: number) {
     ctx.fillStyle = `rgba(${P.panel}, 0.18)`; ctx.fillRect(0, 0, W, H)
-    const t = (now - t0) / 1000
+    const t = Math.max(0, now - t0) / 1000
     const x = W / 2 + Math.sin(t * 0.9) * 200 + Math.sin(t * 2.3) * 60
     const y = H / 2 + Math.cos(t * 1.3) * 80 + Math.cos(t * 2.7) * 40
     trail.push({ x, y }); if (trail.length > 80) trail.shift()
@@ -511,7 +511,7 @@ function loaderMapzoom(ctx: CanvasRenderingContext2D, W: number, H: number, data
   ]
   function draw(now: number) {
     clr(ctx, W, H)
-    const t = (now - t0) / 1000
+    const t = Math.max(0, now - t0) / 1000
     const cx = W / 2, cy = H / 2
     ctx.strokeStyle = `rgba(${P.accent}, 0.08)`; ctx.lineWidth = 1
     for (let r = 30; r < 320; r += 28) {
@@ -560,7 +560,7 @@ function loaderShield(ctx: CanvasRenderingContext2D, W: number, H: number) {
   }
 
   function draw(now: number) {
-    const t = (now - t0) / 1000
+    const t = Math.max(0, now - t0) / 1000
     clr(ctx, W, H)
     const fillProg = Math.min(1, t / 2.0)
 

@@ -196,15 +196,15 @@ export function useNetwork() {
 
   const vpnSignals = computed(() => {
     const s: string[] = []
-    if (providerFlags.value?.proxy) s.push('IP listée comme proxy')
-    if (providerFlags.value?.hosting) s.push('IP d\'hébergeur / VPN connu')
+    if (providerFlags.value?.proxy) s.push('adresse connue comme relais (proxy)')
+    if (providerFlags.value?.hosting) s.push('adresse d\'un hébergeur ou d\'un VPN connu')
     const asName = `${asn.value ?? ''} ${isp.value ?? ''}`
-    if (VPN_ASN_RE.test(asName)) s.push(`Réseau d'hébergeur/VPN (${asName.match(VPN_ASN_RE)?.[0]})`)
+    if (VPN_ASN_RE.test(asName)) s.push(`réseau d'hébergeur ou de VPN (${asName.match(VPN_ASN_RE)?.[0]})`)
     if (ipTimezone.value) {
       const a = offsetFor(ipTimezone.value), b = offsetFor(browserTimezone)
-      if (a !== null && b !== null && a !== b) s.push(`Fuseau IP ${ipTimezone.value} ≠ fuseau système ${browserTimezone}`)
+      if (a !== null && b !== null && a !== b) s.push(`l'heure du pays de l'IP (${ipTimezone.value}) ne correspond pas à celle de votre ordinateur (${browserTimezone})`)
     }
-    if (webrtcLeak.value) s.push(`WebRTC révèle une autre IP : ${webrtcLeak.value}`)
+    if (webrtcLeak.value) s.push(`le navigateur révèle une autre adresse : ${webrtcLeak.value}`)
     return s
   })
   const isVPN = computed<boolean | null>(() => loading.value ? null : vpnSignals.value.length > 0)

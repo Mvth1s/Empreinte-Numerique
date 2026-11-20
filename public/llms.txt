@@ -19,7 +19,7 @@ Tout le calcul se fait côté client (Vite + Vue 3 + TypeScript) : il n'y a ni b
 - Localisation : pays, ville et coordonnées déduits de l'IP, cohérence fuseau horaire / IP, résolveur DNS et, avec autorisation, position GPS
 - Bloqueurs de pub : détection d'un bloqueur cosmétique (leurre HTML) et réseau (domaines publicitaires et traceurs), Brave Shields
 
-Un dernier onglet, « Se protéger », présente des contre-mesures (Brave, Firefox + arkenfox, VPN, uBlock Origin, DNS privé, Tor Browser).
+Un dernier onglet, « Se protéger », présente des contre-mesures (Brave, Firefox en protection « Stricte » avec arkenfox en option, uBlock Origin, VPN, DNS privé, Tor Browser). Quand le navigateur masque ou falsifie une valeur (Brave, Firefox anti-empreinte, Tor), la carte concernée l'indique au lieu de présenter la valeur comme réelle.
 
 ## Liens
 

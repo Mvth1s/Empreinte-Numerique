@@ -18,32 +18,34 @@
         icon="🖥️"
         title="Résolution d'écran"
         :value="sc.resolution.value"
-        mean="La résolution de votre écran en pixels CSS est accessible via l'objet screen. Multipliée par le ratio de pixels, elle donne la définition physique réelle de la dalle."
-        deduce="Contribue à l'empreinte unique de votre appareil, révèle la catégorie de périphérique (mobile/desktop/4K)."
+        mean="La taille de votre écran, en points. Le site peut en déduire le nombre réel de pixels de l'écran (voir le pied de la carte)."
+        deduce="Téléphone, portable, grand écran 4K… La taille de l'écran est l'un des éléments de base pour vous reconnaître parmi d'autres visiteurs."
         tech-key="screen.width × devicePixelRatio"
         :tech-val="`physique ≈ ${sc.physicalResolution.value}`"
         severity="moyen"
         sev-label="moyen"
+        :masked="screenMasked"
         :span="4"
       />
       <DataCardV2
         icon="📐"
         title="Résolution disponible"
         :value="sc.availResolution.value"
-        mean="La zone disponible exclut la barre des tâches, les docks et autres éléments OS fixes."
-        deduce="Permet de déduire le système d'exploitation et la configuration de l'interface (barre de tâches visible, etc.)."
+        mean="La partie de l'écran réellement utilisable, sans la barre des tâches (Windows) ou le Dock (Mac)."
+        deduce="La place prise par la barre des tâches dépend de votre système et de vos réglages (taille, position, masquage automatique) : un détail de plus qui vous distingue."
         tech-key="screen.availWidth × screen.availHeight"
         :tech-val="sc.availResolution.value"
         severity="faible"
         sev-label="faible"
+        :masked="screenMasked"
         :span="4"
       />
       <DataCardV2
         icon="🔍"
-        title="Ratio de pixels (DPR)"
+        title="Finesse de l'écran"
         :value="`×${sc.pixelRatio.value}`"
-        mean="C'est le rapport entre les pixels physiques de votre écran et ce que le site perçoit. Un ratio de 2 signifie que votre écran est deux fois plus dense que la normale — c'est ce qu'on appelle un écran Retina ou haute densité."
-        deduce="Ce ratio identifie les écrans premium (iPhone, MacBook, Android haut de gamme) et contribue à votre empreinte matérielle unique."
+        mean="Le nombre de vrais pixels utilisés pour dessiner un point. ×2 veut dire un écran deux fois plus fin que la normale (écran « Retina »). Votre niveau de zoom change aussi ce chiffre."
+        deduce="Les écrans très fins équipent surtout les téléphones et ordinateurs haut de gamme : un indice sur votre appareil et son prix."
         tech-key="window.devicePixelRatio"
         :tech-val="String(sc.pixelRatio.value)"
         severity="faible"
@@ -52,36 +54,38 @@
       />
       <DataCardV2
         icon="⚙️"
-        title="Cœurs CPU logiques"
-        :value="sc.cores.value ? `${sc.cores.value} threads logiques` : 'Non disponible'"
-        mean="navigator.hardwareConcurrency retourne le nombre de threads logiques (cœurs × hyperthreading). Valeur exacte sur Chrome/Edge ; Safari peut la plafonner, Brave et Firefox (mode anti-fingerprinting) la falsifient."
-        deduce="Révèle la gamme de votre processeur, distingue les appareils mobiles entry-level des workstations haut de gamme."
+        title="Cœurs du processeur"
+        :value="sc.cores.value ? `${sc.cores.value} cœurs logiques` : 'Non fourni'"
+        mean="Le nombre de tâches que votre processeur peut mener en même temps. Plus il y en a, plus l'appareil est puissant."
+        deduce="Distingue un petit téléphone (4 cœurs) d'un ordinateur de jeu ou de travail (16 ou plus) : la gamme et le prix de votre appareil."
         tech-key="navigator.hardwareConcurrency"
         :tech-val="String(sc.cores.value ?? 'N/A')"
         severity="moyen"
         sev-label="moyen"
+        :masked="coresMasked"
         :span="4"
       />
       <DataCardV2
         icon="🧠"
-        title="RAM (tranche)"
-        :value="sc.memoryLabel.value ?? 'Non exposée (Firefox/Safari)'"
+        title="Mémoire vive (RAM)"
+        :value="sc.memoryLabel.value ?? 'Non fournie'"
         :mean="sc.memoryCapped.value
-          ? `navigator.deviceMemory est arrondi et plafonné pour limiter le fingerprinting : la plupart des navigateurs s'arrêtent à 8 Go (une machine de 16 ou 32 Go renvoie aussi 8), Chrome récent à 32 Go. Votre valeur (${sc.memory.value}) est un plafond : on sait seulement que vous avez au moins ${sc.memory.value} Go.`
-          : 'navigator.deviceMemory renvoie la RAM arrondie à une puissance de 2 (0,25 · 0,5 · 1 · 2 · 4 · 8 · 16 · 32 Go). Chromium uniquement : Firefox et Safari ne l\'exposent pas.'"
-        deduce="Même grossière, cette tranche distingue un smartphone d'entrée de gamme (≤ 4 Go) d'un ordinateur récent. Le plafond existe précisément pour limiter le fingerprinting."
+          ? `La mémoire de travail de votre appareil. Le navigateur l'arrondit et s'arrête volontairement à un plafond : « ${sc.memory.value} Go ou plus » veut dire que vous en avez au moins ${sc.memory.value}, peut-être bien davantage.`
+          : 'La mémoire de travail de votre appareil, arrondie volontairement par le navigateur (1, 2, 4, 8 Go…) pour rester approximative.'"
+        deduce="Même approximative, elle sépare un téléphone d'entrée de gamme (4 Go ou moins) d'un ordinateur récent."
         tech-key="navigator.deviceMemory"
         :tech-val="sc.memory.value != null ? `${sc.memory.value}${sc.memoryCapped.value ? ' (plafonné)' : ''}` : 'undefined'"
         severity="moyen"
         sev-label="moyen"
+        :masked="sc.memory.value == null ? NOT_GIVEN : null"
         :span="4"
       />
       <DataCardV2
         icon="🔄"
-        title="Taux de rafraîchissement"
+        title="Fluidité de l'écran"
         :value="sc.refreshRate.value ? `${sc.refreshRate.value} Hz` : 'Calcul…'"
-        mean="Votre écran actualise son image un certain nombre de fois par seconde. Le site mesure l'intervalle médian entre 90 images consécutives puis l'arrondit à la fréquence standard la plus proche (60, 120, 144 Hz…)."
-        deduce="Un écran à 144Hz ou 120Hz trahit un gameur ou un téléphone premium. Ces valeurs atypiques réduisent considérablement votre anonymat."
+        mean="Le nombre d'images que votre écran affiche chaque seconde (60, 120, 144…). Le site le mesure simplement en chronométrant l'affichage de la page."
+        deduce="Un écran à 120 ou 144 images par seconde trahit un joueur ou un téléphone haut de gamme : une valeur peu courante qui vous distingue."
         tech-key="requestAnimationFrame › médiane Δt"
         :tech-val="sc.refreshRate.value ? `${sc.refreshRate.value}Hz` : '…'"
         severity="faible"
@@ -90,10 +94,10 @@
       />
       <DataCardV2
         icon="🎨"
-        title="Profondeur couleur"
+        title="Nombre de couleurs"
         :value="`${sc.colorDepth.value} bits`"
-        mean="La profondeur de couleur indique le nombre de bits utilisés pour représenter chaque pixel."
-        deduce="Distingue les écrans standards des écrans HDR professionnels, contribue au fingerprinting de la configuration graphique."
+        mean="La précision des couleurs de votre écran. 24 bits, c'est environ 16 millions de couleurs : la valeur de la plupart des écrans."
+        deduce="Une valeur différente de 24 (30 bits, par exemple) signale un écran haut de gamme ou professionnel, donc rare."
         tech-key="screen.colorDepth"
         :tech-val="`${sc.colorDepth.value} bits`"
         severity="faible"
@@ -102,10 +106,10 @@
       />
       <DataCardV2
         icon="🌈"
-        title="HDR & gamut couleur"
+        title="Écran HDR et couleurs"
         :value="`${sc.hdr.value ? 'HDR actif' : 'SDR'} · ${sc.colorGamut.value}`"
-        mean="Deux media queries distinctes : dynamic-range indique si l'écran affiche du HDR, color-gamut la largeur de la palette (sRGB, Display P3, Rec.2020)."
-        deduce="Un écran HDR ou P3 identifie une dalle premium (iPhone Pro, MacBook, OLED, moniteur HDR) et contribue à l'empreinte matérielle unique."
+        mean="Le site demande si votre écran affiche le HDR (lumières plus éclatantes) et quelle palette de couleurs il couvre : standard (sRGB) ou étendue (P3, Rec.2020)."
+        deduce="Un écran HDR ou à couleurs étendues équipe surtout les appareils haut de gamme (iPhone, MacBook, écrans OLED) : un indice sur votre matériel."
         tech-key="matchMedia('(dynamic-range: high)') + color-gamut"
         :tech-val="`hdr=${sc.hdr.value} gamut=${sc.colorGamut.value}`"
         severity="faible"
@@ -114,10 +118,10 @@
       />
       <DataCardV2
         icon="👆"
-        title="Points de toucher"
+        title="Écran tactile"
         :value="sc.touchPoints.value === 0 ? 'Aucun — souris' : `${sc.touchPoints.value} points simultanés`"
-        mean="navigator.maxTouchPoints retourne le nombre de points de contact simultanés supportés par l'écran."
-        deduce="Distingue les appareils tactiles des ordinateurs de bureau, identifie les tablettes et écrans tactiles professionnels."
+        mean="Le nombre de doigts que votre écran peut détecter en même temps. Zéro veut dire pas d'écran tactile."
+        deduce="Distingue un ordinateur classique d'un téléphone, d'une tablette ou d'un ordinateur portable à écran tactile."
         tech-key="navigator.maxTouchPoints"
         :tech-val="String(sc.touchPoints.value)"
         severity="faible"
@@ -126,38 +130,41 @@
       />
       <DataCardV2
         icon="🧮"
-        title="Mémoire JS (Heap)"
-        :value="sc.heapUsed.value !== null ? `${sc.heapUsed.value} Mo utilisés / ${sc.heapLimit.value} Mo max` : 'Non disponible (Firefox/Safari)'"
-        mean="performance.memory expose l'utilisation du tas JavaScript de cet onglet et la limite fixée par le moteur V8 (≈ 4 Go sur un ordinateur 64 bits, moins sur mobile)."
-        deduce="La limite trahit l'architecture (32/64 bits, mobile ou desktop). Chromium uniquement — son absence identifie Firefox ou Safari."
+        title="Mémoire de cet onglet"
+        :value="sc.heapUsed.value !== null ? `${sc.heapUsed.value} Mo utilisés / ${sc.heapLimit.value} Mo max` : 'Non fournie'"
+        mean="La mémoire utilisée par cette page, et la limite que le navigateur lui accorde. Seuls Chrome, Edge et les navigateurs de la même famille la donnent."
+        deduce="La limite change selon l'appareil (ordinateur ou téléphone) et sa mémoire : un indice de plus sur votre matériel."
         tech-key="performance.memory.usedJSHeapSize"
         :tech-val="sc.heapUsed.value !== null ? `${sc.heapUsed.value}MB / ${sc.heapLimit.value}MB` : 'N/A'"
         severity="moyen"
         sev-label="moyen"
+        :masked="sc.heapUsed.value === null ? NOT_GIVEN : null"
         :span="6"
       />
       <DataCardV2
         icon="🔋"
         title="Batterie"
-        :value="sc.battery.value ? `${sc.battery.value.level}% — ${sc.battery.value.charging ? 'en charge' : 'sur batterie'}` : 'Non disponible (Firefox/Safari)'"
-        mean="L'API Battery Status expose le niveau de charge, l'état de charge et les temps estimés de charge/décharge."
-        deduce="Un niveau de batterie faible peut indiquer une utilisation mobile. Les variations de charge identifient les sessions au fil du temps et contribuent au fingerprinting comportemental."
+        :value="sc.battery.value ? `${sc.battery.value.level}% — ${sc.battery.value.charging ? 'en charge' : 'sur batterie'}` : 'Non fournie'"
+        mean="Le niveau de votre batterie, si elle est en charge, et le temps restant estimé."
+        deduce="Un niveau précis (par exemple 37 %) change lentement : deux onglets ouverts au même moment avec la même valeur appartiennent probablement à la même personne."
         tech-key="navigator.getBattery()"
         :tech-val="sc.battery.value ? `${sc.battery.value.level}% charging=${sc.battery.value.charging}` : 'N/A'"
         severity="faible"
         sev-label="faible"
+        :masked="sc.battery.value ? null : NOT_GIVEN"
         :span="6"
       />
       <DataCardV2
         icon="🖥️"
         title="Écrans multiples"
-        :value="sc.isExtended.value === null ? 'Non disponible' : sc.isExtended.value ? 'Oui — multi-moniteur détecté' : 'Non — écran unique'"
-        mean="screen.isExtended indique si l'écran fait partie d'un setup multi-moniteur. Disponible dans les navigateurs récents."
-        deduce="Un setup multi-écrans est un signal rare qui réduit significativement l'ensemble d'anonymat. Révèle un profil pro/développeur."
+        :value="sc.isExtended.value === null ? 'Non fourni' : sc.isExtended.value ? 'Oui, plusieurs écrans' : 'Non, un seul écran'"
+        mean="Indique si votre ordinateur est branché à plusieurs écrans."
+        deduce="Peu de gens travaillent sur plusieurs écrans : c'est un signe rare, qui évoque plutôt un usage professionnel ou de jeu."
         tech-key="screen.isExtended"
         :tech-val="String(sc.isExtended.value)"
         severity="faible"
         sev-label="faible"
+        :masked="sc.isExtended.value === null ? NOT_GIVEN : null"
         :span="6"
       />
     </div>
@@ -170,7 +177,18 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useScreen } from '../../composables/useScreen'
+import { useProtection, NOT_GIVEN } from '../../composables/useProtection'
 import DataCardV2 from '../DataCardV2.vue'
 const sc = useScreen()
+const prot = useProtection()
+
+const screenMasked = computed(() => prot.screenSpoofed.value
+  ? 'Il annonce la taille de la fenêtre au lieu de celle de l\'écran (Firefox en mode anti-empreinte ou Tor Browser).'
+  : null)
+// Brave remplace le nombre de cœurs par une valeur au hasard (inférieure ou égale au vrai nombre).
+const coresMasked = computed(() => prot.braveFarbling.value
+  ? 'Brave remplace ce nombre par une valeur tirée au hasard, inférieure ou égale au vrai nombre de cœurs.'
+  : sc.cores.value ? null : NOT_GIVEN)
 </script>

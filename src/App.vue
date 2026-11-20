@@ -158,20 +158,22 @@ import { useFingerprint } from './composables/useFingerprint'
 import { useScreen } from './composables/useScreen'
 import { useGPU } from './composables/useGPU'
 import { useConnectivity } from './composables/useConnectivity'
+import { useProtection } from './composables/useProtection'
 
 const network = useNetwork()
 const fingerprint = useFingerprint()
 const screen = useScreen()
 const gpu = useGPU()
 const conn = useConnectivity()
+const protection = useProtection()
 
 const TABS = [
   { id: 'network',      icon: '🌐', label: 'Réseau & IP',        short: 'Réseau',        loader: { kind: 'radar',       text: 'Localisation de votre IP en cours' },     bg: 'radar' as const },
-  { id: 'browser',      icon: '🖥️', label: 'Navigateur & OS',    short: 'Navigateur',    loader: { kind: 'terminal',    text: 'Lecture de votre navigateur' },            bg: 'flow' as const },
+  { id: 'browser',      icon: '🖥️', label: 'Navigateur & système', short: 'Navigateur',    loader: { kind: 'terminal',    text: 'Lecture de votre navigateur' },            bg: 'flow' as const },
   { id: 'timezone',     icon: '🕐', label: 'Fuseau horaire',      short: 'Fuseau',        loader: { kind: 'clock',       text: 'Détection de votre position temporelle' }, bg: 'clock' as const },
   { id: 'hardware',     icon: '💻', label: 'Écran & Matériel',    short: 'Matériel',      loader: { kind: 'scanner',     text: 'Analyse de votre matériel' },              bg: 'scan' as const },
-  { id: 'gpu',          icon: '🎮', label: 'GPU & Rendu',         short: 'GPU',           loader: { kind: 'wireframe',   text: 'Interrogation de votre GPU' },             bg: 'tron' as const },
-  { id: 'fingerprint',  icon: '🖐️', label: 'Fingerprinting',      short: 'Empreinte',     loader: { kind: 'hexrain',     text: 'Calcul de votre empreinte unique' },       bg: 'hexrain' as const },
+  { id: 'gpu',          icon: '🎮', label: 'Carte graphique',     short: 'GPU',           loader: { kind: 'wireframe',   text: 'Interrogation de votre GPU' },             bg: 'tron' as const },
+  { id: 'fingerprint',  icon: '🖐️', label: 'Empreinte unique',    short: 'Empreinte',     loader: { kind: 'hexrain',     text: 'Calcul de votre empreinte unique' },       bg: 'hexrain' as const },
   { id: 'storage',      icon: '💾', label: 'Stockage',            short: 'Stockage',      loader: { kind: 'diskbar',     text: 'Inspection du stockage local' },           bg: 'blocks' as const },
   { id: 'connectivity', icon: '📡', label: 'Connectivité',        short: 'Connexion',     loader: { kind: 'wifi',        text: 'Test de votre connexion' },                bg: 'wave' as const },
   { id: 'permissions',  icon: '🔐', label: 'Permissions',         short: 'Permissions',   loader: { kind: 'permissions', text: 'Vérification de vos permissions' },        bg: 'rings' as const },
@@ -235,8 +237,9 @@ const traceScore = computed(() => {
   if (network.publicIP.value) s += 15
   if (network.city.value) s += 10
   if (network.localIPs.value.length > 0) s += 15
-  if (fingerprint.canvasHash.value) s += 15
-  if (fingerprint.audioHash.value) s += 10
+  // Empreintes brouillées par le navigateur : elles ne permettent plus de suivre, pas de points.
+  if (fingerprint.canvasHash.value && !fingerprint.canvasNoise.value && !protection.canvasTampered.value) s += 15
+  if (fingerprint.audioHash.value && !fingerprint.audioNoise.value && !protection.audioTampered.value) s += 10
   if (gpu.renderer.value && !gpu.masked.value) s += 8 // pas de point si le navigateur masque le GPU
   if (fingerprint.detectedFonts.value.length > 5) s += 7
   return Math.min(s, 100)

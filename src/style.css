@@ -25,6 +25,7 @@
   --yellow: #ffd60a;
   --green: #6cd99a;
   --critical: #ffffff;
+  --info: #7cb4ff;
   --overlay: rgba(6, 6, 9, 0.88);
   --header-bg: rgba(11, 11, 16, 0.82);
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
@@ -58,6 +59,7 @@
     --yellow: #8a5a00;
     --green: #18764a;
     --critical: #16171d;
+    --info: #1d5fbf;
     --overlay: rgba(245, 246, 248, 0.9);
     --header-bg: rgba(245, 246, 248, 0.85);
     --shadow: 0 1px 2px rgba(20, 24, 33, 0.06), 0 8px 24px -12px rgba(20, 24, 33, 0.18);
@@ -87,6 +89,7 @@
   --yellow: #8a5a00;
   --green: #18764a;
   --critical: #16171d;
+  --info: #1d5fbf;
   --overlay: rgba(245, 246, 248, 0.9);
   --header-bg: rgba(245, 246, 248, 0.85);
   --shadow: 0 1px 2px rgba(20, 24, 33, 0.06), 0 8px 24px -12px rgba(20, 24, 33, 0.18);
@@ -133,6 +136,7 @@
   --tint-eleve-bd: color-mix(in srgb, var(--red) 50%, transparent);
   --tint-critique-bg: color-mix(in srgb, var(--critical) 6%, transparent);
   --tint-critique-bd: color-mix(in srgb, var(--critical) 45%, transparent);
+  --tint-info-bg: color-mix(in srgb, var(--info) 9%, transparent);
   --tint-cyan-bg: color-mix(in srgb, var(--cyan) 8%, transparent);
   --tint-cyan-bd: color-mix(in srgb, var(--cyan) 45%, transparent);
 }
@@ -525,7 +529,8 @@ body::before {
 .b-eleve    { color: var(--red);      border-color: var(--tint-eleve-bd);    background: var(--tint-eleve-bg); }
 .b-critique { color: var(--bg);       border-color: var(--critical);         background: var(--critical); }
 
-/* Encadrés « Ce que ça veut dire » / « Ce qu'on peut en déduire » */
+/* Encadrés : « Ce que ça veut dire » = information neutre (bleu, toujours identique) ;
+   « Ce qu'on peut en déduire » = conséquence, dans la couleur du niveau de risque. */
 .c-box {
   padding: 0.75rem 0.875rem;
   border-left: 3px solid; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
@@ -533,15 +538,27 @@ body::before {
   color: var(--mute-2);
 }
 .c-box p { margin: 0.25rem 0 0; overflow-wrap: break-word; }
-.c-box-label { display: inline-block; font-size: var(--fs-sm); font-weight: 600; color: var(--fg); }
-.card.sev-faible   .c-box { background: var(--tint-faible-bg);   border-left-color: var(--tint-faible-bd); }
-.card.sev-moyen    .c-box { background: var(--tint-moyen-bg);    border-left-color: var(--tint-moyen-bd); }
-.card.sev-eleve    .c-box { background: var(--tint-eleve-bg);    border-left-color: var(--tint-eleve-bd); }
-.card.sev-critique .c-box { background: var(--tint-critique-bg); border-left-color: var(--tint-critique-bd); }
+.c-box-label { display: inline-block; font-size: var(--fs-sm); font-weight: 600; }
+.c-box.mean { background: var(--tint-info-bg); border-left-color: var(--info); }
+.c-box.mean .c-box-label { color: var(--info); }
+.card.sev-faible   .c-box.deduce { background: var(--tint-faible-bg);   border-left-color: var(--green); }
+.card.sev-moyen    .c-box.deduce { background: var(--tint-moyen-bg);    border-left-color: var(--yellow); }
+.card.sev-eleve    .c-box.deduce { background: var(--tint-eleve-bg);    border-left-color: var(--red); }
+.card.sev-critique .c-box.deduce { background: var(--tint-critique-bg); border-left-color: var(--critical); }
 .card.sev-faible   .c-box.deduce .c-box-label { color: var(--green); }
 .card.sev-moyen    .c-box.deduce .c-box-label { color: var(--yellow); }
 .card.sev-eleve    .c-box.deduce .c-box-label { color: var(--red); }
 .card.sev-critique .c-box.deduce .c-box-label { color: var(--critical); }
+
+/* Valeur masquée ou faussée par le navigateur */
+.c-masked {
+  display: flex; gap: 0.5rem; align-items: flex-start;
+  margin: 0; padding: 0.625rem 0.75rem;
+  background: var(--tint-faible-bg); border: 1px solid var(--tint-faible-bd); border-radius: var(--radius-sm);
+  font-size: var(--fs-sm); line-height: 1.55; color: var(--fg);
+}
+.c-masked b { color: var(--green); }
+.card.is-masked .c-value { color: var(--mute-2); text-decoration: line-through; text-decoration-color: var(--mute); text-decoration-thickness: 1px; }
 
 /* Pied technique */
 .c-tech {
@@ -895,6 +912,7 @@ body::before {
   position: relative; z-index: 2;
 }
 .site-foot p { margin: 0; }
+.foot-reviewed { display: block; margin-top: 0.25rem; color: var(--mute-2); }
 .site-foot nav { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
 .site-foot a, .site-foot .foot-link {
   color: var(--mute-2); text-decoration: underline; text-decoration-color: var(--line-2);

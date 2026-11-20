@@ -1,14 +1,19 @@
 <template>
-  <article :class="['card', `sev-${severity}`, `col-${span || 4}`]">
+  <article :class="['card', `sev-${sev}`, `col-${span || 4}`, { 'is-masked': masked }]">
     <header class="c-head">
       <div class="c-title">
-        <span class="c-ico">{{ icon }}</span>
+        <span class="c-ico" aria-hidden="true">{{ icon }}</span>
         <h3>{{ title }}</h3>
       </div>
-      <span :class="['badge', `b-${severity}`]">{{ sevLabel }}</span>
+      <span :class="['badge', `b-${sev}`]">{{ masked ? 'protégé' : sevLabel }}</span>
     </header>
 
     <div :class="['c-value', { loading }]">{{ loading ? '' : value }}</div>
+
+    <p v-if="masked" class="c-masked">
+      <span aria-hidden="true">🛡️</span>
+      <span><b>Masqué ou faussé par votre navigateur.</b> {{ masked }}</span>
+    </p>
 
     <div class="c-box mean">
       <span class="c-box-label">💬 Ce que ça veut dire</span>
@@ -24,14 +29,18 @@
 
     <footer class="c-tech">
       <span class="t-key" :title="techKey">{{ techKey }}</span>
-      <span class="t-arrow">→</span>
+      <span class="t-arrow" aria-hidden="true">→</span>
       <span class="t-val">{{ loading ? '…' : techVal }}</span>
     </footer>
   </article>
 </template>
 
 <script setup lang="ts">
-defineProps<{
+import { computed } from 'vue'
+
+type Severity = 'faible' | 'moyen' | 'eleve' | 'critique'
+
+const props = defineProps<{
   icon: string
   title: string
   value: string | number
@@ -39,9 +48,14 @@ defineProps<{
   deduce: string
   techKey: string
   techVal: string | number
-  severity: 'faible' | 'moyen' | 'eleve' | 'critique'
+  severity: Severity
   sevLabel: string
   loading?: boolean
   span?: number
+  /** Explication si le navigateur a masqué ou falsifié la valeur : bandeau dédié, badge « protégé ». */
+  masked?: string | null
 }>()
+
+// Une valeur masquée ne renseigne plus le site : le risque affiché redescend.
+const sev = computed<Severity>(() => props.masked ? 'faible' : props.severity)
 </script>
