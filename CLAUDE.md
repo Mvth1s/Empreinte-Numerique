@@ -18,7 +18,7 @@ npm run preview  # Prévisualisation du build dist/
 
 - **Vite 5 + Vue 3 + TypeScript** (Composition API `<script setup>`) — `vue-tsc` vérifie les types avant `vite build`
 - **CSS vanilla** avec variables CSS dans `src/style.css` — `tailwindcss` est dans les devDeps mais n'est pas utilisé pour la mise en page principale
-- **100% client-side** — aucun backend, aucun test automatisé. Seul cookie : Google Analytics 4 (`G-X83M1WF7KK`), chargé par `src/utils/analytics.ts` **uniquement après consentement** via `CookieBanner.vue` (choix stocké dans `localStorage['en-consent']`, réouvrable via « Gérer les cookies » dans le footer ; mentions légales et politique de confidentialité dans `LegalSection.vue`, ancres `#mentions-legales` et `#confidentialite`). Ne jamais mettre le snippet gtag en dur dans `index.html`.
+- **100% client-side** — aucun backend, aucun test automatisé. Seul cookie : Google Analytics 4 (`G-X83M1WF7KK`), chargé par `src/utils/analytics.ts` **uniquement après consentement** via `CookieBanner.vue` (choix stocké dans `localStorage['en-consent']`, réouvrable via « Gérer les cookies » dans le footer partagé `SiteFooter.vue`). Pages légales séparées (Vite multi-page, entrées déclarées dans `rollupOptions.input` de `vite.config.ts`) : `/mentions-legales/`, `/confidentialite/`, `/cookies/` — chaque `<dossier>/index.html` charge `src/legal.ts` → `LegalPage.vue` avec `data-page` sur `<body>`, contenus dans `src/components/legal/` (`LegalNotice`, `PrivacyPolicy`, `CookiePolicy`). Ajouter une page = nouveau HTML + entrée `input` + `LegalPageId` + `sitemap.xml`. Ne jamais mettre le snippet gtag en dur dans `index.html`.
 - Vérification Google Search Console : balise `google-site-verification` dans `index.html` — ne pas la supprimer.
 - APIs externes (par ordre de priorité HTTPS) :
   - `api4.ipify.org` / `api6.ipify.org` — IPv4 et IPv6 publiques, interrogées séparément (HTTPS)
@@ -142,5 +142,5 @@ Polices : **IBM Plex Mono** (mono, data, labels) · **DM Sans** (corps, titres) 
 
 ### SEO
 
-- Le JSON-LD (WebSite, WebApplication, Person, FAQPage) est injecté au build par le plugin `jsonLd()` de `vite.config.ts`. La FAQPage est générée depuis `src/data/faq.ts`, la même source que `FaqSection.vue` : modifier la FAQ à cet endroit uniquement.
+- Le JSON-LD (WebSite, WebApplication, Person, FAQPage) est injecté au build par le plugin `jsonLd()` de `vite.config.ts`, sur la page d'accueil uniquement. La FAQPage est générée depuis `src/data/faq.ts`, la même source que `FaqSection.vue` : modifier la FAQ à cet endroit uniquement.
 - Favicons, icônes PWA, `logo.webp` et `og-cover.png` sont générés par `python3 scripts/generate-images.py` (Pillow) depuis `public/logo.png`.

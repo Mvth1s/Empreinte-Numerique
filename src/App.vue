@@ -113,19 +113,7 @@
       </main>
 
       <FaqSection />
-      <LegalSection />
-
-      <footer class="site-foot">
-        <p>Empreinte Numérique — outil éducatif open-source, 100 % côté client.</p>
-        <nav aria-label="Liens du projet">
-          <a href="https://github.com/Mvth1s/Empreinte-Numerique" target="_blank" rel="noopener">Code source (GitHub)</a>
-          <a href="https://github.com/Mvth1s" target="_blank" rel="noopener">GitHub de l'auteur</a>
-          <a href="#faq">FAQ</a>
-          <a href="#mentions-legales">Mentions légales</a>
-          <a href="#confidentialite">Politique de confidentialité</a>
-          <button type="button" class="foot-link" @click="cookieBannerOpen = true">Gérer les cookies</button>
-        </nav>
-      </footer>
+      <SiteFooter @manage-cookies="cookieBannerOpen = true" />
     </div>
 
     <!-- Share modal -->
@@ -152,7 +140,7 @@
 import { ref, computed, watch, onMounted, nextTick, defineAsyncComponent } from 'vue'
 import BackgroundCanvas from './components/BackgroundCanvas.vue'
 import FaqSection from './components/FaqSection.vue'
-import LegalSection from './components/LegalSection.vue'
+import SiteFooter from './components/SiteFooter.vue'
 import CookieBanner from './components/CookieBanner.vue'
 import { readConsent } from './utils/analytics'
 

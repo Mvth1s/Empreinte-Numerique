@@ -29,3 +29,5 @@ export interface GeoData {
   flagged: boolean
   status: string
 }
+
+export type LegalPageId = 'mentions-legales' | 'confidentialite' | 'cookies'
