@@ -10,6 +10,7 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 ### Ajouté
 - **Google Analytics 4** chargé uniquement après consentement (bandeau cookies RGPD, refus aussi simple que l'acceptation, choix modifiable via « Cookies » en pied de page)
 - Balise de vérification **Google Search Console**
+- **Pages légales séparées** : `/mentions-legales/`, `/confidentialite/` et `/cookies/` (nouvelle politique cookies avec choix modifiable sur la page), liées depuis le pied de page de toutes les pages et ajoutées au sitemap
 
 ---
 

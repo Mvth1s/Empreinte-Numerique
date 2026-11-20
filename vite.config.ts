@@ -1,3 +1,4 @@
+import { resolve } from 'node:path'
 import { defineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { FAQ } from './src/data/faq'
@@ -56,12 +57,24 @@ function jsonLd(): Plugin {
 
   return {
     name: 'json-ld',
-    transformIndexHtml: () => [
-      { tag: 'script', attrs: { type: 'application/ld+json' }, children: json, injectTo: 'head' },
-    ],
+    // Page d'accueil uniquement : la FAQPage n'a pas de sens sur les pages légales.
+    transformIndexHtml: (_html, ctx) => ctx.path === '/index.html'
+      ? [{ tag: 'script', attrs: { type: 'application/ld+json' }, children: json, injectTo: 'head' }]
+      : [],
   }
 }
 
 export default defineConfig({
   plugins: [vue(), jsonLd()],
+  build: {
+    rollupOptions: {
+      // Pages légales servies en HTML séparé : /mentions-legales/, /confidentialite/, /cookies/
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        'mentions-legales': resolve(__dirname, 'mentions-legales/index.html'),
+        confidentialite: resolve(__dirname, 'confidentialite/index.html'),
+        cookies: resolve(__dirname, 'cookies/index.html'),
+      },
+    },
+  },
 })
