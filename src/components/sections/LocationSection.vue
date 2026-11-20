@@ -23,7 +23,7 @@
         <span class="pin">📍</span>
       </div>
       <div class="loc-info">
-        <div class="hb-label">SANS PERMISSION GPS</div>
+        <div class="hb-label">Sans permission GPS</div>
         <div class="loc-line"><b>Pays</b><span>{{ net.country.value ?? '…' }}</span></div>
         <div class="loc-line"><b>Région</b><span>{{ net.regionName.value ?? '—' }}</span></div>
         <div class="loc-line"><b>Ville</b><span>{{ net.city.value ?? '…' }}</span></div>
@@ -36,16 +36,16 @@
             </button>
           </template>
           <template v-else-if="gpsError">
-            <span style="color:var(--red)">⚠️ {{ gpsError }}</span>
+            <span class="loc-status-err">⚠️ {{ gpsError }}</span>
           </template>
           <template v-else-if="gpsCoords">
-            <span style="color:var(--cyan)">✓ GPS autorisé — précision : ±{{ gpsCoords.accuracy }} m</span>
+            <span class="loc-status-ok">✓ GPS autorisé — précision : ±{{ gpsCoords.accuracy }} m</span>
           </template>
         </div>
       </div>
     </div>
 
-    <div v-if="gpsCoords" class="cards" style="margin-bottom:18px">
+    <div v-if="gpsCoords" class="cards cards-gap">
       <DataCardV2
         icon="📍"
         title="Position GPS réelle"

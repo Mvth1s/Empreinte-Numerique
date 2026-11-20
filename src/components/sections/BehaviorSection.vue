@@ -17,7 +17,7 @@
     <div class="hero-block beh-block">
       <canvas id="heat-canvas" ref="heatCanvas" aria-hidden="true"></canvas>
       <div class="beh-info">
-        <div class="hb-label">HEATMAP DE VOTRE SOURIS · LIVE</div>
+        <div class="hb-label">Carte de chaleur de votre souris, en direct</div>
         <div class="loc-line"><b>Échantillons</b><span id="heat-count">{{ heatCount }}</span></div>
         <div class="loc-line"><b>Temps</b><span id="heat-time">{{ heatTime }}</span></div>
         <div class="loc-line"><b>Pointeur</b><span>{{ pointerType }}</span></div>
@@ -121,6 +121,7 @@
 </template>
 
 <script setup lang="ts">
+import { P } from '../../utils/theme'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useBehavior } from '../../composables/useBehavior'
 import DataCardV2 from '../DataCardV2.vue'
@@ -157,9 +158,9 @@ function dot(e: MouseEvent) {
     y = (e.clientY / window.innerHeight) * c.height
   }
   const g = ctx.createRadialGradient(x, y, 0, x, y, 22)
-  g.addColorStop(0, 'rgba(255,255,255,0.8)')
-  g.addColorStop(0.35, 'rgba(0,229,255,0.55)')
-  g.addColorStop(1, 'rgba(0,229,255,0)')
+  g.addColorStop(0, `rgba(${P.ink}, 0.8)`)
+  g.addColorStop(0.35, `rgba(${P.accent}, 0.55)`)
+  g.addColorStop(1, `rgba(${P.accent}, 0)`)
   ctx.fillStyle = g
   ctx.fillRect(x - 22, y - 22, 44, 44)
 
@@ -172,7 +173,7 @@ function dot(e: MouseEvent) {
 function fade() {
   const c = heatCanvas.value
   if (!c || !ctx) return
-  ctx.fillStyle = 'rgba(8,8,13,0.04)'
+  ctx.fillStyle = `rgba(${P.panel}, 0.04)`
   ctx.fillRect(0, 0, c.width, c.height)
 }
 
@@ -186,9 +187,9 @@ onMounted(() => {
   if (!ctx) return
 
   // Background + grid
-  ctx.fillStyle = '#08080d'
+  ctx.fillStyle = `rgb(${P.panel})`
   ctx.fillRect(0, 0, c.width, c.height)
-  ctx.strokeStyle = 'rgba(255,255,255,0.04)'
+  ctx.strokeStyle = `rgba(${P.ink}, 0.04)`
   ctx.lineWidth = 1
   for (let x = 0; x < c.width; x += 24) {
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, c.height); ctx.stroke()

@@ -8,7 +8,7 @@
         <img src="/logo.webp" alt="Empreinte Numérique" class="welcome-logo" width="220" height="220" />
         <h2 id="welcome-title">Vous pensez être <em>anonyme</em>.<br/>Ce site sait déjà beaucoup sur vous.</h2>
         <p>
-          Sans cookie, sans login, sans la moindre autorisation, un site web peut reconstruire votre identité technique en moins de deux secondes. Cette démo vous montre <strong style="color:var(--fg)">tout ce qu'il découvre</strong>, en langage clair.
+          Sans cookie, sans login, sans la moindre autorisation, un site web peut reconstruire votre identité technique en moins de deux secondes. Cette démo vous montre <strong>tout ce qu'il découvre</strong>, en langage clair.
         </p>
         <ul>
           <li><b>{{ TABS.length }}</b>catégories</li>
@@ -21,12 +21,13 @@
     </div>
 
     <div class="app">
+      <a class="skip-link" href="#main">Aller au contenu</a>
       <!-- Header -->
       <header class="top">
         <div class="brand">
           <img src="/logo.webp" alt="" class="brand-logo" width="40" height="40" />
           <div>
-            <h1>EMPREINTE NUMÉRIQUE</h1>
+            <h1>Empreinte Numérique</h1>
             <div class="tag">Ce que chaque site sait sur vous</div>
           </div>
         </div>
@@ -39,10 +40,11 @@
               <span class="ts-lbl">Traçabilité</span>
             </div>
           </div>
-          <button class="share-btn" aria-haspopup="dialog" @click="openShare">📤 Partager</button>
+          <button class="share-btn" aria-haspopup="dialog" @click="openShare">Partager</button>
+          <ThemeToggle />
           <div class="session">
-            <div><span class="dot"></span>SESSION ACTIVE</div>
-            <div style="opacity:.6">{{ sessionDate }}</div>
+            <div><span class="dot" aria-hidden="true"></span>Session active</div>
+            <div>{{ sessionDate }}</div>
           </div>
         </div>
       </header>
@@ -81,7 +83,7 @@
       <!-- Mobile nav -->
       <div :class="['mobile-nav', { open: mobileNavOpen }]" id="mobile-nav" ref="mobileNavEl" role="dialog" aria-modal="true" aria-label="Choisir une catégorie">
         <div class="mobile-nav-head">
-          <span class="lbl">// Choisir une catégorie</span>
+          <span class="lbl">Choisir une catégorie</span>
           <button class="mobile-nav-close" id="mobile-close" @click="mobileNavOpen = false" aria-label="Fermer">×</button>
         </div>
         <div class="tab-grid" id="tab-grid">
@@ -100,7 +102,7 @@
       </div>
 
       <!-- Main content -->
-      <main class="main">
+      <main class="main" id="main" tabindex="-1">
         <LoadOverlay
           :visible="loading"
           :kind="loadKind"
@@ -111,11 +113,7 @@
 
         <div id="content" role="tabpanel" :aria-labelledby="`tab-${activeTab}`" :aria-busy="loading" :style="{ opacity: loading ? 0 : 1 }">
           <component :is="activeComponent" v-if="!showWelcome" />
-          <div v-else class="empty-state" style="text-align:center; padding: 80px 20px; color: var(--mute);">
-            <div style="font-family: var(--mono); font-size: 12px; letter-spacing: .25em; text-transform: uppercase;">
-              Choisissez une catégorie ci-dessus pour commencer
-            </div>
-          </div>
+          <p v-else class="empty-state">Choisissez une catégorie ci-dessus pour commencer.</p>
         </div>
       </main>
 
@@ -147,6 +145,7 @@ import { ref, computed, watch, onMounted, nextTick, defineAsyncComponent } from 
 import BackgroundCanvas from './components/BackgroundCanvas.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import CookieBanner from './components/CookieBanner.vue'
+import ThemeToggle from './components/ThemeToggle.vue'
 import { readConsent } from './utils/analytics'
 import { useDialog } from './composables/useDialog'
 
@@ -261,7 +260,8 @@ const sessionDate = computed(() => {
 })
 
 let loadTimer: ReturnType<typeof setTimeout> | null = null
-const LOAD_DURATION = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 500 : 2800
+// Animation de chargement à la première visite d'un onglet seulement : les retours sont instantanés.
+const LOAD_DURATION = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 400 : 1600
 
 const loaderData = computed((): Record<string, string> => {
   const off = -new Date().getTimezoneOffset()
@@ -332,9 +332,10 @@ async function switchTab(id: TabId, force = false) {
   bgKind.value = tab.bg as BgKind
   loadKind.value = tab.loader.kind
   loadText.value = tab.loader.text
+  const firstVisit = !seenTabs.value.has(id)
   seenTabs.value = new Set([...seenTabs.value, id])
 
-  loading.value = true
+  loading.value = firstVisit
   await nextTick()
   updateSlider()
 
@@ -343,7 +344,7 @@ async function switchTab(id: TabId, force = false) {
   if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
 
   if (loadTimer) clearTimeout(loadTimer)
-  loadTimer = setTimeout(() => { loading.value = false }, LOAD_DURATION)
+  if (firstVisit) loadTimer = setTimeout(() => { loading.value = false }, LOAD_DURATION)
 }
 
 function skipLoad() {

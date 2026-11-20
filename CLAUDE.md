@@ -53,7 +53,7 @@ Le **fetch réseau** est mis en cache au niveau module via `_geoPromise` dans `u
 
 ### Grille de mise en page
 
-La grille est en CSS pur dans `src/style.css` — 12 colonnes, gap 20px. Chaque section utilise `.cards` comme conteneur et les cartes portent leur propre classe de span via `DataCardV2` (`:span` prop → `.col-N`). Classes disponibles : `.col-3`, `.col-4`, `.col-6`, `.col-8`, `.col-12`. Responsive : ≤1100px → 6 colonnes max, ≤720px → pleine largeur.
+La grille est en CSS pur dans `src/style.css` — 12 colonnes, gap 1.25rem. Chaque section utilise `.cards` comme conteneur et les cartes portent leur propre classe de span via `DataCardV2` (`:span` prop → `.col-N`). Classes disponibles : `.col-3`, `.col-4`, `.col-6`, `.col-8`, `.col-12`. Responsive (points de rupture en `em`) : ≤68.75em (1100px) → 6 colonnes max, ≤45em (720px) → pleine largeur.
 
 ### Composant DataCardV2
 
@@ -131,16 +131,23 @@ Le score (0–100) est calculé dans `App.vue`. Les composables `useNetwork`, `u
 
 Score total max : 100 (cap via `Math.min(s, 100)`).
 
-### Palette de couleurs (variables CSS)
+### Thèmes et palette (variables CSS)
+
+Deux thèmes, mêmes noms de variables : sombre par défaut (`:root`), clair via `prefers-color-scheme: light` ou `data-theme="light"` sur `<html>` (bloc dupliqué dans `style.css`, à garder synchronisé). Choix explicite posé par `ThemeToggle.vue` → `src/utils/theme.ts`, mémorisé dans `localStorage['en-theme']`, appliqué avant rendu par `public/theme-init.js` (script externe bloquant, la CSP interdit l'inline). **Ne jamais écrire de couleur en dur** : utiliser les variables (`color-mix()` pour les teintes) ; les canvas lisent la palette `P` de `theme.ts` (`rgba(${P.accent}, a)`), alimentée par les variables `--*-rgb`. Tout couple texte/fond doit rester ≥ 4.5:1 (WCAG AA) dans les deux thèmes.
 
 ```
---bg: #0a0a0f      --card: #0f0f17    --line: #1f1f2b
---bg-2: #111118    --card-2: #14141d  --line-2: #2a2a38
---cyan: #00e5ff    --red: #ff3b30     --yellow: #ffd60a
---mute: #6d6d80    --mute-2: #9a9aae  --fg: #f0f0f0
+              sombre     clair
+--bg          #0b0b10    #f5f6f8      --card / --card-2 : surfaces des cartes
+--fg          #ededf2    #16171d      --line / --line-2 : bordures
+--mute        #9393a8    #5a5f6e      texte tertiaire (≥ 5.8:1)
+--mute-2      #b9b9c8    #3e4250      texte secondaire
+--cyan        #00d8f0    #076a82      accent ; texte posé dessus : --on-cyan
+--red         #ff6159    #c0281e      --yellow #ffd60a / #8a5a00 · --green #6cd99a / #18764a
 ```
 
-Polices : **IBM Plex Mono** (mono, data, labels) · **DM Sans** (corps, titres) — auto-hébergées en WOFF2 latin dans `public/fonts/` (`src/fonts.css`), aucune requête Google Fonts.
+Unités : `rem` pour les tailles de texte (échelle `--fs-xs` 12px → `--fs-xl` 22px, rien sous `--fs-xs`) et les espacements, `em` pour l'interlettrage et les media queries, `px` pour bordures et ombres, interlignes sans unité. Rayons : `--radius-sm` / `--radius` / `--radius-lg` / `--radius-pill`. Cibles tactiles ≥ 2.75rem (44px).
+
+Polices : **DM Sans** (corps, titres, libellés) · **IBM Plex Mono** (réservée aux données techniques : hashes, IP, pied technique des cartes) — auto-hébergées en WOFF2 latin dans `public/fonts/` (`src/fonts.css`), aucune requête Google Fonts.
 
 ### SEO
 

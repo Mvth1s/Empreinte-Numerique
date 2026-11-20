@@ -15,7 +15,7 @@
 
     <!-- Hero fingerprint -->
     <div class="hero-block fp-block">
-      <div class="hb-label">VOTRE IDENTIFIANT UNIQUE PROBABLE</div>
+      <div class="hb-label">Votre identifiant unique probable</div>
       <div class="hb-hash" id="fp-hash">
         <span>{{ typedHash }}</span><span class="caret"></span>
       </div>

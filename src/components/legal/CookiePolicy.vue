@@ -65,7 +65,7 @@ const COOKIES = [
   },
   {
     q: 'Stockage local (sans consentement)',
-    a: "Votre choix est mémorisé dans le localStorage de votre navigateur (clé en-consent), ce qui évite de vous redemander à chaque visite. Ce n'est pas un cookie, il n'est jamais envoyé à un serveur et il est strictement nécessaire au respect de votre choix.",
+    a: "Votre choix est mémorisé dans le localStorage de votre navigateur (clé en-consent), ce qui évite de vous redemander à chaque visite ; de même pour le thème clair/sombre si vous le changez (clé en-theme). Ce ne sont pas des cookies, ils ne sont jamais envoyés à un serveur et ils sont strictement nécessaires au respect de vos choix.",
   },
   {
     q: 'Aucun autre cookie',

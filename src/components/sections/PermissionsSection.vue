@@ -91,7 +91,7 @@
           <div class="c-inline-demo">
             <div v-if="micStream">
               <div class="pdc-vumeter"><div class="pdc-vu-bar" :style="{ width: micLevel * 100 + '%' }"></div></div>
-              <div class="pdc-data" style="margin-top:8px">
+              <div class="pdc-data">
                 <div v-if="micInfo.label" class="pdc-row"><b>Appareil</b><span>{{ micInfo.label }}</span></div>
                 <div v-if="micInfo.sampleRate" class="pdc-row"><b>Fréquence</b><span>{{ micInfo.sampleRate }} Hz</span></div>
                 <div class="pdc-row"><b>Niveau</b><span>{{ Math.round(micLevel * 100) }} %</span></div>
@@ -122,7 +122,7 @@
         <template #demo>
           <div class="c-inline-demo">
             <div v-if="notifSent" class="pdc-data">
-              <div class="pdc-row"><b>Statut</b><span style="color:var(--green)">✓ Notification envoyée</span></div>
+              <div class="pdc-row"><b>Statut</b><span class="pdc-granted">✓ Notification envoyée</span></div>
               <div class="pdc-row"><b>Portée</b><span>Onglet fermé inclus</span></div>
             </div>
             <div v-else-if="notifError" class="pdc-error">⚠️ {{ notifError }}</div>
@@ -150,7 +150,7 @@
           <div class="c-inline-demo">
             <div v-if="clipContent !== null">
               <div class="pdc-clip-preview">{{ clipPreview }}</div>
-              <div class="pdc-data" style="margin-top:8px">
+              <div class="pdc-data">
                 <div class="pdc-row"><b>Longueur</b><span>{{ clipContent.length }} caractères</span></div>
               </div>
             </div>

@@ -15,6 +15,10 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - **Pré-rendu au build** de la FAQ et des pages légales (HTML lisible sans JavaScript, hydraté ensuite) ; liens vers ces pages dans le `<noscript>` de l'accueil
 - **Accessibilité** : onglets ARIA navigables au clavier, menu mobile en boutons, fenêtres modales avec focus piégé, fermeture par Échap et focus restitué
 - **Pages légales séparées** : `/mentions-legales/`, `/confidentialite/` et `/cookies/` (nouvelle politique cookies avec choix modifiable sur la page), liées depuis le pied de page de toutes les pages et ajoutées au sitemap
+- **Thème clair** (suit le réglage du système, bouton pour forcer clair/sombre, sans flash au chargement) ; fonds animés et écrans de chargement adaptés au thème
+- **Lisibilité** : tailles en `rem` (respectent la taille de police du navigateur), aucun texte sous 12 px, contrastes WCAG AA vérifiés dans les deux thèmes, lien « Aller au contenu », cibles tactiles de 44 px
+- **Design** plus sobre : coins arrondis, moins de majuscules espacées et d'effets néon, police mono réservée aux données techniques
+- Animation de chargement limitée à la première visite de chaque onglet (1,6 s au lieu de 2,8 s à chaque changement)
 
 ### Corrigé
 - `llms.txt` aligné sur la réalité : cookie Google Analytics avec consentement, liste à jour des services tiers, onglet Bloqueurs, liens vers les pages légales

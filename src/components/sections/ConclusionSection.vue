@@ -12,7 +12,7 @@
 
     <!-- Hero: synthèse personnalisée -->
     <div class="conclusion-hero">
-      <h3>// Ce que ce site a collecté sur vous — sans permission</h3>
+      <h3>Ce que ce site a collecté sur vous, sans aucune permission</h3>
       <div class="ch-summary">
         <div class="ch-item">
           <span class="ch-label">IP publique</span>

@@ -3,6 +3,7 @@
 </template>
 
 <script setup lang="ts">
+import { P } from '../utils/theme'
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 
 type BgKind = 'particles' | 'radar' | 'hexrain' | 'tron' | 'cursor' |
@@ -104,7 +105,7 @@ function drawParticles() {
     if (p.x < 0) p.x = W; if (p.x > W) p.x = 0
     if (p.y < 0) p.y = H; if (p.y > H) p.y = 0
   })
-  ctx.strokeStyle = 'rgba(0,229,255,0.06)'; ctx.lineWidth = 1
+  ctx.strokeStyle = `rgba(${P.accent}, 0.06)`; ctx.lineWidth = 1
   for (let i = 0; i < particles.length; i++) {
     for (let j = i + 1; j < particles.length; j++) {
       const a = particles[i], b = particles[j]
@@ -117,18 +118,18 @@ function drawParticles() {
     }
   }
   ctx.globalAlpha = 1
-  ctx.fillStyle = 'rgba(0,229,255,0.5)'
+  ctx.fillStyle = `rgba(${P.accent}, 0.5)`
   particles.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill() })
 }
 
 // ---- radar ----
 function drawRadar(now: number) {
   const ctx = getCtx(); if (!ctx) return
-  ctx.fillStyle = 'rgba(10,10,15,0.12)'; ctx.fillRect(0, 0, W, H)
+  ctx.fillStyle = `rgba(${P.bg}, 0.12)`; ctx.fillRect(0, 0, W, H)
   const t = now / 1000
   pulses.forEach(p => {
     const phase = ((t + p.t) % p.period) / p.period
-    ctx.strokeStyle = `rgba(0,229,255,${(1 - phase) * 0.18})`; ctx.lineWidth = 1
+    ctx.strokeStyle = `rgba(${P.accent}, ${(1 - phase) * 0.18})`; ctx.lineWidth = 1
     ctx.beginPath(); ctx.arc(p.x, p.y, phase * 240, 0, Math.PI * 2); ctx.stroke()
   })
 }
@@ -136,7 +137,7 @@ function drawRadar(now: number) {
 // ---- hexrain ----
 function drawHexRain(now: number) {
   const ctx = getCtx(); if (!ctx) return
-  ctx.fillStyle = 'rgba(10,10,15,0.08)'; ctx.fillRect(0, 0, W, H)
+  ctx.fillStyle = `rgba(${P.bg}, 0.08)`; ctx.fillRect(0, 0, W, H)
   ctx.font = '13px "IBM Plex Mono", monospace'
   const t = now / 1000
   const hexChars = '0123456789abcdef'
@@ -144,7 +145,7 @@ function drawHexRain(now: number) {
     d.y += d.v * 0.05
     if (d.y > H + 20) { d.y = -20; d.s = Math.random() * 1000 }
     const ch = hexChars[Math.floor((t * 0.6 + d.s) % 16)]
-    ctx.fillStyle = 'rgba(0,229,255,0.05)'
+    ctx.fillStyle = `rgba(${P.accent}, 0.05)`
     ctx.fillText(ch, i * 18 + 6, d.y)
   })
 }
@@ -156,7 +157,7 @@ function drawTron(now: number) {
   const t = now / 1000
   const horizonY = H * 0.55, vp = W / 2
   ctx.lineWidth = 1
-  ctx.strokeStyle = 'rgba(0,229,255,0.10)'
+  ctx.strokeStyle = `rgba(${P.accent}, 0.10)`
   for (let i = -12; i <= 12; i++) {
     ctx.beginPath(); ctx.moveTo(vp + i * 60, horizonY); ctx.lineTo(vp + i * 360, H + 60); ctx.stroke()
   }
@@ -164,22 +165,22 @@ function drawTron(now: number) {
   for (let i = 0; i < 18; i++) {
     const z = ((t * speed + i * 22) % 220) / 220
     const y = horizonY + Math.pow(z, 1.6) * (H - horizonY + 40)
-    ctx.strokeStyle = `rgba(0,229,255,${z * 0.15})`
+    ctx.strokeStyle = `rgba(${P.accent}, ${z * 0.15})`
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke()
   }
   const grad = ctx.createLinearGradient(0, horizonY - 40, 0, horizonY + 4)
-  grad.addColorStop(0, 'rgba(0,229,255,0)')
-  grad.addColorStop(1, 'rgba(0,229,255,0.10)')
+  grad.addColorStop(0, `rgba(${P.accent}, 0)`)
+  grad.addColorStop(1, `rgba(${P.accent}, 0.10)`)
   ctx.fillStyle = grad; ctx.fillRect(0, horizonY - 40, W, 44)
 }
 
 // ---- cursor ----
 function drawCursor() {
   const ctx = getCtx(); if (!ctx) return
-  ctx.fillStyle = 'rgba(10,10,15,0.18)'; ctx.fillRect(0, 0, W, H)
+  ctx.fillStyle = `rgba(${P.bg}, 0.18)`; ctx.fillRect(0, 0, W, H)
   trail.forEach((p, i) => {
     const k = i / trail.length
-    ctx.fillStyle = `rgba(0,229,255,${k * 0.18})`
+    ctx.fillStyle = `rgba(${P.accent}, ${k * 0.18})`
     ctx.beginPath(); ctx.arc(p.x, p.y, 1 + k * 2, 0, Math.PI * 2); ctx.fill()
   })
   if (trail.length === 0) drawParticles()
@@ -188,7 +189,7 @@ function drawCursor() {
 // ---- terminal ----
 function drawTerminal(now: number) {
   const ctx = getCtx(); if (!ctx) return
-  ctx.fillStyle = 'rgba(10,10,15,0.04)'; ctx.fillRect(0, 0, W, H)
+  ctx.fillStyle = `rgba(${P.bg}, 0.04)`; ctx.fillRect(0, 0, W, H)
   ctx.font = '12px "IBM Plex Mono", monospace'
   const t = now / 1000
   const cols = Math.max(1, Math.floor(W / 220))
@@ -199,7 +200,7 @@ function drawTerminal(now: number) {
     termLines.forEach((line, i) => {
       const y = (i * 22 - offset + H + termLines.length * 22) % (H + termLines.length * 22) - 22
       if (y < -22 || y > H + 22) return
-      ctx.fillStyle = `rgba(0,229,255,0.045)`
+      ctx.fillStyle = `rgba(${P.accent}, 0.045)`
       ctx.fillText(line, x, y)
     })
   }
@@ -214,20 +215,20 @@ function drawClock(now: number) {
   ctx.lineWidth = 1
   for (let i = 0; i < 7; i++) {
     const angle = t * (0.06 + i * 0.025) + i * Math.PI / 7
-    ctx.strokeStyle = 'rgba(0,229,255,0.05)'
+    ctx.strokeStyle = `rgba(${P.accent}, 0.05)`
     ctx.beginPath()
     ctx.ellipse(cx, cy, 60 + i * 55, 100 + i * 25, angle, 0, Math.PI * 2)
     ctx.stroke()
   }
   const r = Math.min(W, H) * 0.14
-  ctx.strokeStyle = 'rgba(0,229,255,0.09)'; ctx.lineWidth = 1
+  ctx.strokeStyle = `rgba(${P.accent}, 0.09)`; ctx.lineWidth = 1
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke()
   const aH = (t * 0.08) % (Math.PI * 2)
   const aM = (t * 0.9) % (Math.PI * 2)
   ctx.lineCap = 'round'
-  ctx.strokeStyle = 'rgba(0,229,255,0.14)'; ctx.lineWidth = 2
+  ctx.strokeStyle = `rgba(${P.accent}, 0.14)`; ctx.lineWidth = 2
   ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(aH - Math.PI / 2) * r * 0.5, cy + Math.sin(aH - Math.PI / 2) * r * 0.5); ctx.stroke()
-  ctx.strokeStyle = 'rgba(0,229,255,0.10)'; ctx.lineWidth = 1
+  ctx.strokeStyle = `rgba(${P.accent}, 0.10)`; ctx.lineWidth = 1
   ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(aM - Math.PI / 2) * r * 0.8, cy + Math.sin(aM - Math.PI / 2) * r * 0.8); ctx.stroke()
   ctx.lineCap = 'butt'
 }
@@ -236,7 +237,7 @@ function drawClock(now: number) {
 function drawScan(now: number) {
   const ctx = getCtx(); if (!ctx) return
   ctx.clearRect(0, 0, W, H)
-  ctx.strokeStyle = 'rgba(0,229,255,0.03)'; ctx.lineWidth = 1
+  ctx.strokeStyle = `rgba(${P.accent}, 0.03)`; ctx.lineWidth = 1
   for (let y = 0; y < H; y += 32) {
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke()
   }
@@ -246,9 +247,9 @@ function drawScan(now: number) {
   const t = now / 1000
   const scanY = (t * 70) % (H + 60) - 30
   const grad = ctx.createLinearGradient(0, scanY - 40, 0, scanY + 40)
-  grad.addColorStop(0, 'rgba(0,229,255,0)')
-  grad.addColorStop(0.5, 'rgba(0,229,255,0.07)')
-  grad.addColorStop(1, 'rgba(0,229,255,0)')
+  grad.addColorStop(0, `rgba(${P.accent}, 0)`)
+  grad.addColorStop(0.5, `rgba(${P.accent}, 0.07)`)
+  grad.addColorStop(1, `rgba(${P.accent}, 0)`)
   ctx.fillStyle = grad; ctx.fillRect(0, scanY - 40, W, 80)
 }
 
@@ -265,7 +266,7 @@ function drawBlocks(now: number) {
       const base = blockCells[idx] ?? Math.random()
       const flicker = (Math.sin(t * (0.8 + base * 1.6) + base * 12) + 1) / 2
       const alpha = flicker * 0.055
-      ctx.fillStyle = `rgba(0,229,255,${alpha})`
+      ctx.fillStyle = `rgba(${P.accent}, ${alpha})`
       ctx.fillRect(c * cw + 1, r * ch + 1, cw - 3, ch - 3)
     }
   }
@@ -281,7 +282,7 @@ function drawWave(now: number) {
   for (let i = 0; i < 10; i++) {
     const phase = ((t * 0.3 + i * 0.7) % 5) / 5
     const r = phase * maxR
-    ctx.strokeStyle = `rgba(0,229,255,${(1 - phase) * 0.09})`
+    ctx.strokeStyle = `rgba(${P.accent}, ${(1 - phase) * 0.09})`
     ctx.lineWidth = 1
     ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke()
   }
@@ -295,11 +296,11 @@ function drawRings(now: number) {
   ringPos.forEach(pos => {
     for (let k = 0; k < 3; k++) {
       const phase = ((t * 0.4 + pos.offset + k * 1.2) % 4) / 4
-      ctx.strokeStyle = `rgba(0,229,255,${(1 - phase) * 0.11})`
+      ctx.strokeStyle = `rgba(${P.accent}, ${(1 - phase) * 0.11})`
       ctx.lineWidth = 1
       ctx.beginPath(); ctx.arc(pos.x, pos.y, phase * 160, 0, Math.PI * 2); ctx.stroke()
     }
-    ctx.fillStyle = 'rgba(0,229,255,0.08)'
+    ctx.fillStyle = `rgba(${P.accent}, 0.08)`
     ctx.beginPath(); ctx.arc(pos.x, pos.y, 2.5, 0, Math.PI * 2); ctx.fill()
   })
 }
@@ -314,7 +315,7 @@ function drawFlow(now: number) {
   // Connection lines (dim)
   ctx.lineWidth = 1
   flowNodes.forEach(node => {
-    ctx.strokeStyle = 'rgba(0,229,255,0.05)'
+    ctx.strokeStyle = `rgba(${P.accent}, 0.05)`
     ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(node.x, node.y); ctx.stroke()
   })
 
@@ -337,25 +338,25 @@ function drawFlow(now: number) {
     const tx = (isOut ? cx : node.x) + ((isOut ? node.x : cx) - (isOut ? cx : node.x)) * tp
     const ty = (isOut ? cy : node.y) + ((isOut ? node.y : cy) - (isOut ? cy : node.y)) * tp
     const a = p.bright ? 0.62 : 0.18
-    ctx.strokeStyle = `rgba(0,229,255,${a * 0.55})`; ctx.lineWidth = 1
+    ctx.strokeStyle = `rgba(${P.accent}, ${a * 0.55})`; ctx.lineWidth = 1
     ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(x, y); ctx.stroke()
-    ctx.fillStyle = `rgba(0,229,255,${a})`
+    ctx.fillStyle = `rgba(${P.accent}, ${a})`
     ctx.beginPath(); ctx.arc(x, y, p.bright ? 2 : 1.1, 0, Math.PI * 2); ctx.fill()
   })
 
   // Edge nodes
   flowNodes.forEach(node => {
-    ctx.fillStyle = 'rgba(0,229,255,0.09)'
+    ctx.fillStyle = `rgba(${P.accent}, 0.09)`
     ctx.beginPath(); ctx.arc(node.x, node.y, 2.5, 0, Math.PI * 2); ctx.fill()
-    ctx.strokeStyle = 'rgba(0,229,255,0.05)'; ctx.lineWidth = 1
+    ctx.strokeStyle = `rgba(${P.accent}, 0.05)`; ctx.lineWidth = 1
     ctx.beginPath(); ctx.arc(node.x, node.y, 7, 0, Math.PI * 2); ctx.stroke()
   })
 
   // Center node (browser) — pulsing
   const pulse = (Math.sin(t * 1.9) + 1) / 2
-  ctx.fillStyle = `rgba(0,229,255,${0.22 + pulse * 0.18})`
+  ctx.fillStyle = `rgba(${P.accent}, ${0.22 + pulse * 0.18})`
   ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill()
-  ctx.strokeStyle = `rgba(0,229,255,${0.07 + pulse * 0.08})`; ctx.lineWidth = 1
+  ctx.strokeStyle = `rgba(${P.accent}, ${0.07 + pulse * 0.08})`; ctx.lineWidth = 1
   ctx.beginPath(); ctx.arc(cx, cy, 12 + pulse * 4, 0, Math.PI * 2); ctx.stroke()
   ctx.beginPath(); ctx.arc(cx, cy, 24 + pulse * 6, 0, Math.PI * 2); ctx.stroke()
 }
@@ -365,11 +366,11 @@ function drawMap(now: number) {
   const ctx = getCtx(); if (!ctx) return
   ctx.clearRect(0, 0, W, H)
   const cx = W / 2, cy = H / 2
-  ctx.strokeStyle = 'rgba(0,229,255,0.045)'; ctx.lineWidth = 1
+  ctx.strokeStyle = `rgba(${P.accent}, 0.045)`; ctx.lineWidth = 1
   for (let r = 40; r < 700; r += 55) {
     ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke()
   }
-  ctx.strokeStyle = 'rgba(255,255,255,0.025)'
+  ctx.strokeStyle = `rgba(${P.ink}, 0.025)`
   for (let x = 0; x < W; x += 42) {
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke()
   }
@@ -378,10 +379,10 @@ function drawMap(now: number) {
   }
   const t = now / 1000
   const pulse = (Math.sin(t * 2.2) + 1) / 2
-  ctx.strokeStyle = `rgba(0,229,255,${0.06 + pulse * 0.10})`
+  ctx.strokeStyle = `rgba(${P.accent}, ${0.06 + pulse * 0.10})`
   ctx.lineWidth = 1.5
   ctx.beginPath(); ctx.arc(cx, cy, 10 + pulse * 8, 0, Math.PI * 2); ctx.stroke()
-  ctx.fillStyle = `rgba(0,229,255,${0.18 + pulse * 0.12})`
+  ctx.fillStyle = `rgba(${P.accent}, ${0.18 + pulse * 0.12})`
   ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill()
 }
 
@@ -409,8 +410,8 @@ function drawGlobe(now: number) {
   ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.clip()
 
   const radGrad = ctx.createRadialGradient(cx - R * 0.3, cy - R * 0.3, 0, cx, cy, R)
-  radGrad.addColorStop(0, 'rgba(15,20,40,0.9)')
-  radGrad.addColorStop(1, 'rgba(5,8,20,0.97)')
+  radGrad.addColorStop(0, `rgba(${P.panel}, 0.9)`)
+  radGrad.addColorStop(1, `rgba(${P.panel}, 0.97)`)
   ctx.fillStyle = radGrad; ctx.fillRect(cx - R, cy - R, R * 2, R * 2)
 
   const nLat = 9, nMer = 12
@@ -420,7 +421,7 @@ function drawGlobe(now: number) {
     const sy = cy - R * Math.sin(phi)
     const sr = R * Math.cos(phi)
     const isEquator = i === Math.round(nLat / 2)
-    ctx.strokeStyle = isEquator ? 'rgba(0,229,255,0.16)' : 'rgba(0,229,255,0.06)'
+    ctx.strokeStyle = isEquator ? `rgba(${P.accent}, 0.16)` : `rgba(${P.accent}, 0.06)`
     ctx.lineWidth = isEquator ? 1.2 : 0.7
     ctx.beginPath(); ctx.ellipse(cx, sy, sr, sr * 0.18, 0, 0, Math.PI * 2); ctx.stroke()
   }
@@ -429,7 +430,7 @@ function drawGlobe(now: number) {
     const a = (i / nMer) * Math.PI + rot
     const sx = R * Math.abs(Math.sin(a))
     const isFront = Math.cos(a) > 0
-    ctx.strokeStyle = isFront ? 'rgba(0,229,255,0.10)' : 'rgba(0,229,255,0.03)'
+    ctx.strokeStyle = isFront ? `rgba(${P.accent}, 0.10)` : `rgba(${P.accent}, 0.03)`
     ctx.lineWidth = 0.7
     ctx.beginPath(); ctx.ellipse(cx, cy, sx, R, 0, 0, Math.PI * 2); ctx.stroke()
   }
@@ -442,26 +443,26 @@ function drawGlobe(now: number) {
     const sx = cx + R * Math.cos(phi) * Math.sin(effLam)
     const sy = cy - R * Math.sin(phi)
     const alpha = Math.cos(effLam)
-    ctx.fillStyle = `rgba(0,229,255,${alpha * 0.75})`
+    ctx.fillStyle = `rgba(${P.accent}, ${alpha * 0.75})`
     ctx.beginPath(); ctx.arc(sx, sy, 2, 0, Math.PI * 2); ctx.fill()
     const pingPhase = ((t * 1.4 + city.lon * 0.01) % 2) / 2
-    ctx.strokeStyle = `rgba(0,229,255,${(1 - pingPhase) * alpha * 0.3})`
+    ctx.strokeStyle = `rgba(${P.accent}, ${(1 - pingPhase) * alpha * 0.3})`
     ctx.lineWidth = 0.7
     ctx.beginPath(); ctx.arc(sx, sy, pingPhase * 9, 0, Math.PI * 2); ctx.stroke()
   })
 
   const shine = ctx.createRadialGradient(cx - R * 0.38, cy - R * 0.38, 0, cx - R * 0.2, cy - R * 0.2, R * 0.7)
-  shine.addColorStop(0, 'rgba(0,229,255,0.07)')
+  shine.addColorStop(0, `rgba(${P.accent}, 0.07)`)
   shine.addColorStop(1, 'rgba(0,0,0,0)')
   ctx.fillStyle = shine; ctx.fillRect(cx - R, cy - R, R * 2, R * 2)
 
   ctx.restore()
 
-  ctx.strokeStyle = 'rgba(0,229,255,0.18)'; ctx.lineWidth = 1.2
+  ctx.strokeStyle = `rgba(${P.accent}, 0.18)`; ctx.lineWidth = 1.2
   ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke()
 
   for (let k = 1; k <= 3; k++) {
-    ctx.strokeStyle = `rgba(0,229,255,${0.05 / k})`; ctx.lineWidth = 1
+    ctx.strokeStyle = `rgba(${P.accent}, ${0.05 / k})`; ctx.lineWidth = 1
     ctx.beginPath(); ctx.arc(cx, cy, R + k * 6, 0, Math.PI * 2); ctx.stroke()
   }
 }
@@ -491,7 +492,7 @@ function start(kind: string) {
     const ctx = getCtx()
     if (ctx) {
       ctx.clearRect(0, 0, W, H)
-      ctx.fillStyle = 'rgba(0,229,255,0.04)'
+      ctx.fillStyle = `rgba(${P.accent}, 0.04)`
       for (let i = 0; i < 30; i++) ctx.fillRect(Math.random() * W, Math.random() * H, 1.4, 1.4)
     }
     return
